@@ -85,6 +85,9 @@
   tr:last-child td{border-bottom:none;}
   td.num{font-family:'Space Mono',monospace;}
   td.checkbox-col, th.checkbox-col{width:34px;}
+  th.sortable{cursor:pointer; user-select:none;}
+  th.sortable:hover{color:var(--tan);}
+  .sort-arrow{display:inline-block; margin-left:4px; font-size:10px;}
   .row-delete{background:none; border:none; color:var(--warn); font-size:16px; padding:2px 6px;}
   .pagination{display:flex; align-items:center; justify-content:center; gap:14px; margin-top:16px;}
   .pagination button{background:var(--card); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-weight:700; font-size:13px;}
@@ -164,8 +167,14 @@
           <thead>
             <tr>
               <th class="checkbox-col"><input type="checkbox" id="selectAllBox" onchange="toggleSelectAll()"></th>
-              <th>Name</th><th>Email</th><th>Phone</th><th>Address</th>
-              <th>Orders</th><th>Lifetime spend</th><th>Last visit</th><th></th>
+              <th class="sortable" onclick="setSort('name')">Name<span class="sort-arrow" id="arrow-name"></span></th>
+              <th class="sortable" onclick="setSort('email')">Email<span class="sort-arrow" id="arrow-email"></span></th>
+              <th class="sortable" onclick="setSort('phone')">Phone<span class="sort-arrow" id="arrow-phone"></span></th>
+              <th class="sortable" onclick="setSort('address')">Address<span class="sort-arrow" id="arrow-address"></span></th>
+              <th class="sortable" onclick="setSort('order_count')">Orders<span class="sort-arrow" id="arrow-order_count"></span></th>
+              <th class="sortable" onclick="setSort('lifetime_spend')">Lifetime spend<span class="sort-arrow" id="arrow-lifetime_spend"></span></th>
+              <th class="sortable" onclick="setSort('last_visit')">Last visit<span class="sort-arrow" id="arrow-last_visit"></span></th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="customerRows"></tbody>
@@ -344,6 +353,8 @@
   let filteredCustomers = [];
   let currentPage = 1;
   let selectedIds = new Set();
+  let sortField = 'name';
+  let sortAsc = true; // default: first name A -> Z
 
   async function loadCustomers(){
     const res = await authedFetch('customers-list');
@@ -353,6 +364,55 @@
     onSearchChange();
   }
 
+  function setSort(field){
+    if (sortField === field){
+      sortAsc = !sortAsc; // clicking the same header again flips direction
+    } else {
+      sortField = field;
+      sortAsc = true;
+    }
+    currentPage = 1;
+    applySort();
+    renderCustomers();
+  }
+
+  function sortValue(c, field){
+    switch(field){
+      case 'name': return `${c.first_name || ''} ${c.last_name || ''}`.trim().toLowerCase();
+      case 'email': return (c.email || '').toLowerCase();
+      case 'phone': return (c.phone || '').toLowerCase();
+      case 'address': return (c.address || '').toLowerCase();
+      case 'order_count': return Number(c.order_count || 0);
+      case 'lifetime_spend': return Number(c.lifetime_spend || 0);
+      case 'last_visit': return c.last_visit || ''; // blank dates sort to one end, not scattered
+      default: return '';
+    }
+  }
+
+  function applySort(){
+    const numeric = sortField === 'order_count' || sortField === 'lifetime_spend';
+    filteredCustomers.sort((a, b) => {
+      const av = sortValue(a, sortField);
+      const bv = sortValue(b, sortField);
+      // Always push blank/empty values to the bottom regardless of sort direction,
+      // so an empty "Last visit" column doesn't scatter randomly through the list.
+      const aEmpty = av === '' || av === null;
+      const bEmpty = bv === '' || bv === null;
+      if (aEmpty && !bEmpty) return 1;
+      if (bEmpty && !aEmpty) return -1;
+      if (aEmpty && bEmpty) return 0;
+
+      let cmp;
+      if (numeric) cmp = av - bv;
+      else cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortAsc ? cmp : -cmp;
+    });
+
+    document.querySelectorAll('.sort-arrow').forEach(el => el.textContent = '');
+    const arrow = document.getElementById('arrow-' + sortField);
+    if (arrow) arrow.textContent = sortAsc ? '▲' : '▼';
+  }
+
   function onSearchChange(){
     const q = (document.getElementById('customerSearch').value || '').toLowerCase();
     filteredCustomers = allCustomers.filter(c => {
@@ -360,6 +420,7 @@
       return hay.includes(q);
     });
     currentPage = 1;
+    applySort();
     renderCustomers();
   }
 
@@ -495,7 +556,8 @@
     'street address 1': '_street1', 'street address 2': '_street2',
     'city': '_city', 'state': '_state', 'postal code': '_zip',
     'address': 'address',
-    'first visit': 'first_visit', 'last visit': 'last_visit',
+    'first visit': 'first_visit', 'first_visit': 'first_visit',
+    'last visit': 'last_visit', 'last_visit': 'last_visit',
     'transaction count': 'order_count', 'order_count': 'order_count',
     'lifetime spend': 'lifetime_spend', 'lifetime_spend': 'lifetime_spend',
   };
