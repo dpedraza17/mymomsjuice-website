@@ -77,11 +77,19 @@
   .btn{background:var(--orange); color:#fff; border:none; border-radius:10px; padding:10px 16px; font-weight:700; font-size:13.5px;}
   .btn.secondary{background:var(--dark);}
   .btn.ghost{background:none; border:1px solid var(--line); color:var(--ink);}
+  .btn.danger{background:var(--warn);}
+  .btn:disabled{opacity:0.5; cursor:not-allowed;}
   table{width:100%; border-collapse:collapse; background:var(--card); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);}
   th,td{text-align:left; padding:11px 14px; font-size:13.5px; border-bottom:1px solid var(--line);}
   th{background:var(--dark); color:#fff; font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;}
   tr:last-child td{border-bottom:none;}
   td.num{font-family:'Space Mono',monospace;}
+  td.checkbox-col, th.checkbox-col{width:34px;}
+  .row-delete{background:none; border:none; color:var(--warn); font-size:16px; padding:2px 6px;}
+  .pagination{display:flex; align-items:center; justify-content:center; gap:14px; margin-top:16px;}
+  .pagination button{background:var(--card); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-weight:700; font-size:13px;}
+  .pagination button:disabled{opacity:0.4; cursor:not-allowed;}
+  .pagination .page-info{font-size:13px; color:var(--muted); font-family:'Space Mono',monospace;}
 
   /* --- Modals --- */
   .modal-overlay{position:fixed; inset:0; background:rgba(13,34,19,0.55); display:none; align-items:center; justify-content:center; padding:20px; z-index:50;}
@@ -142,21 +150,31 @@
 
       <!-- CUSTOMERS VIEW -->
       <div class="view" id="view-customers">
+        <div class="section-head">
+          <h2>Customers <span class="count-pill" id="totalCustomerCount">0</span></h2>
+        </div>
         <div class="toolbar">
-          <input type="search" id="customerSearch" placeholder="Search by name, email, or phone..." oninput="renderCustomers()">
+          <input type="search" id="customerSearch" placeholder="Search by name, email, or phone..." oninput="onSearchChange()">
           <button class="btn" onclick="openModal('addCustomerModal')">+ Add customer</button>
           <button class="btn secondary" onclick="openModal('importModal')">Import CSV</button>
           <button class="btn ghost" onclick="exportCustomersCSV()">Export CSV</button>
+          <button class="btn danger" id="bulkDeleteBtn" onclick="bulkDeleteSelected()" disabled>Delete selected (<span id="selectedCount">0</span>)</button>
         </div>
         <table>
           <thead>
             <tr>
+              <th class="checkbox-col"><input type="checkbox" id="selectAllBox" onchange="toggleSelectAll()"></th>
               <th>Name</th><th>Email</th><th>Phone</th><th>Address</th>
-              <th>Orders</th><th>Lifetime spend</th><th>Last visit</th>
+              <th>Orders</th><th>Lifetime spend</th><th>Last visit</th><th></th>
             </tr>
           </thead>
           <tbody id="customerRows"></tbody>
         </table>
+        <div class="pagination">
+          <button id="prevPageBtn" onclick="changePage(-1)">&larr; Prev</button>
+          <span class="page-info" id="pageInfo">Page 1</span>
+          <button id="nextPageBtn" onclick="changePage(1)">Next &rarr;</button>
+        </div>
       </div>
     </main>
   </div>
@@ -192,14 +210,15 @@
       <p style="font-size:13px; color:var(--muted); margin:0;">
         Works with a Square customer export, or any CSV with columns for
         first/last name, email, phone, and address. Matching by email — existing
-        customers get updated, not duplicated.
+        customers get updated, not duplicated. Large files are uploaded in
+        batches automatically.
       </p>
       <div class="import-drop">
         <input type="file" id="csvFile" accept=".csv">
       </div>
       <div class="modal-actions">
         <button class="btn ghost" onclick="closeModal('importModal')">Cancel</button>
-        <button class="btn" onclick="submitImport()">Import</button>
+        <button class="btn" id="importSubmitBtn" onclick="submitImport()">Import</button>
       </div>
       <div class="import-status" id="importStatus"></div>
     </div>
@@ -208,6 +227,8 @@
 <script>
   // ---- Config ----
   const FN = '/.netlify/functions/';
+  const PAGE_SIZE = 50;
+  const IMPORT_CHUNK_SIZE = 250; // keeps each request comfortably under Netlify's function time limit
 
   // ---- Auth ----
   function getPassword(){ return sessionStorage.getItem('adminPw') || ''; }
@@ -251,7 +272,6 @@
     location.reload();
   }
 
-  // Auto-login if password already saved this session
   window.addEventListener('DOMContentLoaded', () => {
     if (getPassword()) login();
   });
@@ -321,24 +341,77 @@
 
   // ---- Customers ----
   let allCustomers = [];
+  let filteredCustomers = [];
+  let currentPage = 1;
+  let selectedIds = new Set();
 
   async function loadCustomers(){
     const res = await authedFetch('customers-list');
     const data = await res.json();
     allCustomers = data.customers || [];
-    renderCustomers();
+    selectedIds.clear();
+    onSearchChange();
   }
 
-  function renderCustomers(){
+  function onSearchChange(){
     const q = (document.getElementById('customerSearch').value || '').toLowerCase();
-    const filtered = allCustomers.filter(c => {
+    filteredCustomers = allCustomers.filter(c => {
       const hay = `${c.first_name || ''} ${c.last_name || ''} ${c.email || ''} ${c.phone || ''}`.toLowerCase();
       return hay.includes(q);
     });
+    currentPage = 1;
+    renderCustomers();
+  }
 
-    document.getElementById('customerRows').innerHTML = filtered.length
-      ? filtered.map(c => `
+  function totalPages(){
+    return Math.max(1, Math.ceil(filteredCustomers.length / PAGE_SIZE));
+  }
+
+  function changePage(delta){
+    const next = currentPage + delta;
+    if (next < 1 || next > totalPages()) return;
+    currentPage = next;
+    renderCustomers();
+  }
+
+  function updateBulkDeleteButton(){
+    const btn = document.getElementById('bulkDeleteBtn');
+    document.getElementById('selectedCount').textContent = selectedIds.size;
+    btn.disabled = selectedIds.size === 0;
+  }
+
+  function toggleSelectAll(){
+    const checked = document.getElementById('selectAllBox').checked;
+    const pageItems = getCurrentPageItems();
+    pageItems.forEach(c => {
+      if (checked) selectedIds.add(c.id);
+      else selectedIds.delete(c.id);
+    });
+    renderCustomers();
+  }
+
+  function toggleRowSelect(id){
+    if (selectedIds.has(id)) selectedIds.delete(id);
+    else selectedIds.add(id);
+    updateBulkDeleteButton();
+    document.getElementById('selectAllBox').checked =
+      getCurrentPageItems().every(c => selectedIds.has(c.id));
+  }
+
+  function getCurrentPageItems(){
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredCustomers.slice(start, start + PAGE_SIZE);
+  }
+
+  function renderCustomers(){
+    document.getElementById('totalCustomerCount').textContent = allCustomers.length;
+
+    const pageItems = getCurrentPageItems();
+
+    document.getElementById('customerRows').innerHTML = pageItems.length
+      ? pageItems.map(c => `
         <tr>
+          <td class="checkbox-col"><input type="checkbox" ${selectedIds.has(c.id) ? 'checked' : ''} onchange="toggleRowSelect('${c.id}')"></td>
           <td>${c.first_name || ''} ${c.last_name || ''}</td>
           <td>${c.email || '—'}</td>
           <td>${c.phone || '—'}</td>
@@ -346,8 +419,35 @@
           <td class="num">${c.order_count || 0}</td>
           <td class="num">${money(c.lifetime_spend)}</td>
           <td>${c.last_visit || '—'}</td>
+          <td><button class="row-delete" title="Delete customer" onclick="deleteOneCustomer('${c.id}')">🗑</button></td>
         </tr>`).join('')
-      : `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">No customers match that search.</td></tr>`;
+      : `<tr><td colspan="9" style="text-align:center; color:var(--muted); padding:24px;">No customers match that search.</td></tr>`;
+
+    document.getElementById('selectAllBox').checked =
+      pageItems.length > 0 && pageItems.every(c => selectedIds.has(c.id));
+
+    const pages = totalPages();
+    document.getElementById('pageInfo').textContent =
+      `Page ${currentPage} of ${pages} (${filteredCustomers.length} customer${filteredCustomers.length === 1 ? '' : 's'})`;
+    document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+    document.getElementById('nextPageBtn').disabled = currentPage >= pages;
+
+    updateBulkDeleteButton();
+  }
+
+  async function deleteOneCustomer(id){
+    if (!confirm('Delete this customer? This cannot be undone.')) return;
+    await authedFetch('customers-delete', { method: 'POST', body: JSON.stringify({ ids: [id] }) });
+    selectedIds.delete(id);
+    loadCustomers();
+  }
+
+  async function bulkDeleteSelected(){
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} selected customer(s)? This cannot be undone.`)) return;
+    await authedFetch('customers-delete', { method: 'POST', body: JSON.stringify({ ids: Array.from(selectedIds) }) });
+    selectedIds.clear();
+    loadCustomers();
   }
 
   async function submitAddCustomer(){
@@ -412,32 +512,61 @@
       row.address = [parts, csz.trim()].filter(Boolean).join(', ');
     }
     if (row.lifetime_spend) row.lifetime_spend = String(row.lifetime_spend).replace(/[$,]/g, '');
-    if (row.phone) row.phone = String(row.phone).replace(/^'/, '');
+    // Strip any leading ' (Square exports phone numbers as '+1XXXXXXXXXX to force
+    // spreadsheet apps to treat them as text instead of a number).
+    if (row.phone) row.phone = String(row.phone).trim().replace(/^'/, '');
     return row;
   }
 
   async function submitImport(){
     const fileInput = document.getElementById('csvFile');
     const status = document.getElementById('importStatus');
+    const submitBtn = document.getElementById('importSubmitBtn');
     if (!fileInput.files.length){ status.textContent = 'Choose a CSV file first.'; return; }
 
     status.textContent = 'Reading file...';
+    submitBtn.disabled = true;
+
     Papa.parse(fileInput.files[0], {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
         const rows = results.data.map(mapRow).filter(r => r.first_name || r.last_name || r.email || r.phone);
-        status.textContent = `Importing ${rows.length} customers...`;
-        try {
-          const res = await authedFetch('customers-import', { method: 'POST', body: JSON.stringify({ rows }) });
-          const data = await res.json();
-          status.textContent = `Imported ${data.imported} of ${data.total}.` + (data.errors?.length ? '\n' + data.errors.join('\n') : '');
-          loadCustomers();
-        } catch(e){
-          status.textContent = 'Import failed: ' + e.message;
+
+        if (rows.length === 0){
+          status.textContent = 'No usable rows found in that file.';
+          submitBtn.disabled = false;
+          return;
         }
+
+        // Upload in chunks so large files (thousands of rows) don't time out
+        // in a single request.
+        let totalImported = 0;
+        let totalErrors = [];
+        const chunkCount = Math.ceil(rows.length / IMPORT_CHUNK_SIZE);
+
+        for (let i = 0; i < rows.length; i += IMPORT_CHUNK_SIZE){
+          const chunk = rows.slice(i, i + IMPORT_CHUNK_SIZE);
+          const chunkNum = Math.floor(i / IMPORT_CHUNK_SIZE) + 1;
+          status.textContent = `Importing batch ${chunkNum} of ${chunkCount} (${totalImported} done so far)...`;
+          try {
+            const res = await authedFetch('customers-import', { method: 'POST', body: JSON.stringify({ rows: chunk }) });
+            const data = await res.json();
+            totalImported += data.imported || 0;
+            if (data.errors && data.errors.length) totalErrors = totalErrors.concat(data.errors);
+          } catch(e){
+            totalErrors.push(`Batch ${chunkNum} failed: ${e.message}`);
+          }
+        }
+
+        status.textContent = `Done — imported ${totalImported} of ${rows.length}.` + (totalErrors.length ? '\n' + totalErrors.join('\n') : '');
+        submitBtn.disabled = false;
+        loadCustomers();
       },
-      error: (err) => { status.textContent = 'Could not read file: ' + err.message; }
+      error: (err) => {
+        status.textContent = 'Could not read file: ' + err.message;
+        submitBtn.disabled = false;
+      }
     });
   }
 </script>
