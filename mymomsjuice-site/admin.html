@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>My Mom's Juice — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+  :root{
+    --dark:#0D2213;
+    --green:#1E3F27;
+    --orange:#E85A2B;
+    --tan:#E4B978;
+    --paper:#FAF7EF;
+    --card:#FFFFFF;
+    --ink:#1B2A1E;
+    --muted:#66766A;
+    --line:#E4DFD0;
+    --ok:#2E7D46;
+    --warn:#B4571F;
+    --radius:14px;
+    --shadow:0 4px 14px rgba(13,34,19,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Karla',sans-serif; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Baloo 2',sans-serif; font-weight:700; margin:0;}
+  .mono{font-family:'Space Mono',monospace;}
+  button{font-family:inherit; cursor:pointer;}
+
+  /* --- Login gate --- */
+  #loginScreen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .login-card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:36px 32px; width:100%; max-width:360px; text-align:center;}
+  .login-card h1{font-size:22px; color:var(--dark); margin-bottom:6px;}
+  .login-card p{color:var(--muted); font-size:14px; margin:0 0 20px;}
+  .login-card input{width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); font-size:15px; margin-bottom:12px;}
+  .login-card button{width:100%; background:var(--orange); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:15px;}
+  .login-error{color:var(--warn); font-size:13px; margin-top:10px; display:none;}
+
+  /* --- App shell --- */
+  #app{display:none;}
+  header{background:var(--dark); color:#fff; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20;}
+  header h1{font-size:19px; color:#fff;}
+  header .sub{font-family:'Space Mono',monospace; font-size:11px; color:var(--tan); margin-top:2px;}
+  .tabs{display:flex; gap:6px; padding:14px 24px 0; max-width:1100px; margin:0 auto;}
+  .tab-btn{background:none; border:none; padding:12px 18px; font-weight:700; font-size:15px; color:var(--muted); border-bottom:3px solid transparent;}
+  .tab-btn.active{color:var(--dark); border-bottom-color:var(--orange);}
+  main{max-width:1100px; margin:0 auto; padding:20px 24px 60px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* --- Cards / sections --- */
+  .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:26px 0 12px; flex-wrap:wrap;}
+  .section-head h2{font-size:18px; color:var(--dark);}
+  .count-pill{background:var(--tan); color:var(--dark); font-family:'Space Mono',monospace; font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px; margin-left:8px;}
+
+  .order-card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px 18px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; border-left:5px solid var(--line);}
+  .order-card.overdue{border-left-color:var(--warn);}
+  .order-card.done{border-left-color:var(--ok); opacity:0.75;}
+  .order-info strong{font-size:15.5px;}
+  .order-meta{color:var(--muted); font-size:13px; margin-top:4px; line-height:1.5;}
+  .badge{display:inline-block; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; padding:2px 8px; border-radius:6px; margin-right:6px;}
+  .badge.pickup{background:#E9F1E9; color:var(--ok);}
+  .badge.delivery{background:#FDECE2; color:var(--orange);}
+  .badge.popup{background:#FBF0DB; color:#8A6318;}
+  .badge.overdue-flag{background:#FBE4DA; color:var(--warn);}
+  .order-actions button{border:none; border-radius:8px; padding:9px 16px; font-weight:700; font-size:13.5px;}
+  .btn-fulfill{background:var(--ok); color:#fff;}
+  .btn-undo{background:none; border:1px solid var(--line) !important; color:var(--muted);}
+  .empty{color:var(--muted); font-size:14px; padding:24px; text-align:center; background:var(--card); border-radius:var(--radius);}
+
+  /* --- Customers table --- */
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:center;}
+  .toolbar input[type=search]{padding:10px 14px; border-radius:10px; border:1px solid var(--line); font-size:14px; flex:1; min-width:180px;}
+  .btn{background:var(--orange); color:#fff; border:none; border-radius:10px; padding:10px 16px; font-weight:700; font-size:13.5px;}
+  .btn.secondary{background:var(--dark);}
+  .btn.ghost{background:none; border:1px solid var(--line); color:var(--ink);}
+  table{width:100%; border-collapse:collapse; background:var(--card); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);}
+  th,td{text-align:left; padding:11px 14px; font-size:13.5px; border-bottom:1px solid var(--line);}
+  th{background:var(--dark); color:#fff; font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;}
+  tr:last-child td{border-bottom:none;}
+  td.num{font-family:'Space Mono',monospace;}
+
+  /* --- Modals --- */
+  .modal-overlay{position:fixed; inset:0; background:rgba(13,34,19,0.55); display:none; align-items:center; justify-content:center; padding:20px; z-index:50;}
+  .modal-overlay.active{display:flex;}
+  .modal{background:var(--card); border-radius:var(--radius); padding:26px; width:100%; max-width:420px; max-height:90vh; overflow-y:auto;}
+  .modal h3{font-size:18px; color:var(--dark); margin-bottom:14px;}
+  .modal label{display:block; font-size:12.5px; font-weight:700; color:var(--muted); margin:12px 0 5px;}
+  .modal input{width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); font-size:14px;}
+  .modal-actions{display:flex; gap:10px; margin-top:20px;}
+  .modal-actions button{flex:1; border:none; border-radius:10px; padding:11px; font-weight:700;}
+  .modal-close{background:none; border:none; float:right; font-size:20px; color:var(--muted); line-height:1;}
+  .import-status{font-size:13px; color:var(--muted); margin-top:12px; white-space:pre-wrap;}
+  .import-drop{border:2px dashed var(--line); border-radius:10px; padding:22px; text-align:center; color:var(--muted); font-size:13.5px; margin-top:10px;}
+</style>
+</head>
+<body>
+
+  <!-- Login gate -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <h1>My Mom's Juice — Admin</h1>
+      <p>Enter the admin password to continue.</p>
+      <input type="password" id="passwordInput" placeholder="Password" autofocus>
+      <button onclick="login()">Log in</button>
+      <div class="login-error" id="loginError">That password isn't right — try again.</div>
+    </div>
+  </div>
+
+  <!-- Main app -->
+  <div id="app">
+    <header>
+      <div>
+        <h1>My Mom's Juice</h1>
+        <div class="sub">ADMIN DASHBOARD</div>
+      </div>
+      <button class="btn ghost" style="color:#fff; border-color:rgba(255,255,255,0.3);" onclick="logout()">Log out</button>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="orders" onclick="showTab('orders')">Orders</button>
+      <button class="tab-btn" data-tab="customers" onclick="showTab('customers')">Customers</button>
+    </div>
+
+    <main>
+      <!-- ORDERS VIEW -->
+      <div class="view active" id="view-orders">
+        <div class="section-head">
+          <h2>Needs Fulfillment <span class="count-pill" id="unfulfilledCount">0</span></h2>
+          <button class="btn ghost" onclick="loadOrders()">Refresh</button>
+        </div>
+        <div id="unfulfilledList"></div>
+
+        <div class="section-head">
+          <h2>Fulfilled <span class="count-pill" id="fulfilledCount">0</span></h2>
+        </div>
+        <div id="fulfilledList"></div>
+      </div>
+
+      <!-- CUSTOMERS VIEW -->
+      <div class="view" id="view-customers">
+        <div class="toolbar">
+          <input type="search" id="customerSearch" placeholder="Search by name, email, or phone..." oninput="renderCustomers()">
+          <button class="btn" onclick="openModal('addCustomerModal')">+ Add customer</button>
+          <button class="btn secondary" onclick="openModal('importModal')">Import CSV</button>
+          <button class="btn ghost" onclick="exportCustomersCSV()">Export CSV</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th><th>Email</th><th>Phone</th><th>Address</th>
+              <th>Orders</th><th>Lifetime spend</th><th>Last visit</th>
+            </tr>
+          </thead>
+          <tbody id="customerRows"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add customer modal -->
+  <div class="modal-overlay" id="addCustomerModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('addCustomerModal')">&times;</button>
+      <h3>Add a customer</h3>
+      <label>First name</label>
+      <input id="addFirstName">
+      <label>Last name</label>
+      <input id="addLastName">
+      <label>Email</label>
+      <input id="addEmail" type="email">
+      <label>Phone</label>
+      <input id="addPhone" type="tel">
+      <label>Address</label>
+      <input id="addAddress">
+      <div class="modal-actions">
+        <button class="btn ghost" onclick="closeModal('addCustomerModal')">Cancel</button>
+        <button class="btn" onclick="submitAddCustomer()">Save customer</button>
+      </div>
+      <div class="import-status" id="addCustomerStatus"></div>
+    </div>
+  </div>
+
+  <!-- Import CSV modal -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('importModal')">&times;</button>
+      <h3>Import customers from CSV</h3>
+      <p style="font-size:13px; color:var(--muted); margin:0;">
+        Works with a Square customer export, or any CSV with columns for
+        first/last name, email, phone, and address. Matching by email — existing
+        customers get updated, not duplicated.
+      </p>
+      <div class="import-drop">
+        <input type="file" id="csvFile" accept=".csv">
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost" onclick="closeModal('importModal')">Cancel</button>
+        <button class="btn" onclick="submitImport()">Import</button>
+      </div>
+      <div class="import-status" id="importStatus"></div>
+    </div>
+  </div>
+
+<script>
+  // ---- Config ----
+  const FN = '/.netlify/functions/';
+
+  // ---- Auth ----
+  function getPassword(){ return sessionStorage.getItem('adminPw') || ''; }
+
+  async function authedFetch(path, opts = {}){
+    opts.headers = Object.assign({}, opts.headers, {
+      'x-admin-password': getPassword(),
+      'Content-Type': 'application/json',
+    });
+    const res = await fetch(FN + path, opts);
+    if (res.status === 401){
+      sessionStorage.removeItem('adminPw');
+      showLogin(true);
+      throw new Error('Unauthorized');
+    }
+    return res;
+  }
+
+  function showLogin(err){
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loginError').style.display = err ? 'block' : 'none';
+  }
+
+  async function login(){
+    const pw = document.getElementById('passwordInput').value;
+    sessionStorage.setItem('adminPw', pw);
+    try {
+      await authedFetch('orders-list');
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadOrders();
+      loadCustomers();
+    } catch(e){
+      showLogin(true);
+    }
+  }
+
+  function logout(){
+    sessionStorage.removeItem('adminPw');
+    location.reload();
+  }
+
+  // Auto-login if password already saved this session
+  window.addEventListener('DOMContentLoaded', () => {
+    if (getPassword()) login();
+  });
+
+  // ---- Tabs ----
+  function showTab(name){
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  }
+
+  // ---- Modals ----
+  function openModal(id){ document.getElementById(id).classList.add('active'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+  // ---- Orders ----
+  async function loadOrders(){
+    const res = await authedFetch('orders-list');
+    const data = await res.json();
+    renderOrders(data.unfulfilled || [], data.fulfilled || []);
+  }
+
+  function money(n){ return '$' + Number(n || 0).toFixed(2); }
+
+  function orderCard(order, isFulfilled){
+    const cls = isFulfilled ? 'done' : (order.overdue ? 'overdue' : '');
+    const typeBadge = `<span class="badge ${order.order_type || ''}">${order.order_type || 'order'}</span>`;
+    const overdueBadge = (!isFulfilled && order.overdue) ? `<span class="badge overdue-flag">past due — confirm?</span>` : '';
+    const items = Array.isArray(order.items) ? order.items.map(i => `${i.qty || 1}× ${i.name}`).join(', ') : '';
+    const action = isFulfilled
+      ? `<button class="btn-undo" onclick="setFulfilled('${order.id}', false)">Move back to unfulfilled</button>`
+      : `<button class="btn-fulfill" onclick="setFulfilled('${order.id}', true)">Mark fulfilled</button>`;
+
+    return `
+      <div class="order-card ${cls}">
+        <div class="order-info">
+          <strong>${order.customer_name || 'Customer'}</strong> — ${money(order.total)}
+          <div class="order-meta">
+            ${typeBadge}${overdueBadge}
+            Due ${order.due_date || '—'} &middot; ${items}<br>
+            ${order.customer_email || ''} ${order.customer_phone ? ' · ' + order.customer_phone : ''}
+          </div>
+        </div>
+        <div class="order-actions">${action}</div>
+      </div>`;
+  }
+
+  function renderOrders(unfulfilled, fulfilled){
+    document.getElementById('unfulfilledCount').textContent = unfulfilled.length;
+    document.getElementById('fulfilledCount').textContent = fulfilled.length;
+
+    document.getElementById('unfulfilledList').innerHTML = unfulfilled.length
+      ? unfulfilled.map(o => orderCard(o, false)).join('')
+      : `<div class="empty">Nothing waiting on you right now.</div>`;
+
+    document.getElementById('fulfilledList').innerHTML = fulfilled.length
+      ? fulfilled.map(o => orderCard(o, true)).join('')
+      : `<div class="empty">No fulfilled orders yet.</div>`;
+  }
+
+  async function setFulfilled(orderId, fulfilled){
+    await authedFetch('orders-mark-fulfilled', {
+      method: 'POST',
+      body: JSON.stringify({ orderId, fulfilled }),
+    });
+    loadOrders();
+  }
+
+  // ---- Customers ----
+  let allCustomers = [];
+
+  async function loadCustomers(){
+    const res = await authedFetch('customers-list');
+    const data = await res.json();
+    allCustomers = data.customers || [];
+    renderCustomers();
+  }
+
+  function renderCustomers(){
+    const q = (document.getElementById('customerSearch').value || '').toLowerCase();
+    const filtered = allCustomers.filter(c => {
+      const hay = `${c.first_name || ''} ${c.last_name || ''} ${c.email || ''} ${c.phone || ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+
+    document.getElementById('customerRows').innerHTML = filtered.length
+      ? filtered.map(c => `
+        <tr>
+          <td>${c.first_name || ''} ${c.last_name || ''}</td>
+          <td>${c.email || '—'}</td>
+          <td>${c.phone || '—'}</td>
+          <td>${c.address || '—'}</td>
+          <td class="num">${c.order_count || 0}</td>
+          <td class="num">${money(c.lifetime_spend)}</td>
+          <td>${c.last_visit || '—'}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">No customers match that search.</td></tr>`;
+  }
+
+  async function submitAddCustomer(){
+    const payload = {
+      first_name: document.getElementById('addFirstName').value,
+      last_name: document.getElementById('addLastName').value,
+      email: document.getElementById('addEmail').value,
+      phone: document.getElementById('addPhone').value,
+      address: document.getElementById('addAddress').value,
+    };
+    const status = document.getElementById('addCustomerStatus');
+    status.textContent = 'Saving...';
+    try {
+      const res = await authedFetch('customers-add', { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+      status.textContent = 'Saved!';
+      ['addFirstName','addLastName','addEmail','addPhone','addAddress'].forEach(id => document.getElementById(id).value = '');
+      loadCustomers();
+      setTimeout(() => closeModal('addCustomerModal'), 600);
+    } catch(e){
+      status.textContent = e.message;
+    }
+  }
+
+  function exportCustomersCSV(){
+    const csv = Papa.unparse(allCustomers.map(c => ({
+      first_name: c.first_name, last_name: c.last_name, email: c.email,
+      phone: c.phone, address: c.address, order_count: c.order_count,
+      lifetime_spend: c.lifetime_spend, last_visit: c.last_visit,
+    })));
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'my-moms-juice-customers.csv';
+    a.click();
+  }
+
+  // Maps common column name variants (from Square or other exports) to our schema
+  const COLUMN_MAP = {
+    'first name': 'first_name', 'first_name': 'first_name',
+    'last name': 'last_name', 'last_name': 'last_name',
+    'email address': 'email', 'email': 'email',
+    'phone number': 'phone', 'phone': 'phone',
+    'street address 1': '_street1', 'street address 2': '_street2',
+    'city': '_city', 'state': '_state', 'postal code': '_zip',
+    'address': 'address',
+    'first visit': 'first_visit', 'last visit': 'last_visit',
+    'transaction count': 'order_count', 'order_count': 'order_count',
+    'lifetime spend': 'lifetime_spend', 'lifetime_spend': 'lifetime_spend',
+  };
+
+  function mapRow(raw){
+    const row = {};
+    for (const key in raw){
+      const mapped = COLUMN_MAP[key.trim().toLowerCase()];
+      if (mapped) row[mapped] = raw[key];
+    }
+    if (!row.address){
+      const parts = [row._street1, row._street2].filter(Boolean).join(', ');
+      const csz = [row._city, row._state].filter(Boolean).join(' ') + (row._zip ? ' ' + row._zip : '');
+      row.address = [parts, csz.trim()].filter(Boolean).join(', ');
+    }
+    if (row.lifetime_spend) row.lifetime_spend = String(row.lifetime_spend).replace(/[$,]/g, '');
+    if (row.phone) row.phone = String(row.phone).replace(/^'/, '');
+    return row;
+  }
+
+  async function submitImport(){
+    const fileInput = document.getElementById('csvFile');
+    const status = document.getElementById('importStatus');
+    if (!fileInput.files.length){ status.textContent = 'Choose a CSV file first.'; return; }
+
+    status.textContent = 'Reading file...';
+    Papa.parse(fileInput.files[0], {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const rows = results.data.map(mapRow).filter(r => r.first_name || r.last_name || r.email || r.phone);
+        status.textContent = `Importing ${rows.length} customers...`;
+        try {
+          const res = await authedFetch('customers-import', { method: 'POST', body: JSON.stringify({ rows }) });
+          const data = await res.json();
+          status.textContent = `Imported ${data.imported} of ${data.total}.` + (data.errors?.length ? '\n' + data.errors.join('\n') : '');
+          loadCustomers();
+        } catch(e){
+          status.textContent = 'Import failed: ' + e.message;
+        }
+      },
+      error: (err) => { status.textContent = 'Could not read file: ' + err.message; }
+    });
+  }
+</script>
+</body>
+</html>
