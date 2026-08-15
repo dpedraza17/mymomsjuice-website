@@ -18,6 +18,7 @@ exports.handler = async (event) => {
       .from('customers')
       .select('*')
       .order('last_visit', { ascending: false, nullsFirst: false })
+      .order('id', { ascending: true }) // stable tiebreaker so paging never repeats/skips rows with the same last_visit
       .range(from, from + PAGE_SIZE - 1);
 
     if (error) {
