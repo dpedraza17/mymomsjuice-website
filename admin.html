@@ -349,7 +349,8 @@
 
   function orderCard(order, isFulfilled){
     const cls = isFulfilled ? 'done' : (order.overdue ? 'overdue' : '');
-    const typeBadge = `<span class="badge ${order.order_type || ''}">${order.order_type || 'order'}</span>`;
+    const modeLabels = { pickup: 'Pickup — Mesa', delivery: 'Delivery', popup: 'Pop-up — 83rd Ave & McDowell' };
+    const typeBadge = `<span class="badge ${order.order_type || ''}">${modeLabels[order.order_type] || order.order_type || 'order'}</span>`;
     const overdueBadge = (!isFulfilled && order.overdue) ? `<span class="badge overdue-flag">past due — confirm?</span>` : '';
     const items = Array.isArray(order.items) ? order.items.map(i => `${i.qty || 1}× ${i.name}`).join(', ') : '';
     const action = isFulfilled
