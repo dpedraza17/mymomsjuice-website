@@ -60,6 +60,33 @@
   .seg button.active{background:var(--orange); color:#fff;}
   .mode-note{font-size:16px; color:#fff; font-weight:700; text-align:center;}
   .mode-bar.needs-attention{animation:modePulse 0.6s ease 2;}
+
+  #modeBar .seg{position:relative; overflow:hidden;}
+  .toggle-hint-icon{display:inline-flex; margin-left:8px; font-size:16px; opacity:0.7;}
+  #modeBar.toggle-hint .seg::after{
+    content:'';
+    position:absolute;
+    top:0; left:-45%;
+    width:35%; height:100%;
+    background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 70%, transparent 100%);
+    transform:skewX(-16deg);
+    animation:segShimmerSweep 1.9s ease-in-out 3;
+    pointer-events:none;
+  }
+  @keyframes segShimmerSweep{
+    0%{ left:-45%; }
+    100%{ left:130%; }
+  }
+  #modeBar.toggle-hint .toggle-hint-icon{animation:toggleHintNudge 1.2s ease-in-out 4;}
+  @keyframes toggleHintNudge{
+    0%,100%{ transform:translateX(0); opacity:0.7; }
+    50%{ transform:translateX(5px); opacity:1; }
+  }
+  #modeBar.toggle-hint .mode-btn:not(.active){animation:toggleHintGlow 1.9s ease-in-out 3;}
+  @keyframes toggleHintGlow{
+    0%,100%{ box-shadow:none; }
+    50%{ box-shadow:0 0 0 3px rgba(255,255,255,0.28); }
+  }
   #cartModeBar .seg{flex-direction:column; width:100%; box-sizing:border-box; border-radius:14px;}
   #cartModeBar .seg button{width:100%; padding:13px 10px; font-size:15px; white-space:normal; line-height:1.3; text-align:center; box-sizing:border-box; border-radius:10px;}
   #cartModeBar .mode-inner{align-items:stretch; padding-left:0; padding-right:0;}
@@ -260,7 +287,7 @@
 <div class="mode-bar" id="modeBar">
   <div class="wrap">
     <div class="mode-inner">
-      <span class="mode-label">Step 1 — Choose delivery or pick up below:</span>
+      <span class="mode-label">Step 1 — Choose delivery or pick up below: <span class="toggle-hint-icon" aria-hidden="true">⇄</span></span>
       <div class="seg" role="group" aria-label="Choose pickup or delivery">
         <button type="button" class="mode-btn" data-mode="pickup">Pick up in Mesa</button>
         <button type="button" class="mode-btn active" data-mode="delivery">Get delivery</button>
@@ -1174,6 +1201,22 @@
   renderBuilder();
   renderMenu();
   updateCartUI();
+
+  // One-time animated hint (shimmer sweep + gentle glow + nudging icon) so
+  // first-time visitors notice the pickup/delivery toggle is interactive.
+  // Plays a few times shortly after load, then stops on its own; also
+  // stops immediately the first time someone clicks one of the options.
+  (function toggleHintDemo(){
+    const bar = document.getElementById('modeBar');
+    if(!bar) return;
+    const stopHint = ()=> bar.classList.remove('toggle-hint');
+    setTimeout(()=>{ bar.classList.add('toggle-hint'); }, 700);
+    bar.querySelectorAll('.mode-btn').forEach(btn=>{
+      btn.addEventListener('click', stopHint, { once:true });
+    });
+    // Safety net in case the CSS iteration count ever changes.
+    setTimeout(stopHint, 8000);
+  })();
 
   // Handle returning from Stripe Checkout (success_url / cancel_url both
   // point back to this same page with an ?order= flag — see server.js).
