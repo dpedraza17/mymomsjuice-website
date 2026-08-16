@@ -88,6 +88,17 @@
     0%{ left:-45%; }
     100%{ left:130%; }
   }
+  #addSixPack.shimmer-ready{position:relative; overflow:hidden;}
+  #addSixPack.shimmer-ready::after{
+    content:'';
+    position:absolute;
+    top:0; left:-45%;
+    width:35%; height:100%;
+    background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 70%, transparent 100%);
+    transform:skewX(-16deg);
+    animation:segShimmerSweep 1.6s ease-in-out infinite;
+    pointer-events:none;
+  }
   #modeBar.toggle-hint .toggle-hint-icon{animation:toggleHintNudge 1.2s ease-in-out 4;}
   @keyframes toggleHintNudge{
     0%,100%{ transform:translateX(0); opacity:0.7; }
@@ -234,9 +245,9 @@
   .call-link{display:block; text-align:center; margin-top:10px; font-size:13.5px; font-weight:700; text-decoration:underline;}
   .cart-note{font-size:12px; color:var(--muted); margin-top:10px; line-height:1.5;}
 
-  .add-toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); background:var(--dark); color:#fff; padding:12px 22px; border-radius:999px; font-weight:700; font-size:14px; box-shadow:var(--shadow); z-index:150; opacity:0; pointer-events:none; transition:opacity 0.22s ease, transform 0.22s ease; display:flex; align-items:center; gap:8px; border:2px solid var(--green); white-space:nowrap;}
+  .add-toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); background:var(--dark); color:#fff; padding:15px 26px; border-radius:999px; font-weight:700; font-size:17px; box-shadow:var(--shadow); z-index:150; opacity:0; pointer-events:none; transition:opacity 0.22s ease, transform 0.22s ease; display:flex; align-items:center; gap:8px; border:2px solid var(--green); white-space:nowrap;}
   .add-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-  .add-toast .toast-check{color:var(--green); font-weight:900; font-size:16px;}
+  .add-toast .toast-check{color:var(--green); font-weight:900; font-size:19px;}
 
   @media (max-width:820px){
     .how-grid, .detox-grid, .find-grid, .bundle-grid, .flavor-check-grid{grid-template-columns:1fr;}
@@ -334,6 +345,7 @@
       <div class="builder-status">
         <span><strong class="mono" id="builderCount">0</strong> / 6 flavors selected</span>
         <button class="add-btn" id="addSixPack" style="padding:18px 32px; font-size:19px; width:100%; margin-top:16px;">Add 6-pack to order</button>
+        <p id="sixPackMsg" style="display:none; margin:10px 0 0; font-size:14px; font-weight:700; color:var(--orange); text-align:center;">Choose 6 bottles to add your 6-pack to the order.</p>
       </div>
       <div class="flavor-check" id="shotBuilderCard" style="margin-top:36px; background:#E9D8B4; border-color:var(--line); color:var(--dark);">
         <span class="fc-info" style="color:var(--dark);"><strong>Add Immunity Shots?</strong> — Ginger &amp; fresh-squeezed orange. <span id="shotBuilderPrice">$5 ea</span></span>
@@ -771,13 +783,23 @@
     }
     document.getElementById('bqty-'+id).textContent = builderQty[id];
     document.getElementById('builderCount').textContent = builderTotal();
+    document.getElementById('addSixPack').classList.toggle('shimmer-ready', builderTotal() === 6);
+    if(builderTotal() === 6){
+      const msg = document.getElementById('sixPackMsg');
+      msg.style.display = 'none';
+      clearTimeout(msg._hideTimer);
+    }
   });
 
   document.getElementById('addSixPack').addEventListener('click', (e)=>{
+    const msg = document.getElementById('sixPackMsg');
     if(builderTotal() !== 6){
-      alert('Pick 6 bottles total for your 6-pack (any mix of flavors).');
+      msg.style.display = 'block';
+      clearTimeout(msg._hideTimer);
+      msg._hideTimer = setTimeout(()=>{ msg.style.display = 'none'; }, 3000);
       return;
     }
+    msg.style.display = 'none';
     const flavors = {};
     Object.entries(builderQty).forEach(([id,qty])=>{
       if(qty>0) flavors[id] = qty;
@@ -789,6 +811,7 @@
       if(el) el.textContent = 0;
     });
     document.getElementById('builderCount').textContent = 0;
+    e.currentTarget.classList.remove('shimmer-ready');
     flashAdded(e.currentTarget, 'Added to order!');
     showAddedToast('6-pack added to order');
     updateCartUI();
