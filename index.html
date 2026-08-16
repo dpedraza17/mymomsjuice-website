@@ -304,13 +304,13 @@
         <button type="button" class="mode-btn active" data-mode="delivery">Get delivery</button>
         <button type="button" class="mode-btn" data-mode="popup">Pick up on 83rd Ave & McDowell</button>
       </div>
-      <div id="homeDeliveryEstimate" style="display:none; margin-top:6px; background:var(--tan); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
+      <div id="homeDeliveryEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
         Order now and get it delivered <span id="homeDeliveryEstimateDate"></span>
       </div>
-      <div id="homePickupEstimate" style="display:none; margin-top:6px; background:var(--tan); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
+      <div id="homePickupEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
         Order now and pick up <span id="homePickupEstimateDate"></span>
       </div>
-      <div id="homePopupEstimate" style="display:none; margin-top:6px; background:var(--tan); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
+      <div id="homePopupEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
         Order now and pick up <span id="homePopupEstimateDate"></span>
       </div>
       <span class="mode-note" id="modeNote">Please choose one to continue</span>
@@ -493,13 +493,13 @@
         </div>
       </div>
     </div>
-    <div id="deliveryEstimate" style="display:none; margin-bottom:18px; background:var(--tan); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
+    <div id="deliveryEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
       Order now and get it delivered <span id="deliveryEstimateDate"></span>
     </div>
-    <div id="pickupEstimate" style="display:none; margin-bottom:18px; background:var(--tan); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
+    <div id="pickupEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
       Order now and pick up <span id="pickupEstimateDate"></span>
     </div>
-    <div id="popupEstimate" style="display:none; margin-bottom:18px; background:var(--tan); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
+    <div id="popupEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
       Order now and pick up <span id="popupEstimateDate"></span>
     </div>
     <div class="field">
@@ -546,16 +546,6 @@
         <button class="qbtn" data-action="plus" data-id="shot" id="shotCartPlus" style="width:34px; height:34px; font-size:19px; border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
       </span>
       <p style="font-size:15px; margin:10px 0 0; color:var(--dark);">$5 each, or $4 each when ordering 5 or more.</p>
-    </div>
-    <div style="margin-top:48px;"></div>
-    <div style="text-align:center; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:19px; letter-spacing:0.3px; background:var(--orange); color:#fff; border-radius:10px; padding:12px 16px; margin-bottom:14px;">
-      ⚠️ Important, please read below
-    </div>
-    <div id="pickupNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
-      <p style="margin:0; font-size:18px; font-weight:700; line-height:1.5;">Pickup at The Kitchen's Market — Friday, Saturday or Sunday (order by Thursday) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ</p>
-    </div>
-    <div id="popupNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
-      <p style="margin:0; font-size:18px; font-weight:700; line-height:1.5;">Pick up this Saturday or Sunday 8am-12pm (order by Thursday) — 8367 W McDowell Rd, Tolleson</p>
     </div>
     <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Tuesdays &amp; Fridays. Orders are due by midnight the night before.</p>
@@ -1082,8 +1072,6 @@
       document.getElementById(id).style.display = (mode==='delivery') ? 'flex' : 'none';
     });
     document.getElementById('deliveryTimesNote').style.display = (mode==='delivery') ? 'block' : 'none';
-    document.getElementById('pickupNote').style.display = (mode==='pickup') ? 'block' : 'none';
-    document.getElementById('popupNote').style.display = (mode==='popup') ? 'block' : 'none';
     const deliveryEstimate = document.getElementById('deliveryEstimate');
     if(mode === 'delivery'){
       document.getElementById('deliveryEstimateDate').textContent = getNextDeliveryLabel();
