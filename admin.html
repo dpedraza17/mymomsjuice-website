@@ -363,6 +363,7 @@
           <div class="order-meta">
             ${typeBadge}${overdueBadge}
             ${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')} &middot; ${items}<br>
+            ${order.customer_note ? `<strong>Note:</strong> ${order.customer_note}<br>` : ''}
             ${order.customer_email || ''} ${order.customer_phone ? ' · ' + order.customer_phone : ''}
           </div>
         </div>
