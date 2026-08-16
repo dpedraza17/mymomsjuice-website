@@ -362,7 +362,7 @@
           <strong>${order.customer_name || 'Customer'}</strong> — ${money(order.total)}
           <div class="order-meta">
             ${typeBadge}${overdueBadge}
-            Due ${order.due_date || '—'} &middot; ${items}<br>
+            ${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')} &middot; ${items}<br>
             ${order.customer_email || ''} ${order.customer_phone ? ' · ' + order.customer_phone : ''}
           </div>
         </div>
