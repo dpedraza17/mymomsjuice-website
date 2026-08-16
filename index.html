@@ -1210,12 +1210,33 @@
     const bar = document.getElementById('modeBar');
     if(!bar) return;
     const stopHint = ()=> bar.classList.remove('toggle-hint');
-    setTimeout(()=>{ bar.classList.add('toggle-hint'); }, 700);
     bar.querySelectorAll('.mode-btn').forEach(btn=>{
       btn.addEventListener('click', stopHint, { once:true });
     });
-    // Safety net in case the CSS iteration count ever changes.
-    setTimeout(stopHint, 8000);
+
+    const playHint = ()=>{
+      bar.classList.remove('toggle-hint');
+      void bar.offsetWidth; // restart animation if it already played once
+      bar.classList.add('toggle-hint');
+      setTimeout(stopHint, 8000); // safety net in case iteration counts change
+    };
+
+    if('IntersectionObserver' in window){
+      let played = false;
+      const observer = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting && !played){
+            played = true;
+            playHint();
+            observer.disconnect();
+          }
+        });
+      }, { threshold: 0.6 });
+      observer.observe(bar);
+    } else {
+      // Fallback for older browsers without IntersectionObserver support.
+      setTimeout(playHint, 700);
+    }
   })();
 
   // Handle returning from Stripe Checkout (success_url / cancel_url both
