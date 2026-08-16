@@ -480,7 +480,6 @@
     <button class="cart-close" id="closeCart" aria-label="Close cart">&times;</button>
   </div>
   <div class="cart-body-wrap">
-    <p style="font-family:'Baloo 2',sans-serif; font-weight:700; font-size:16px; margin:0 0 10px; color:var(--muted);">Order summary</p>
     <div id="cartBody" style="margin-bottom:24px;">
       <p class="cart-empty">Nothing added yet — tap "Add" on any menu item.</p>
     </div>
@@ -827,7 +826,7 @@
     return t;
   }
   function tipAmount(){
-    return subtotalPrice() * (tipPercent / 100);
+    return tipMode === 'custom' ? customTipAmount : subtotalPrice() * (tipPercent / 100);
   }
   function totalPrice(){
     let t = subtotalPrice();
@@ -890,6 +889,7 @@
     tipWrap.className = 'cart-tip';
     tipWrap.style.margin = '14px 0 6px';
     const tipLabel = document.createElement('div');
+    tipLabel.id = 'tipAmountLabel';
     tipLabel.textContent = `Add a tip — $${tipAmount().toFixed(2)}`;
     tipLabel.style.fontWeight = '700';
     tipLabel.style.fontSize = '17.5px';
@@ -906,23 +906,80 @@
       btn.style.flex = '1';
       btn.style.padding = '12px 0';
       btn.style.borderRadius = '999px';
-      btn.style.border = pct === tipPercent ? '2px solid var(--tan)' : '1px solid var(--line)';
-      btn.style.background = pct === tipPercent ? 'var(--tan)' : 'transparent';
-      btn.style.color = pct === tipPercent ? 'var(--dark)' : 'var(--ink)';
+      const active = tipMode === 'percent' && pct === tipPercent;
+      btn.style.border = active ? '2px solid var(--tan)' : '1px solid var(--line)';
+      btn.style.background = active ? 'var(--tan)' : 'transparent';
+      btn.style.color = active ? 'var(--dark)' : 'var(--ink)';
       btn.style.fontWeight = '700';
       btn.style.fontSize = '17px';
       btn.style.cursor = 'pointer';
       btn.addEventListener('click', ()=>{
+        tipMode = 'percent';
         tipPercent = pct;
         updateCartUI();
       });
       tipBtnRow.appendChild(btn);
     });
+    const customBtn = document.createElement('button');
+    customBtn.type = 'button';
+    customBtn.textContent = 'Custom';
+    customBtn.style.flex = '1';
+    customBtn.style.padding = '12px 0';
+    customBtn.style.borderRadius = '999px';
+    const customActive = tipMode === 'custom';
+    customBtn.style.border = customActive ? '2px solid var(--tan)' : '1px solid var(--line)';
+    customBtn.style.background = customActive ? 'var(--tan)' : 'transparent';
+    customBtn.style.color = customActive ? 'var(--dark)' : 'var(--ink)';
+    customBtn.style.fontWeight = '700';
+    customBtn.style.fontSize = '17px';
+    customBtn.style.cursor = 'pointer';
+    customBtn.addEventListener('click', ()=>{
+      tipMode = 'custom';
+      updateCartUI();
+    });
+    tipBtnRow.appendChild(customBtn);
     tipWrap.appendChild(tipBtnRow);
+    if(tipMode === 'custom'){
+      const customWrap = document.createElement('div');
+      customWrap.style.display = 'flex';
+      customWrap.style.alignItems = 'center';
+      customWrap.style.gap = '8px';
+      customWrap.style.marginTop = '10px';
+      const dollarSign = document.createElement('span');
+      dollarSign.textContent = '$';
+      dollarSign.style.fontWeight = '700';
+      dollarSign.style.fontSize = '17px';
+      const customInput = document.createElement('input');
+      customInput.type = 'text';
+      customInput.inputMode = 'decimal';
+      customInput.placeholder = '0.00';
+      customInput.value = customTipAmount ? customTipAmount.toFixed(2) : '';
+      customInput.style.flex = '1';
+      customInput.style.border = '1px solid var(--line)';
+      customInput.style.borderRadius = '10px';
+      customInput.style.padding = '10px 12px';
+      customInput.style.fontSize = '16px';
+      customInput.style.fontFamily = "'Karla',sans-serif";
+      customInput.style.background = '#fff';
+      customInput.style.color = 'var(--dark)';
+      customInput.addEventListener('input', ()=>{
+        const parsed = parseFloat(customInput.value.replace(/[^0-9.]/g, ''));
+        customTipAmount = isNaN(parsed) ? 0 : parsed;
+        // Update totals directly instead of a full re-render so the
+        // customer doesn't lose focus/cursor position while typing.
+        const label = document.getElementById('tipAmountLabel');
+        if(label) label.textContent = `Add a tip — $${tipAmount().toFixed(2)}`;
+        const totalEl = document.getElementById('cartTotalDisplay');
+        if(totalEl) totalEl.textContent = `$${totalPrice().toFixed(2)}`;
+      });
+      customWrap.appendChild(dollarSign);
+      customWrap.appendChild(customInput);
+      tipWrap.appendChild(customWrap);
+    }
     body.appendChild(tipWrap);
     const tot = document.createElement('div');
     tot.className = 'cart-total';
-    tot.innerHTML = `<span>Estimated total</span><span>$${totalPrice().toFixed(2)}</span>`;
+    tot.innerHTML = `<span>Estimated total</span><span id="cartTotalDisplay">$${totalPrice().toFixed(2)}</span>`;
     body.appendChild(tot);
   }
 
@@ -943,6 +1000,8 @@
   let mode = 'delivery';
   const DELIVERY_FEE = 6;
   let tipPercent = 15;
+  let tipMode = 'percent';
+  let customTipAmount = 0;
   const TIP_OPTIONS = [0, 10, 15, 20];
   const modeBar = document.getElementById('modeBar');
   const modeNote = document.getElementById('modeNote');
@@ -1183,7 +1242,8 @@
         sixPacks: sixPacks,
         detoxes: detoxes.map(d => Number(d.days)),
         shotQty: extras.shot,
-        tipPercent: tipPercent,
+        tipPercent: tipMode === 'percent' ? tipPercent : null,
+        tipAmount: tipAmount(),
       },
     };
 
