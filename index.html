@@ -1251,25 +1251,45 @@
     }
   })();
 
-  // Inside the cart drawer, briefly glow the pickup/delivery option the
-  // customer already selected once that section scrolls into view, so the
+  // Inside the cart drawer, briefly shimmer the pickup/delivery option the
+  // customer already selected once that section becomes visible, so the
   // choice (now further down since the order summary moved to the top)
-  // doesn't get missed.
+  // doesn't get missed. Tied to the cart actually opening + scrolling,
+  // since an IntersectionObserver rooted inside the (offscreen-until-open)
+  // drawer would otherwise report "visible" even while the drawer is closed.
   (function cartSelectionHighlight(){
     const cartBar = document.getElementById('cartModeBar');
     const scrollRoot = document.querySelector('.cart-body-wrap');
-    if(!cartBar || !scrollRoot || !('IntersectionObserver' in window)) return;
+    const openBtn = document.getElementById('openCart');
+    if(!cartBar || !scrollRoot || !openBtn) return;
+
+    let armed = false;
     let played = false;
-    const observer = new IntersectionObserver((entries)=>{
-      entries.forEach(entry=>{
-        if(entry.isIntersecting && !played){
-          played = true;
-          cartBar.classList.add('reveal-selection');
-          setTimeout(()=> cartBar.classList.remove('reveal-selection'), 4000);
-        }
-      });
-    }, { root: scrollRoot, threshold: 0.6 });
-    observer.observe(cartBar);
+
+    function tryReveal(){
+      if(!armed || played) return;
+      const rootRect = scrollRoot.getBoundingClientRect();
+      const barRect = cartBar.getBoundingClientRect();
+      const visibleTop = Math.max(rootRect.top, barRect.top);
+      const visibleBottom = Math.min(rootRect.bottom, barRect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      if(barRect.height > 0 && visibleHeight / barRect.height >= 0.6){
+        played = true;
+        cartBar.classList.remove('reveal-selection');
+        void cartBar.offsetWidth; // restart animation if it already played once
+        cartBar.classList.add('reveal-selection');
+        setTimeout(()=> cartBar.classList.remove('reveal-selection'), 4000);
+      }
+    }
+
+    openBtn.addEventListener('click', ()=>{
+      armed = true;
+      played = false;
+      // Give the drawer's slide-in transition a moment, then check —
+      // covers both "already visible on open" and "revealed by scrolling".
+      setTimeout(tryReveal, 350);
+    });
+    scrollRoot.addEventListener('scroll', tryReveal, { passive: true });
   })();
 
   // Handle returning from Stripe Checkout (success_url / cancel_url both
