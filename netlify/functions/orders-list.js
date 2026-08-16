@@ -9,7 +9,7 @@ exports.handler = async (event) => {
   const { data, error } = await supabase
     .from('orders')
     .select('*')
-    .order('due_date', { ascending: true });
+    .order('created_at', { ascending: false });
 
   if (error) {
     return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
