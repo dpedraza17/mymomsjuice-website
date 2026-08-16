@@ -196,6 +196,10 @@
   .call-link{display:block; text-align:center; margin-top:10px; font-size:13.5px; font-weight:700; text-decoration:underline;}
   .cart-note{font-size:12px; color:var(--muted); margin-top:10px; line-height:1.5;}
 
+  .add-toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); background:var(--dark); color:#fff; padding:12px 22px; border-radius:999px; font-weight:700; font-size:14px; box-shadow:var(--shadow); z-index:150; opacity:0; pointer-events:none; transition:opacity 0.22s ease, transform 0.22s ease; display:flex; align-items:center; gap:8px; border:2px solid var(--green); white-space:nowrap;}
+  .add-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .add-toast .toast-check{color:var(--green); font-weight:900; font-size:16px;}
+
   @media (max-width:820px){
     .how-grid, .detox-grid, .find-grid, .bundle-grid, .flavor-check-grid{grid-template-columns:1fr;}
     .menu-grid{grid-template-columns:repeat(2,1fr);}
@@ -599,7 +603,7 @@
             <span class="qty mono" id="qty-${it.id}">${cart[it.id]||0}</span>
             <button class="qbtn" data-action="plus" data-id="${it.id}" aria-label="Add one ${it.name}" ${locked?'disabled':''}>+</button>
           </div>
-          <button class="add-btn ${cart[it.id]?'in-cart':''}" data-action="add" data-id="${it.id}" ${locked?'disabled':''}>${locked?'Thu only':(cart[it.id]?'Added':'Add')}</button>
+          <button class="add-btn ${cart[it.id]?'in-cart':''}" data-action="add" data-id="${it.id}" ${locked?'disabled':''}>${locked?'Thu only':(cart[it.id]?'Added to order':'Add to order')}</button>
         </div>
       `;
       menuItems.appendChild(card);
@@ -637,19 +641,53 @@
       alert('Agua de Pepino con Limón is only available to order on Thursdays.');
       return;
     }
+    const itemInfo = items.find(x=>x.id===id);
+    const itemName = itemInfo ? itemInfo.name : 'Item';
     if(btn.dataset.action==='plus' || btn.dataset.action==='add'){
       cart[id] = (cart[id]||0)+1;
+      showAddedToast(`${itemName} added to order`);
     } else if(btn.dataset.action==='minus'){
       cart[id] = Math.max(0,(cart[id]||0)-1);
     }
     document.getElementById('qty-'+id).textContent = cart[id]||0;
     const addBtn = document.querySelector(`.add-btn[data-id="${id}"]`);
     if(addBtn){
-      addBtn.textContent = cart[id] ? 'Added' : 'Add';
+      addBtn.textContent = cart[id] ? 'Added to order' : 'Add to order';
       addBtn.classList.toggle('in-cart', !!cart[id]);
     }
     updateCartUI();
   });
+
+  let toastTimer;
+  function showAddedToast(message){
+    let toast = document.getElementById('addToast');
+    if(!toast){
+      toast = document.createElement('div');
+      toast.id = 'addToast';
+      toast.className = 'add-toast';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span class="toast-check">✓</span> ${message}`;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ toast.classList.remove('show'); }, 1500);
+  }
+
+  function flashAdded(btn, addedLabel){
+    if(!btn) return;
+    const original = btn.textContent;
+    const originalBg = btn.style.background;
+    const originalColor = btn.style.color;
+    btn.textContent = addedLabel || 'Added to order!';
+    btn.style.background = 'var(--green)';
+    btn.style.color = 'var(--dark)';
+    clearTimeout(btn._flashTimer);
+    btn._flashTimer = setTimeout(()=>{
+      btn.textContent = original;
+      btn.style.background = originalBg;
+      btn.style.color = originalColor;
+    }, 1300);
+  }
 
   function updateShotDisplays(){
     const priceLabel = extras.shot>=5 ? '$4 ea' : '$5 ea';
@@ -664,7 +702,7 @@
   document.getElementById('shotCard').addEventListener('click', (e)=>{
     const btn = e.target.closest('.qbtn');
     if(!btn) return;
-    if(btn.dataset.action==='plus') extras.shot++;
+    if(btn.dataset.action==='plus'){ extras.shot++; showAddedToast('Immunity Shot added to order'); }
     else extras.shot = Math.max(0, extras.shot-1);
     updateShotDisplays();
     updateCartUI();
@@ -673,7 +711,7 @@
   document.getElementById('shotBuilderCard').addEventListener('click', (e)=>{
     const btn = e.target.closest('.qbtn');
     if(!btn) return;
-    if(btn.dataset.action==='plus') extras.shot++;
+    if(btn.dataset.action==='plus'){ extras.shot++; showAddedToast('Immunity Shot added to order'); }
     else extras.shot = Math.max(0, extras.shot-1);
     updateShotDisplays();
     updateCartUI();
@@ -682,7 +720,7 @@
   document.getElementById('cartShotUpsell').addEventListener('click', (e)=>{
     const btn = e.target.closest('.qbtn');
     if(!btn) return;
-    if(btn.dataset.action==='plus') extras.shot++;
+    if(btn.dataset.action==='plus'){ extras.shot++; showAddedToast('Immunity Shot added to order'); }
     else extras.shot = Math.max(0, extras.shot-1);
     updateShotDisplays();
     updateCartUI();
@@ -707,7 +745,7 @@
     document.getElementById('builderCount').textContent = builderTotal();
   });
 
-  document.getElementById('addSixPack').addEventListener('click', ()=>{
+  document.getElementById('addSixPack').addEventListener('click', (e)=>{
     if(builderTotal() !== 6){
       alert('Pick 6 bottles total for your 6-pack (any mix of flavors).');
       return;
@@ -723,12 +761,16 @@
       if(el) el.textContent = 0;
     });
     document.getElementById('builderCount').textContent = 0;
+    flashAdded(e.currentTarget, 'Added to order!');
+    showAddedToast('6-pack added to order');
     updateCartUI();
   });
 
   document.querySelectorAll('[data-detox]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', (e)=>{
       detoxes.push({days:btn.dataset.detox, price:Number(btn.dataset.price)});
+      flashAdded(e.currentTarget, 'Added to order!');
+      showAddedToast(`${btn.dataset.detox}-Day Cleanse added to order`);
       updateCartUI();
     });
   });
@@ -761,7 +803,7 @@
       const qtyEl = document.getElementById('qty-'+key);
       if(qtyEl) qtyEl.textContent = 0;
       const addBtn = document.querySelector(`.add-btn[data-id="${key}"]`);
-      if(addBtn){ addBtn.textContent = 'Add'; addBtn.classList.remove('in-cart'); }
+      if(addBtn){ addBtn.textContent = 'Add to order'; addBtn.classList.remove('in-cart'); }
     } else if(type==='sixpack'){
       sixPacks.splice(Number(key),1);
     } else if(type==='detox'){
