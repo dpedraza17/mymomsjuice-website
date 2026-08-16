@@ -61,6 +61,7 @@
   .order-card.done{border-left-color:var(--ok); opacity:0.75;}
   .order-info strong{font-size:15.5px;}
   .order-meta{color:var(--muted); font-size:13px; margin-top:4px; line-height:1.5;}
+  .order-items{background:var(--paper); border-radius:8px; padding:8px 12px; margin:8px 0; font-size:14px; color:var(--ink); font-weight:600; line-height:1.6;}
   .badge{display:inline-block; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; padding:2px 8px; border-radius:6px; margin-right:6px;}
   .badge.pickup{background:#E9F1E9; color:var(--ok);}
   .badge.delivery{background:#FDECE2; color:var(--orange);}
@@ -363,7 +364,10 @@
           <strong>${order.customer_name || 'Customer'}</strong> — ${money(order.total)}
           <div class="order-meta">
             ${typeBadge}${overdueBadge}
-            ${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')} &middot; ${items}<br>
+            ${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')}
+          </div>
+          <div class="order-items">${items || 'No items listed'}</div>
+          <div class="order-meta">
             ${order.customer_note ? `<strong>Note:</strong> ${order.customer_note}<br>` : ''}
             ${order.customer_email || ''} ${order.customer_phone ? ' · ' + order.customer_phone : ''}
           </div>
