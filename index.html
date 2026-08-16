@@ -61,11 +61,16 @@
   .mode-note{font-size:16px; color:#fff; font-weight:700; text-align:center;}
   .mode-bar.needs-attention{animation:modePulse 0.6s ease 2;}
 
-  #cartModeBar .mode-btn.active{background:var(--yellow); color:var(--dark);}
-  #cartModeBar.reveal-selection .mode-btn.active{animation:selectionGlow 1.8s ease-in-out 2;}
-  @keyframes selectionGlow{
-    0%,100%{ box-shadow:none; }
-    50%{ box-shadow:0 0 0 5px rgba(244,206,78,0.55); }
+  #cartModeBar.reveal-selection .mode-btn.active{position:relative; overflow:hidden;}
+  #cartModeBar.reveal-selection .mode-btn.active::after{
+    content:'';
+    position:absolute;
+    top:0; left:-45%;
+    width:35%; height:100%;
+    background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0.65) 50%, rgba(255,255,255,0) 70%, transparent 100%);
+    transform:skewX(-16deg);
+    animation:segShimmerSweep 1.9s ease-in-out 2;
+    pointer-events:none;
   }
   #modeBar .seg{position:relative; overflow:hidden;}
   .toggle-hint-icon{display:inline-flex; margin-left:8px; font-size:16px; opacity:0.7;}
