@@ -233,6 +233,30 @@
     </div>
   </div>
 
+  <!-- Edit customer modal -->
+  <div class="modal-overlay" id="editCustomerModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('editCustomerModal')">&times;</button>
+      <h3>Edit customer</h3>
+      <input type="hidden" id="editId">
+      <label>First name</label>
+      <input id="editFirstName">
+      <label>Last name</label>
+      <input id="editLastName">
+      <label>Email</label>
+      <input id="editEmail" type="email">
+      <label>Phone</label>
+      <input id="editPhone" type="tel">
+      <label>Address</label>
+      <input id="editAddress">
+      <div class="modal-actions">
+        <button class="btn ghost" onclick="closeModal('editCustomerModal')">Cancel</button>
+        <button class="btn" onclick="submitEditCustomer()">Save changes</button>
+      </div>
+      <div class="import-status" id="editCustomerStatus"></div>
+    </div>
+  </div>
+
 <script>
   // ---- Config ----
   const FN = '/.netlify/functions/';
@@ -480,7 +504,7 @@
           <td class="num">${c.order_count || 0}</td>
           <td class="num">${money(c.lifetime_spend)}</td>
           <td>${c.last_visit || '—'}</td>
-          <td><button class="row-delete" title="Delete customer" onclick="deleteOneCustomer('${c.id}')">🗑</button></td>
+          <td><button class="row-delete" title="Edit customer" onclick="openEditCustomer('${c.id}')">✎</button> <button class="row-delete" title="Delete customer" onclick="deleteOneCustomer('${c.id}')">🗑</button></td>
         </tr>`).join('')
       : `<tr><td colspan="9" style="text-align:center; color:var(--muted); padding:24px;">No customers match that search.</td></tr>`;
 
@@ -494,6 +518,42 @@
     document.getElementById('nextPageBtn').disabled = currentPage >= pages;
 
     updateBulkDeleteButton();
+  }
+
+  function openEditCustomer(id){
+    const c = allCustomers.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('editId').value = c.id;
+    document.getElementById('editFirstName').value = c.first_name || '';
+    document.getElementById('editLastName').value = c.last_name || '';
+    document.getElementById('editEmail').value = c.email || '';
+    document.getElementById('editPhone').value = c.phone || '';
+    document.getElementById('editAddress').value = c.address || '';
+    document.getElementById('editCustomerStatus').textContent = '';
+    openModal('editCustomerModal');
+  }
+
+  async function submitEditCustomer(){
+    const payload = {
+      id: document.getElementById('editId').value,
+      first_name: document.getElementById('editFirstName').value,
+      last_name: document.getElementById('editLastName').value,
+      email: document.getElementById('editEmail').value,
+      phone: document.getElementById('editPhone').value,
+      address: document.getElementById('editAddress').value,
+    };
+    const status = document.getElementById('editCustomerStatus');
+    status.textContent = 'Saving...';
+    try {
+      const res = await authedFetch('customers-update', { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+      status.textContent = 'Saved!';
+      loadCustomers();
+      setTimeout(() => closeModal('editCustomerModal'), 500);
+    } catch(e){
+      status.textContent = e.message;
+    }
   }
 
   async function deleteOneCustomer(id){
