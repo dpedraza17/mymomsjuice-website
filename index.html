@@ -61,6 +61,12 @@
   .mode-note{font-size:16px; color:#fff; font-weight:700; text-align:center;}
   .mode-bar.needs-attention{animation:modePulse 0.6s ease 2;}
 
+  #cartModeBar .mode-btn.active{background:var(--yellow); color:var(--dark);}
+  #cartModeBar.reveal-selection .mode-btn.active{animation:selectionGlow 1.8s ease-in-out 2;}
+  @keyframes selectionGlow{
+    0%,100%{ box-shadow:none; }
+    50%{ box-shadow:0 0 0 5px rgba(244,206,78,0.55); }
+  }
   #modeBar .seg{position:relative; overflow:hidden;}
   .toggle-hint-icon{display:inline-flex; margin-left:8px; font-size:16px; opacity:0.7;}
   #modeBar.toggle-hint .seg::after{
@@ -469,6 +475,10 @@
     <button class="cart-close" id="closeCart" aria-label="Close cart">&times;</button>
   </div>
   <div class="cart-body-wrap">
+    <p style="font-family:'Baloo 2',sans-serif; font-weight:700; font-size:16px; margin:0 0 10px; color:var(--muted);">Order summary</p>
+    <div id="cartBody" style="margin-bottom:24px;">
+      <p class="cart-empty">Nothing added yet — tap "Add" on any menu item.</p>
+    </div>
     <div class="mode-bar" id="cartModeBar" style="border-radius:14px; margin-bottom:18px;">
       <div class="mode-inner" style="padding:14px 10px; flex-direction:column; gap:10px; justify-content:flex-start;">
         <span class="mode-label" style="font-size:18px;">You selected:</span>
@@ -519,9 +529,6 @@
     <div class="field" id="addressZipField" style="display:none;">
       <label for="custZip">ZIP code</label>
       <input type="text" id="custZip" placeholder="Zip">
-    </div>
-    <div id="cartBody">
-      <p class="cart-empty">Nothing added yet — tap "Add" on any menu item.</p>
     </div>
     <div class="field" style="margin-bottom:16px;">
       <label for="custNote" id="custNoteLabel" style="font-size:17.5px; font-weight:700;">Add a note (optional)</label>
@@ -1237,6 +1244,27 @@
       // Fallback for older browsers without IntersectionObserver support.
       setTimeout(playHint, 700);
     }
+  })();
+
+  // Inside the cart drawer, briefly glow the pickup/delivery option the
+  // customer already selected once that section scrolls into view, so the
+  // choice (now further down since the order summary moved to the top)
+  // doesn't get missed.
+  (function cartSelectionHighlight(){
+    const cartBar = document.getElementById('cartModeBar');
+    const scrollRoot = document.querySelector('.cart-body-wrap');
+    if(!cartBar || !scrollRoot || !('IntersectionObserver' in window)) return;
+    let played = false;
+    const observer = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting && !played){
+          played = true;
+          cartBar.classList.add('reveal-selection');
+          setTimeout(()=> cartBar.classList.remove('reveal-selection'), 4000);
+        }
+      });
+    }, { root: scrollRoot, threshold: 0.6 });
+    observer.observe(cartBar);
   })();
 
   // Handle returning from Stripe Checkout (success_url / cancel_url both
