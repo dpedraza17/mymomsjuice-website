@@ -377,19 +377,19 @@
         <div class="detox-price mono">$40</div>
         <button class="add-btn" data-detox="1" data-price="40">Add to order</button>
       </div>
-      <div class="detox-card featured">
-        <span class="pill">Most popular</span>
+      <div class="detox-card">
+        <span class="pill">Go further</span>
         <h3 class="display" style="font-size:20px;">2-Day Cleanse</h3>
         <p class="item-desc">10 bottles + 2 immunity shots.</p>
         <div class="detox-price mono">$80</div>
-        <button class="add-btn" data-detox="2" data-price="80" style="background:#fff; color:var(--orange);">Add to order</button>
+        <button class="add-btn" data-detox="2" data-price="80">Add to order</button>
       </div>
-      <div class="detox-card">
-        <span class="pill">Go further</span>
+      <div class="detox-card featured">
+        <span class="pill">Most popular</span>
         <h3 class="display" style="font-size:20px;">3-Day Cleanse</h3>
         <p class="item-desc">15 bottles + 3 immunity shots.</p>
         <div class="detox-price mono">$115</div>
-        <button class="add-btn" data-detox="3" data-price="115">Add to order</button>
+        <button class="add-btn" data-detox="3" data-price="115" style="background:#fff; color:var(--orange);">Add to order</button>
       </div>
       <div class="detox-card">
         <span class="pill">Go further</span>
@@ -616,8 +616,13 @@
   const menuItems = document.getElementById('menuItems');
   const builderGrid = document.getElementById('builderGrid');
 
+  // Agua de Pepino con Limón is available for Friday delivery, and for both
+  // pickup options (Mesa runs Fri/Sat/Sun, the McDowell pop-up runs Sat/Sun —
+  // both already fall within its available days). The only time it's NOT
+  // available is when the next delivery would land on a Tuesday.
   function isPepinoAvailable(){
-    return new Date().getDay() === 4; // Thursday
+    if(mode === 'delivery') return getNextDeliveryDow() === 5;
+    return true;
   }
 
   function renderMenu(){
@@ -643,7 +648,7 @@
             <span class="qty mono" id="qty-${it.id}">${cart[it.id]||0}</span>
             <button class="qbtn" data-action="plus" data-id="${it.id}" aria-label="Add one ${it.name}" ${locked?'disabled':''}>+</button>
           </div>
-          <button class="add-btn ${cart[it.id]?'in-cart':''}" data-action="add" data-id="${it.id}" ${locked?'disabled':''}>${locked?'Thu only':(cart[it.id]?'Added to order':'Add to order')}</button>
+          <button class="add-btn ${cart[it.id]?'in-cart':''}" data-action="add" data-id="${it.id}" ${locked?'disabled':''}>${locked?'Not avail. Tue':(cart[it.id]?'Added to order':'Add to order')}</button>
         </div>
       `;
       menuItems.appendChild(card);
@@ -678,7 +683,7 @@
     if(!btn) return;
     const id = btn.dataset.id;
     if(id === 'pepino' && !isPepinoAvailable()){
-      alert('Agua de Pepino con Limón is only available to order on Thursdays.');
+      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday delivery and for pickup.');
       return;
     }
     const itemInfo = items.find(x=>x.id===id);
@@ -886,9 +891,6 @@
     summaryHeading.style.fontFamily = "'Baloo 2',sans-serif";
     summaryHeading.style.fontWeight = '700';
     summaryHeading.style.fontSize = '19px';
-    summaryHeading.style.marginTop = '20px';
-    summaryHeading.style.paddingTop = '20px';
-    summaryHeading.style.borderTop = '1px solid var(--line)';
     summaryHeading.style.marginBottom = '6px';
     body.appendChild(summaryHeading);
     rows.forEach(r=>{
@@ -1026,11 +1028,16 @@
   // Delivery days are Tuesday & Friday. Order by 11:59pm the night before to
   // make that day's run; otherwise it rolls to the next one. Uses Arizona
   // time (America/Phoenix, no DST) regardless of the customer's own clock.
-  function getNextDeliveryLabel(){
+  function getNextDeliveryDow(){
     const azNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
     const dow = azNow.getDay(); // 0=Sun ... 6=Sat
     // Tue/Wed/Thu orders -> this Friday. Fri/Sat/Sun/Mon orders -> next Tuesday.
-    const targetDow = (dow === 2 || dow === 3 || dow === 4) ? 5 : 2;
+    return (dow === 2 || dow === 3 || dow === 4) ? 5 : 2;
+  }
+  function getNextDeliveryLabel(){
+    const azNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
+    const dow = azNow.getDay(); // 0=Sun ... 6=Sat
+    const targetDow = getNextDeliveryDow();
     let daysAhead = (targetDow - dow + 7) % 7;
     if (daysAhead === 0) daysAhead = 7;
     const target = new Date(azNow);
@@ -1171,6 +1178,8 @@
         popupCard.classList.add('active');
       }
       updateAddressField();
+      renderMenu();
+      renderBuilder();
       updateCartUI();
     });
   });
