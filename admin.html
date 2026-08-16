@@ -264,7 +264,23 @@
   const IMPORT_CHUNK_SIZE = 250; // keeps each request comfortably under Netlify's function time limit
 
   // ---- Auth ----
-  function getPassword(){ return sessionStorage.getItem('adminPw') || ''; }
+  // Stored in localStorage (not sessionStorage) so refreshing or reopening
+  // the browser doesn't require logging in again. A 24-hour idle timeout
+  // still applies, since this dashboard is shared by more than one person —
+  // if nobody uses it for a full day, it logs out automatically rather than
+  // staying open indefinitely.
+  const IDLE_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+  function getPassword(){ return localStorage.getItem('adminPw') || ''; }
+  function touchActivity(){ localStorage.setItem('adminLastActive', String(Date.now())); }
+  function isSessionExpired(){
+    const last = Number(localStorage.getItem('adminLastActive') || 0);
+    return !last || (Date.now() - last) > IDLE_TIMEOUT_MS;
+  }
+  function clearSession(){
+    localStorage.removeItem('adminPw');
+    localStorage.removeItem('adminLastActive');
+  }
 
   async function authedFetch(path, opts = {}){
     opts.headers = Object.assign({}, opts.headers, {
@@ -273,10 +289,11 @@
     });
     const res = await fetch(FN + path, opts);
     if (res.status === 401){
-      sessionStorage.removeItem('adminPw');
+      clearSession();
       showLogin(true);
       throw new Error('Unauthorized');
     }
+    touchActivity(); // any successful request resets the 24-hour idle clock
     return res;
   }
 
@@ -288,9 +305,10 @@
 
   async function login(){
     const pw = document.getElementById('passwordInput').value;
-    sessionStorage.setItem('adminPw', pw);
+    localStorage.setItem('adminPw', pw);
     try {
       await authedFetch('orders-list');
+      touchActivity();
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
       loadOrders();
@@ -301,12 +319,13 @@
   }
 
   function logout(){
-    sessionStorage.removeItem('adminPw');
+    clearSession();
     location.reload();
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    if (getPassword()) login();
+    if (getPassword() && !isSessionExpired()) login();
+    else clearSession();
   });
 
   // ---- Tabs ----
