@@ -370,6 +370,20 @@
 
   function money(n){ return '$' + Number(n || 0).toFixed(2); }
 
+  // Supabase auto-populates created_at on insert. If the orders-list API
+  // doesn't return it for some reason, this just renders nothing rather
+  // than showing an "Invalid Date" string.
+  function formatOrderedAt(iso){
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString('en-US', {
+      timeZone: 'America/Phoenix',
+      month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit',
+    });
+  }
+
   function orderCard(order, isFulfilled){
     const cls = isFulfilled ? 'done' : (order.overdue ? 'overdue' : '');
     const modeLabels = { pickup: 'Pickup — Mesa', delivery: 'Delivery', popup: 'Pop-up — 83rd Ave & McDowell' };
@@ -383,6 +397,7 @@
     const action = isFulfilled
       ? `<button class="btn-undo" onclick="setFulfilled('${order.id}', false)">Move back to unfulfilled</button>`
       : `<button class="btn-fulfill" onclick="setFulfilled('${order.id}', true)">Mark fulfilled</button>`;
+    const orderedAt = formatOrderedAt(order.created_at);
 
     return `
       <div class="order-card ${cls}">
@@ -391,6 +406,7 @@
           <div class="order-meta">
             ${typeBadge}${overdueBadge}
             ${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')}
+            ${orderedAt ? `<br>Ordered ${orderedAt}` : ''}
           </div>
           <div class="order-items">${items || 'No items listed'}</div>
           <div class="order-meta">

@@ -75,6 +75,7 @@ async function sendOrderNotificationEmail(session) {
   }
 
   const md = session.metadata || {};
+  console.log('[DIAGNOSTIC] raw structured_items metadata:', md.structured_items);
   const amount = ((session.amount_total || 0) / 100).toFixed(2);
   const modeRaw = (md.order_mode || '').toLowerCase();
   const orderMode = modeRaw.includes('deliver') ? 'delivery'
