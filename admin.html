@@ -283,7 +283,7 @@
     localStorage.removeItem('adminLastActive');
   }
 
-  async function authedFetch(path, opts = {}){
+  async function authedFetch(path, opts = {}, { silent = false } = {}){
     opts.headers = Object.assign({}, opts.headers, {
       'x-admin-password': getPassword(),
       'Content-Type': 'application/json',
@@ -291,7 +291,7 @@
     const res = await fetch(FN + path, opts);
     if (res.status === 401){
       clearSession();
-      showLogin(true);
+      showLogin(!silent);
       throw new Error('Unauthorized');
     }
     touchActivity(); // any successful request resets the 24-hour idle clock
@@ -319,13 +319,33 @@
     }
   }
 
+  // Used only on page load to silently resume a session with the password
+  // already saved in this browser. Unlike login(), it never reads or
+  // overwrites the password field/localStorage — it just tries the
+  // password that's already stored. If that fails, it clears the stale
+  // session and shows a normal (error-free) login screen, since the
+  // person hasn't actually attempted anything yet.
+  async function attemptAutoLogin(){
+    try {
+      await authedFetch('orders-list', {}, { silent: true });
+      touchActivity();
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadOrders();
+      loadCustomers();
+    } catch(e){
+      clearSession();
+      showLogin(false);
+    }
+  }
+
   function logout(){
     clearSession();
     location.reload();
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    if (getPassword() && !isSessionExpired()) login();
+    if (getPassword() && !isSessionExpired()) attemptAutoLogin();
     else clearSession();
   });
 
