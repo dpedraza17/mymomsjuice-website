@@ -62,6 +62,8 @@
   .order-info strong{font-size:15.5px;}
   .order-meta{color:var(--muted); font-size:13px; margin-top:4px; line-height:1.5;}
   .order-items{background:var(--paper); border-radius:8px; padding:8px 12px; margin:8px 0; font-size:14px; color:var(--ink); font-weight:600; line-height:1.6;}
+  .order-item-line{display:flex; justify-content:space-between; gap:12px;}
+  .order-item-price{color:var(--muted); font-weight:600; white-space:nowrap;}
   .badge{display:inline-block; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; padding:2px 8px; border-radius:6px; margin-right:6px;}
   .badge.pickup{background:#E9F1E9; color:var(--ok);}
   .badge.delivery{background:#FDECE2; color:var(--orange);}
@@ -373,7 +375,11 @@
     const modeLabels = { pickup: 'Pickup — Mesa', delivery: 'Delivery', popup: 'Pop-up — 83rd Ave & McDowell' };
     const typeBadge = `<span class="badge ${order.order_type || ''}">${modeLabels[order.order_type] || order.order_type || 'order'}</span>`;
     const overdueBadge = (!isFulfilled && order.overdue) ? `<span class="badge overdue-flag">past due — confirm?</span>` : '';
-    const items = Array.isArray(order.items) ? order.items.map(i => `<div>${i.qty || 1}× ${i.name}</div>`).join('') : '';
+    const items = Array.isArray(order.items) ? order.items.map(i => {
+      const qty = i.qty || 1;
+      const lineTotal = (typeof i.price === 'number') ? money((i.price * qty) / 100) : '';
+      return `<div class="order-item-line"><span>${qty}× ${i.name}</span>${lineTotal ? `<span class="order-item-price">${lineTotal}</span>` : ''}</div>`;
+    }).join('') : '';
     const action = isFulfilled
       ? `<button class="btn-undo" onclick="setFulfilled('${order.id}', false)">Move back to unfulfilled</button>`
       : `<button class="btn-fulfill" onclick="setFulfilled('${order.id}', true)">Mark fulfilled</button>`;
@@ -381,7 +387,7 @@
     return `
       <div class="order-card ${cls}">
         <div class="order-info">
-          <strong>${order.customer_name || 'Customer'}</strong> — ${money(order.total)}
+          <strong>${order.customer_name || 'Customer'}</strong> — Total paid: <strong>${money(order.total)}</strong>
           <div class="order-meta">
             ${typeBadge}${overdueBadge}
             ${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')}
