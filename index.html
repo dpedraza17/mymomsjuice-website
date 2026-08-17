@@ -1170,13 +1170,13 @@
       deliveryCard.classList.remove('active');
       popupCard.classList.remove('active');
       if(mode==='pickup'){
-        modeNote.textContent = "Pickup at The Kitchen's Market — Friday, Saturday or Sunday (order by Thursday) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
+        modeNote.textContent = "Pickup at The Kitchen's Market — Friday (8am-5pm), Saturday(8am-3pm) or Sunday(10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
         pickupCard.classList.add('active');
       } else if(mode==='delivery'){
         modeNote.textContent = 'Delivery Tuesdays & Fridays — order by midnight the night before';
         deliveryCard.classList.add('active');
       } else {
-        modeNote.textContent = 'Pick up this Saturday or Sunday 8am-12pm (order by Thursday) — 8367 W McDowell Rd, Tolleson';
+        modeNote.textContent = 'Pick up Saturday or Sunday 8am-12pm (order by Thursday) — 8367 W McDowell Rd, Tolleson';
         popupCard.classList.add('active');
       }
       updateAddressField();
