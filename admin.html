@@ -137,6 +137,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="orders" onclick="showTab('orders')">Orders</button>
       <button class="tab-btn" data-tab="customers" onclick="showTab('customers')">Customers</button>
+      <button class="tab-btn" data-tab="subscribers" onclick="showTab('subscribers')">Subscribers</button>
     </div>
 
     <main>
@@ -187,6 +188,23 @@
           <span class="page-info" id="pageInfo">Page 1</span>
           <button id="nextPageBtn" onclick="changePage(1)">Next &rarr;</button>
         </div>
+      </div>
+
+      <!-- SUBSCRIBERS VIEW -->
+      <div class="view" id="view-subscribers">
+        <div class="section-head">
+          <h2>Newsletter Subscribers <span class="count-pill" id="totalSubscriberCount">0</span></h2>
+          <button class="btn ghost" onclick="loadSubscribers()">Refresh</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Signed up</th>
+            </tr>
+          </thead>
+          <tbody id="subscriberRows"></tbody>
+        </table>
       </div>
     </main>
   </div>
@@ -316,6 +334,7 @@
       document.getElementById('app').style.display = 'block';
       loadOrders();
       loadCustomers();
+      loadSubscribers();
     } catch(e){
       showLogin(true);
     }
@@ -335,6 +354,7 @@
       document.getElementById('app').style.display = 'block';
       loadOrders();
       loadCustomers();
+      loadSubscribers();
     } catch(e){
       clearSession();
       showLogin(false);
@@ -453,6 +473,21 @@
     allCustomers = data.customers || [];
     selectedIds.clear();
     onSearchChange();
+  }
+
+  // ---- Subscribers ----
+  async function loadSubscribers(){
+    const res = await authedFetch('subscribers-list');
+    const data = await res.json();
+    const subscribers = data.subscribers || [];
+    document.getElementById('totalSubscriberCount').textContent = subscribers.length;
+    document.getElementById('subscriberRows').innerHTML = subscribers.length
+      ? subscribers.map(s => `
+          <tr>
+            <td>${s.email}</td>
+            <td>${formatOrderedAt(s.created_at) || '—'}</td>
+          </tr>`).join('')
+      : `<tr><td colspan="2"><div class="empty">No signups yet.</div></td></tr>`;
   }
 
   function setSort(field){
