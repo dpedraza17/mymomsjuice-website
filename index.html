@@ -655,6 +655,69 @@
   let extras = {shot:0};
   let builderQty = {};
 
+  // Persist the cart across a trip to Stripe Checkout and back. Without
+  // this, clicking "Pay online" navigates the browser fully away to
+  // Stripe's site — destroying all in-memory JS state — so if the customer
+  // cancels and lands back here, the page reloads from scratch with an
+  // empty cart and they'd have to rebuild their whole order.
+  const CART_STORAGE_KEY = 'mmj_cart_state';
+
+  // Text fields on the checkout form — persisted the same way as the cart,
+  // so a customer who cancels out of Stripe and comes back doesn't have to
+  // retype their name, phone, email, address, or note.
+  const CUSTOMER_FIELD_IDS = [
+    'custFirstName', 'custLastName', 'custPhone', 'custEmail', 'custNote',
+    'custStreet', 'custCity', 'custState', 'custZip',
+  ];
+
+  function saveCartToStorage(){
+    try {
+      const customer = {};
+      CUSTOMER_FIELD_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) customer[id] = el.value;
+      });
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({
+        cart, sixPacks, detoxes, extras, customer,
+        mode: typeof mode !== 'undefined' ? mode : undefined,
+        tipMode: typeof tipMode !== 'undefined' ? tipMode : undefined,
+        tipPercent: typeof tipPercent !== 'undefined' ? tipPercent : undefined,
+        customTipAmount: typeof customTipAmount !== 'undefined' ? customTipAmount : undefined,
+      }));
+    } catch(e) { /* localStorage unavailable (private browsing, etc.) — fail silently, cart just won't persist */ }
+  }
+
+  function restoreCartFromStorage(){
+    let saved;
+    try {
+      const raw = localStorage.getItem(CART_STORAGE_KEY);
+      if (!raw) return;
+      saved = JSON.parse(raw);
+    } catch(e) { return; }
+    if (!saved || typeof saved !== 'object') return;
+
+    if (saved.cart && typeof saved.cart === 'object'){
+      Object.keys(saved.cart).forEach(id => { cart[id] = saved.cart[id]; });
+    }
+    if (Array.isArray(saved.sixPacks)) sixPacks = saved.sixPacks;
+    if (Array.isArray(saved.detoxes)) detoxes = saved.detoxes;
+    if (saved.extras && typeof saved.extras === 'object') extras = saved.extras;
+    if (saved.mode) mode = saved.mode;
+    if (saved.tipMode) tipMode = saved.tipMode;
+    if (typeof saved.tipPercent === 'number') tipPercent = saved.tipPercent;
+    if (typeof saved.customTipAmount === 'number') customTipAmount = saved.customTipAmount;
+    if (saved.customer && typeof saved.customer === 'object'){
+      CUSTOMER_FIELD_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof saved.customer[id] === 'string') el.value = saved.customer[id];
+      });
+    }
+  }
+
+  function clearCartStorage(){
+    try { localStorage.removeItem(CART_STORAGE_KEY); } catch(e) {}
+  }
+
   function sixPackLabel(flavorMap){
     return Object.entries(flavorMap).map(([id,qty])=>{
       const it = items.find(i=>i.id===id);
@@ -923,6 +986,7 @@
   }
 
   function updateCartUI(){
+    saveCartToStorage();
     document.getElementById('cartCount').textContent = totalCount();
     document.getElementById('cartShotUpsell').style.display = 'block';
     const body = document.getElementById('cartBody');
@@ -1206,29 +1270,33 @@
       custNote.placeholder = 'Gate code, apartment number, anything else we should know';
     }
   }
-  modeNote.textContent = 'Delivery Tuesdays & Fridays — order by midnight the night before';
-  deliveryCard.classList.add('active');
-  updateAddressField();
+  function applyModeUI(){
+    document.querySelectorAll('.mode-btn').forEach(x=>{
+      x.classList.toggle('active', x.dataset.mode === mode);
+    });
+    pickupCard.classList.remove('active');
+    deliveryCard.classList.remove('active');
+    popupCard.classList.remove('active');
+    if(mode==='pickup'){
+      modeNote.textContent = "Pickup at The Kitchen's Market (order by Thursday) — Friday (8am-5pm), Saturday(8am-3pm) or Sunday(10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
+      pickupCard.classList.add('active');
+    } else if(mode==='delivery'){
+      modeNote.textContent = 'Delivery Tuesdays & Fridays — order by midnight the night before';
+      deliveryCard.classList.add('active');
+    } else {
+      modeNote.textContent = 'Pick up Saturday or Sunday 8am-12pm (order by Thursday) — 8367 W McDowell Rd, Tolleson';
+      popupCard.classList.add('active');
+    }
+    updateAddressField();
+  }
+  // Reflects whatever `mode` currently is — the hardcoded 'delivery'
+  // default, or a value just restored from a previous visit — rather than
+  // always assuming delivery the way this used to be hardcoded to do.
+  applyModeUI();
   document.querySelectorAll('.mode-btn').forEach(b=>{
     b.addEventListener('click', ()=>{
       mode = b.dataset.mode;
-      document.querySelectorAll('.mode-btn').forEach(x=>{
-        x.classList.toggle('active', x.dataset.mode === mode);
-      });
-      pickupCard.classList.remove('active');
-      deliveryCard.classList.remove('active');
-      popupCard.classList.remove('active');
-      if(mode==='pickup'){
-        modeNote.textContent = "Pickup at The Kitchen's Market (order by Thursday) — Friday (8am-5pm), Saturday(8am-3pm) or Sunday(10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
-        pickupCard.classList.add('active');
-      } else if(mode==='delivery'){
-        modeNote.textContent = 'Delivery Tuesdays & Fridays — order by midnight the night before';
-        deliveryCard.classList.add('active');
-      } else {
-        modeNote.textContent = 'Pick up Saturday or Sunday 8am-12pm (order by Thursday) — 8367 W McDowell Rd, Tolleson';
-        popupCard.classList.add('active');
-      }
-      updateAddressField();
+      applyModeUI();
       renderMenu();
       renderBuilder();
       updateCartUI();
@@ -1247,6 +1315,7 @@
   }
 
   document.getElementById('payOnline').addEventListener('click', async ()=>{
+    saveCartToStorage();
     if(!requireModeSelected()) return;
     if(!document.getElementById('custFirstName').value.trim()){
       alert('Please enter your first name before checking out.');
@@ -1341,9 +1410,20 @@
     }
   });
 
+  restoreCartFromStorage();
+  applyModeUI();
   renderBuilder();
   renderMenu();
   updateCartUI();
+
+  // Cart mutations already trigger a save via updateCartUI(), but typing
+  // into these fields doesn't touch the cart — save on every keystroke too,
+  // so info isn't lost if someone fills this in and navigates away some
+  // other way before ever clicking "Pay online".
+  CUSTOMER_FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', saveCartToStorage);
+  });
 
   // One-time animated hint (shimmer sweep + gentle glow + nudging icon) so
   // first-time visitors notice the pickup/delivery toggle is interactive.
