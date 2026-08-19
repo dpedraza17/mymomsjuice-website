@@ -38,6 +38,25 @@
   a{color:inherit;}
   button{font-family:inherit; cursor:pointer;}
   :focus-visible{outline:3px solid var(--orange); outline-offset:2px;}
+
+  /* Email signup popup */
+  .email-popup-overlay{position:fixed; inset:0; background:rgba(13,34,19,0.6); display:flex; align-items:center; justify-content:center; padding:20px; z-index:9999; opacity:0; pointer-events:none; transition:opacity 0.25s ease;}
+  .email-popup-overlay.show{opacity:1; pointer-events:auto;}
+  .email-popup{background:#DCC495; border-radius:var(--radius); max-width:420px; width:100%; padding:32px 28px 28px; position:relative; box-shadow:var(--shadow); text-align:center; transform:scale(0.95); transition:transform 0.25s ease;}
+  .email-popup-overlay.show .email-popup{transform:scale(1);}
+  .email-popup-close{position:absolute; top:12px; right:14px; background:none; border:none; font-size:22px; line-height:1; cursor:pointer; color:var(--dark); opacity:0.6; padding:4px;}
+  .email-popup-close:hover{opacity:1;}
+  .email-popup h3{font-size:22px; color:var(--dark); margin:0 0 10px;}
+  .email-popup p{font-size:15px; color:var(--dark); opacity:0.85; line-height:1.5; margin:0 0 20px;}
+  .email-popup form{display:flex; flex-direction:column; gap:10px;}
+  .email-popup input[type="email"]{padding:12px 14px; border-radius:999px; border:2px solid var(--orange); font-size:15px; font-family:inherit; text-align:center; background:#fff; color:var(--dark);}
+  .email-popup input[type="email"]:focus{outline:none; border-color:var(--dark);}
+  .email-popup button[type="submit"]{background:var(--orange); color:#fff; border:none; border-radius:999px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer;}
+  .email-popup button[type="submit"]:hover{background:var(--dark);}
+  .email-popup button[type="submit"]:disabled{opacity:0.6; cursor:default;}
+  .email-popup-status{font-size:13px; margin-top:10px; min-height:16px;}
+  .email-popup-status.success{color:var(--green);}
+  .email-popup-status.error{color:var(--orange);}
   img{max-width:100%; display:block;}
   .wrap{max-width:1080px; margin:0 auto; padding:0 20px;}
   .eyebrow{font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.12em; font-size:12px; color:var(--green); font-weight:700;}
@@ -1419,5 +1438,84 @@
     window.history.replaceState({}, document.title, cleanUrl);
   })();
 </script>
+<div class="email-popup-overlay" id="emailPopupOverlay">
+  <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="emailPopupTitle">
+    <button class="email-popup-close" id="emailPopupClose" aria-label="Close">&times;</button>
+    <h3 id="emailPopupTitle">Stay in the loop 🍊</h3>
+    <p>Enter your email to receive discount codes, be the first to hear about our latest announcements, and stay up to date with us.</p>
+    <form id="emailPopupForm">
+      <input type="email" id="emailPopupInput" placeholder="you@example.com" required autocomplete="email">
+      <button type="submit" id="emailPopupSubmit">Sign me up</button>
+      <div class="email-popup-status" id="emailPopupStatus"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const SUBSCRIBE_API_URL = "https://mymomsjuice-checkout-backend.onrender.com/api/subscribe";
+    const STORAGE_KEY = 'mmj_email_popup_dismissed';
+
+    // Don't show again if the visitor already dismissed it or already
+    // signed up, on this device.
+    if (localStorage.getItem(STORAGE_KEY)) return;
+
+    const overlay = document.getElementById('emailPopupOverlay');
+    const closeBtn = document.getElementById('emailPopupClose');
+    const form = document.getElementById('emailPopupForm');
+    const input = document.getElementById('emailPopupInput');
+    const submitBtn = document.getElementById('emailPopupSubmit');
+    const status = document.getElementById('emailPopupStatus');
+
+    function dismiss(){
+      overlay.classList.remove('show');
+      localStorage.setItem(STORAGE_KEY, '1');
+    }
+
+    setTimeout(() => overlay.classList.add('show'), 4000);
+
+    closeBtn.addEventListener('click', dismiss);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) dismiss(); });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('show')) dismiss();
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = input.value.trim();
+      if (!email) return;
+
+      submitBtn.disabled = true;
+      status.textContent = '';
+      status.className = 'email-popup-status';
+
+      try {
+        const resp = await fetch(SUBSCRIBE_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await resp.json().catch(() => ({}));
+
+        if (!resp.ok) {
+          status.textContent = data.error || "Something went wrong. Please try again.";
+          status.classList.add('error');
+          submitBtn.disabled = false;
+          return;
+        }
+
+        status.textContent = "You're on the list! 🎉";
+        status.classList.add('success');
+        localStorage.setItem(STORAGE_KEY, '1');
+        setTimeout(dismiss, 1800);
+      } catch (err) {
+        status.textContent = "Something went wrong. Please try again.";
+        status.classList.add('error');
+        submitBtn.disabled = false;
+      }
+    });
+  })();
+</script>
+
 </body>
 </html>
