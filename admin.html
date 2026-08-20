@@ -107,6 +107,29 @@
   .modal-actions{display:flex; gap:10px; margin-top:20px;}
   .modal-actions button{flex:1; border:none; border-radius:10px; padding:11px; font-weight:700;}
   .modal-close{background:none; border:none; float:right; font-size:20px; color:var(--muted); line-height:1;}
+
+  /* Manual Order view */
+  .mo-section{margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--line);}
+  .mo-section h4{font-size:14px; margin-bottom:10px;}
+  .mo-section label{display:block; font-size:12.5px; font-weight:700; color:var(--muted); margin:10px 0 5px;}
+  .mo-section input, .mo-section select{width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); font-size:14px; font-family:inherit;}
+  .mo-grid-2{display:grid; grid-template-columns:1fr 1fr; gap:0 12px;}
+  .mo-mode-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .mo-mode-btn{border:1px solid var(--line); background:#fff; border-radius:10px; padding:9px 16px; font-weight:700; font-size:13.5px; color:var(--ink); cursor:pointer;}
+  .mo-mode-btn.active{background:var(--orange); color:#fff; border-color:var(--orange);}
+  .mo-item-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px;}
+  .mo-item-row{display:flex; align-items:center; justify-content:space-between; border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13.5px;}
+  .mo-stepper{display:flex; align-items:center; gap:12px;}
+  .mo-stepper button{width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:#fff; font-size:16px; font-weight:700; cursor:pointer;}
+  .mo-stepper span{font-weight:700; min-width:20px; text-align:center;}
+  .mo-block{border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:12px;}
+  .mo-block-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .mo-block-head .remove-link{color:var(--warn); font-size:12.5px; font-weight:700; cursor:pointer; background:none; border:none;}
+  .mo-flavor-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px;}
+  .mo-flavor-row{display:flex; align-items:center; justify-content:space-between; font-size:12.5px;}
+  .mo-flavor-total{font-size:12.5px; font-weight:700; margin-top:8px;}
+  .mo-flavor-total.ok{color:var(--ok);}
+  .mo-flavor-total.bad{color:var(--warn);}
   .import-status{font-size:13px; color:var(--muted); margin-top:12px; white-space:pre-wrap;}
   .import-drop{border:2px dashed var(--line); border-radius:10px; padding:22px; text-align:center; color:var(--muted); font-size:13.5px; margin-top:10px;}
 </style>
@@ -138,6 +161,7 @@
       <button class="tab-btn active" data-tab="orders" onclick="showTab('orders')">Orders</button>
       <button class="tab-btn" data-tab="customers" onclick="showTab('customers')">Customers</button>
       <button class="tab-btn" data-tab="subscribers" onclick="showTab('subscribers')">Subscribers</button>
+      <button class="tab-btn" data-tab="manual-order" onclick="showTab('manual-order')">Manual Order</button>
     </div>
 
     <main>
@@ -205,6 +229,77 @@
           </thead>
           <tbody id="subscriberRows"></tbody>
         </table>
+      </div>
+
+      <!-- MANUAL ORDER VIEW -->
+      <div class="view" id="view-manual-order">
+        <div class="section-head">
+          <h2>Create a Manual Order</h2>
+        </div>
+        <p style="color:var(--muted); font-size:13.5px; margin:-10px 0 20px;">Build an order from the menu, then generate a payment link to text or email the customer. When they pay, it flows through exactly like a normal website order &mdash; confirmation email, correct tax, and dashboard tracking all included.</p>
+
+        <div class="mo-section">
+          <h4>Fulfillment</h4>
+          <div class="mo-mode-row">
+            <button type="button" class="mo-mode-btn active" data-mode="pickup" onclick="moSetMode('pickup')">Pickup &mdash; Mesa</button>
+            <button type="button" class="mo-mode-btn" data-mode="delivery" onclick="moSetMode('delivery')">Delivery</button>
+            <button type="button" class="mo-mode-btn" data-mode="popup" onclick="moSetMode('popup')">Pop-up &mdash; Tolleson</button>
+          </div>
+          <p style="font-size:12px; color:var(--muted); margin:8px 0 0;">The customer enters their own name, phone, email, and (for delivery) address directly on the Stripe payment page &mdash; nothing to fill in here.</p>
+        </div>
+
+        <div class="mo-section">
+          <h4>Menu Items <span style="font-weight:400; color:var(--muted); font-size:12.5px;">$7 each</span></h4>
+          <div class="mo-item-grid" id="moItemGrid"></div>
+        </div>
+
+        <div class="mo-section">
+          <h4>6-Packs <span style="font-weight:400; color:var(--muted); font-size:12.5px;">$36 each &mdash; pick any 6 bottles</span></h4>
+          <div id="moSixPacks"></div>
+          <button type="button" class="btn ghost" onclick="moAddSixPack()">+ Add a 6-pack</button>
+        </div>
+
+        <div class="mo-section">
+          <h4>Detox Cleanses</h4>
+          <div id="moDetoxes"></div>
+          <button type="button" class="btn ghost" onclick="moAddDetox()">+ Add a detox cleanse</button>
+        </div>
+
+        <div class="mo-section">
+          <h4>Immunity Shots <span style="font-weight:400; color:var(--muted); font-size:12.5px;">$5 each, $4 each once you hit 5+</span></h4>
+          <div class="mo-stepper">
+            <button type="button" onclick="moAdjustShots(-1)">&minus;</button>
+            <span id="moShotQty">0</span>
+            <button type="button" onclick="moAdjustShots(1)">+</button>
+          </div>
+        </div>
+
+        <div class="mo-section">
+          <h4>Tip</h4>
+          <div class="mo-mode-row" id="moTipButtons"></div>
+          <div id="moCustomTipRow" style="display:none; max-width:160px;">
+            <label>Custom tip ($)</label>
+            <input id="moCustomTip" type="number" min="0" step="0.01" value="0">
+          </div>
+        </div>
+
+        <div class="mo-section" style="background:var(--paper); border-radius:10px; padding:14px 16px; border-bottom:none;">
+          <div style="display:flex; justify-content:space-between; font-weight:700; font-size:16px;">
+            <span>Estimated total</span>
+            <span id="moEstTotal">$0.00</span>
+          </div>
+          <p style="margin:6px 0 0; font-size:12px; color:var(--muted);">This is an estimate &mdash; Stripe calculates the exact total (including tax) when the link is generated.</p>
+        </div>
+
+        <button class="btn" style="padding:14px 24px; font-size:15px;" id="moGenerateBtn" onclick="moGenerateLink()">Generate Payment Link</button>
+        <div id="moError" style="color:var(--warn); margin-top:10px; font-size:13.5px;"></div>
+
+        <div id="moResult" style="display:none; margin-top:20px; background:var(--paper); border-radius:10px; padding:16px;">
+          <label style="display:block; font-size:12.5px; font-weight:700; color:var(--muted); margin-bottom:5px;">Payment link</label>
+          <input id="moResultLink" readonly onclick="this.select()" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); font-size:13.5px; font-family:monospace; margin-bottom:10px;">
+          <button class="btn" style="width:100%;" onclick="moCopyLink()">Copy link</button>
+          <button class="btn ghost" style="margin-top:10px; width:100%;" onclick="moReset()">Start a new order</button>
+        </div>
       </div>
     </main>
   </div>
@@ -335,6 +430,7 @@
       loadOrders();
       loadCustomers();
       loadSubscribers();
+      moInit();
     } catch(e){
       showLogin(true);
     }
@@ -355,6 +451,7 @@
       loadOrders();
       loadCustomers();
       loadSubscribers();
+      moInit();
     } catch(e){
       clearSession();
       showLogin(false);
@@ -389,6 +486,24 @@
   }
 
   function money(n){ return '$' + Number(n || 0).toFixed(2); }
+
+  function escAttr(s){
+    return String(s || '').replace(/"/g, '&quot;');
+  }
+
+  // Click-to-email — same text shown, just wrapped as a mailto: link.
+  function emailLink(email){
+    if (!email) return '—';
+    return `<a href="mailto:${escAttr(email)}" style="color:var(--orange);">${email}</a>`;
+  }
+
+  // Click-to-call on the number itself, plus a small click-to-text next to
+  // it — covers both without needing two full-size separate controls.
+  function phoneLinks(phone){
+    if (!phone) return '—';
+    const digits = phone.replace(/[^\d+]/g, '');
+    return `<a href="tel:${escAttr(digits)}" style="color:var(--orange);">${phone}</a> <a href="sms:${escAttr(digits)}" title="Text" style="color:var(--muted); font-size:0.85em; margin-left:2px;">&#128172;</a>`;
+  }
 
   // Supabase auto-populates created_at on insert. If the orders-list API
   // doesn't return it for some reason, this just renders nothing rather
@@ -431,7 +546,7 @@
           <div class="order-items">${items || 'No items listed'}</div>
           <div class="order-meta">
             ${order.customer_note ? `<strong>Note:</strong> ${order.customer_note}<br>` : ''}
-            ${order.customer_email || ''} ${order.customer_phone ? ' · ' + order.customer_phone : ''}
+            ${order.customer_email ? emailLink(order.customer_email) : ''} ${order.customer_phone ? ' · ' + phoneLinks(order.customer_phone) : ''}
           </div>
         </div>
         <div class="order-actions">${action}</div>
@@ -488,6 +603,296 @@
             <td>${formatOrderedAt(s.created_at) || '—'}</td>
           </tr>`).join('')
       : `<tr><td colspan="2"><div class="empty">No signups yet.</div></td></tr>`;
+  }
+
+  // ==========================================================================
+  // MANUAL ORDER — build an order from the real menu and generate a payment
+  // link to text/email a customer. Reuses the same public checkout endpoint
+  // the website itself calls, so pricing, tax, the confirmation email, and
+  // the Orders tab all work identically to a normal website order — nothing
+  // here is a separate/parallel system.
+  // ==========================================================================
+  const MO_CHECKOUT_URL = 'https://mymomsjuice-checkout-backend.onrender.com/api/create-checkout-session';
+
+  // Mirrors the items array in index.html — keep these in sync if the menu changes.
+  const MO_ITEMS = [
+    {id:'green', name:'Green Juice', price:700},
+    {id:'vampiro', name:'El Vampiro', price:700},
+    {id:'mimosa', name:'Mimosa Juice', price:700},
+    {id:'sunrise', name:'Citrus Sunrise', price:700},
+    {id:'grapefruit', name:'Fresh Grapefruit', price:700},
+    {id:'sonsfav', name:"The Son's Favorite", price:700},
+    {id:'watermelon', name:'Watermelon Water', price:700},
+    {id:'pepino', name:'Agua de Pepino con Limón', price:700},
+    {id:'horchatalatte', name:'Horchata Latte', price:700},
+    {id:'horchata', name:"My Mom's Horchata", price:700},
+    {id:'chatamatcha', name:'Chata Matcha', price:700},
+    {id:'strawhorchata', name:'Strawberry Horchata', price:700},
+    {id:'stlemonade', name:'Strawberry Lemonade', price:700},
+  ];
+  const MO_SIXPACK_PRICE = 3600;
+  const MO_DETOX_PRICES = {1:4000, 2:8000, 3:11500, 4:14500, 5:17000};
+  const MO_SHOT_PRICE_REGULAR = 500;
+  const MO_SHOT_PRICE_BULK = 400;
+  const MO_SHOT_BULK_THRESHOLD = 5;
+  const MO_DELIVERY_FEE = 600;
+  const MO_TIP_OPTIONS = [0, 10, 15, 20];
+
+  let moState = {
+    mode: 'pickup',
+    cart: {},
+    sixPacks: [],
+    detoxes: [],
+    shotQty: 0,
+    tipMode: 'percent',
+    tipPercent: 15,
+    customTip: 0,
+  };
+
+  function moItemQty(id){ return moState.cart[id] || 0; }
+
+  function moRenderItemGrid(){
+    document.getElementById('moItemGrid').innerHTML = MO_ITEMS.map(item => `
+      <div class="mo-item-row">
+        <span>${item.name}</span>
+        <div class="mo-stepper">
+          <button type="button" onclick="moAdjustItem('${item.id}', -1)">&minus;</button>
+          <span id="moItemQty-${item.id}">${moItemQty(item.id)}</span>
+          <button type="button" onclick="moAdjustItem('${item.id}', 1)">+</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function moAdjustItem(id, delta){
+    const next = Math.max(0, moItemQty(id) + delta);
+    moState.cart[id] = next;
+    document.getElementById(`moItemQty-${id}`).textContent = next;
+    moCalcEstimate();
+  }
+
+  function moSetMode(mode){
+    moState.mode = mode;
+    document.querySelectorAll('.mo-mode-btn[data-mode]').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    moCalcEstimate();
+  }
+
+  function moFlavorTotal(pack){
+    return Object.values(pack).reduce((sum, q) => sum + Number(q || 0), 0);
+  }
+
+  function moRenderSixPacks(){
+    document.getElementById('moSixPacks').innerHTML = moState.sixPacks.map((pack, i) => {
+      const total = moFlavorTotal(pack);
+      const totalClass = total === 6 ? 'ok' : 'bad';
+      return `
+        <div class="mo-block">
+          <div class="mo-block-head">
+            <strong>6-Pack #${i + 1}</strong>
+            <button type="button" class="remove-link" onclick="moRemoveSixPack(${i})">Remove</button>
+          </div>
+          <div class="mo-flavor-grid">
+            ${MO_ITEMS.map(item => `
+              <div class="mo-flavor-row">
+                <span>${item.name}</span>
+                <div class="mo-stepper">
+                  <button type="button" onclick="moAdjustSixPackFlavor(${i}, '${item.id}', -1)">&minus;</button>
+                  <span id="moPack-${i}-${item.id}">${pack[item.id] || 0}</span>
+                  <button type="button" onclick="moAdjustSixPackFlavor(${i}, '${item.id}', 1)">+</button>
+                </div>
+              </div>`).join('')}
+          </div>
+          <div class="mo-flavor-total ${totalClass}" id="moPackTotal-${i}">${total} / 6 bottles</div>
+        </div>`;
+    }).join('');
+  }
+
+  function moAddSixPack(){
+    moState.sixPacks.push({});
+    moRenderSixPacks();
+    moCalcEstimate();
+  }
+
+  function moRemoveSixPack(index){
+    moState.sixPacks.splice(index, 1);
+    moRenderSixPacks();
+    moCalcEstimate();
+  }
+
+  function moAdjustSixPackFlavor(packIndex, flavorId, delta){
+    const pack = moState.sixPacks[packIndex];
+    const next = Math.max(0, (pack[flavorId] || 0) + delta);
+    if (next === 0) delete pack[flavorId]; else pack[flavorId] = next;
+    document.getElementById(`moPack-${packIndex}-${flavorId}`).textContent = next;
+    const total = moFlavorTotal(pack);
+    const totalEl = document.getElementById(`moPackTotal-${packIndex}`);
+    totalEl.textContent = `${total} / 6 bottles`;
+    totalEl.className = 'mo-flavor-total ' + (total === 6 ? 'ok' : 'bad');
+    moCalcEstimate();
+  }
+
+  function moRenderDetoxes(){
+    document.getElementById('moDetoxes').innerHTML = moState.detoxes.map((days, i) => `
+      <div class="mo-block" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <select onchange="moSetDetoxDays(${i}, this.value)" style="max-width:220px;">
+          ${[1,2,3,4,5].map(d => `<option value="${d}" ${Number(days)===d?'selected':''}>${d}-Day Detox Cleanse — ${money(MO_DETOX_PRICES[d]/100)}</option>`).join('')}
+        </select>
+        <button type="button" class="remove-link" onclick="moRemoveDetox(${i})">Remove</button>
+      </div>`).join('');
+  }
+
+  function moAddDetox(){
+    moState.detoxes.push(1);
+    moRenderDetoxes();
+    moCalcEstimate();
+  }
+
+  function moSetDetoxDays(index, days){
+    moState.detoxes[index] = Number(days);
+    moCalcEstimate();
+  }
+
+  function moRemoveDetox(index){
+    moState.detoxes.splice(index, 1);
+    moRenderDetoxes();
+    moCalcEstimate();
+  }
+
+  function moAdjustShots(delta){
+    moState.shotQty = Math.max(0, moState.shotQty + delta);
+    document.getElementById('moShotQty').textContent = moState.shotQty;
+    moCalcEstimate();
+  }
+
+  function moRenderTipButtons(){
+    const buttons = MO_TIP_OPTIONS.map(pct => `
+      <button type="button" class="mo-mode-btn ${moState.tipMode==='percent' && moState.tipPercent===pct ? 'active':''}" onclick="moSetTip('percent', ${pct})">${pct}%</button>
+    `).join('');
+    const customBtn = `<button type="button" class="mo-mode-btn ${moState.tipMode==='custom'?'active':''}" onclick="moSetTip('custom')">Custom</button>`;
+    document.getElementById('moTipButtons').innerHTML = buttons + customBtn;
+    document.getElementById('moCustomTipRow').style.display = moState.tipMode === 'custom' ? 'block' : 'none';
+  }
+
+  function moSetTip(tipMode, pct){
+    moState.tipMode = tipMode;
+    if (tipMode === 'percent') moState.tipPercent = pct;
+    moRenderTipButtons();
+    moCalcEstimate();
+  }
+
+  function moSubtotalCents(){
+    let total = 0;
+    MO_ITEMS.forEach(item => { total += moItemQty(item.id) * item.price; });
+    total += moState.sixPacks.length * MO_SIXPACK_PRICE;
+    moState.detoxes.forEach(d => { total += MO_DETOX_PRICES[d] || 0; });
+    const shotUnit = moState.shotQty >= MO_SHOT_BULK_THRESHOLD ? MO_SHOT_PRICE_BULK : MO_SHOT_PRICE_REGULAR;
+    total += moState.shotQty * shotUnit;
+    return total;
+  }
+
+  function moTipCents(subtotal){
+    if (moState.tipMode === 'custom'){
+      const v = Number(document.getElementById('moCustomTip').value || 0);
+      return Math.max(0, Math.round(v * 100));
+    }
+    return Math.round(subtotal * (moState.tipPercent / 100));
+  }
+
+  function moCalcEstimate(){
+    const subtotal = moSubtotalCents();
+    const deliveryFee = moState.mode === 'delivery' ? MO_DELIVERY_FEE : 0;
+    const tip = moTipCents(subtotal);
+    const total = subtotal + deliveryFee + tip;
+    document.getElementById('moEstTotal').textContent = money(total / 100);
+  }
+
+  async function moGenerateLink(){
+    const errEl = document.getElementById('moError');
+    errEl.textContent = '';
+
+    for (let i = 0; i < moState.sixPacks.length; i++){
+      if (moFlavorTotal(moState.sixPacks[i]) !== 6){
+        errEl.textContent = `6-Pack #${i + 1} needs to total exactly 6 bottles.`;
+        return;
+      }
+    }
+    const hasAnyItems = MO_ITEMS.some(item => moItemQty(item.id) > 0) ||
+      moState.sixPacks.length > 0 || moState.detoxes.length > 0 || moState.shotQty > 0;
+    if (!hasAnyItems){ errEl.textContent = 'Add at least one item before generating a link.'; return; }
+
+    const subtotal = moSubtotalCents();
+    const tipAmount = moTipCents(subtotal) / 100;
+
+    // No customer info sent — the payer enters their own name, email,
+    // phone, and (for delivery) billing/delivery address directly on
+    // Stripe's checkout page. server.js allows this: contact info is only
+    // required when some of it is provided, so sending none at all is
+    // valid and Stripe collects it instead.
+    const payload = {
+      mode: moState.mode,
+      cart: {
+        items: { ...moState.cart },
+        sixPacks: moState.sixPacks,
+        detoxes: moState.detoxes,
+        shotQty: moState.shotQty,
+        tipPercent: moState.tipMode === 'percent' ? moState.tipPercent : null,
+        tipAmount: tipAmount,
+      },
+    };
+
+    const btn = document.getElementById('moGenerateBtn');
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+
+    try {
+      const resp = await fetch(MO_CHECKOUT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok){
+        errEl.textContent = data.error || 'Something went wrong generating the link.';
+        return;
+      }
+
+      document.getElementById('moResultLink').value = data.url;
+      document.getElementById('moResult').style.display = 'block';
+    } catch(err){
+      errEl.textContent = 'Could not reach the checkout server. Please try again.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate Payment Link';
+    }
+  }
+
+  function moCopyLink(){
+    const input = document.getElementById('moResultLink');
+    input.select();
+    navigator.clipboard?.writeText(input.value);
+  }
+
+  function moReset(){
+    moState = { mode:'pickup', cart:{}, sixPacks:[], detoxes:[], shotQty:0, tipMode:'percent', tipPercent:15, customTip:0 };
+    document.getElementById('moCustomTip').value = 0;
+    document.getElementById('moResult').style.display = 'none';
+    document.getElementById('moError').textContent = '';
+    moSetMode('pickup');
+    moRenderItemGrid();
+    moRenderSixPacks();
+    moRenderDetoxes();
+    document.getElementById('moShotQty').textContent = '0';
+    moRenderTipButtons();
+    moCalcEstimate();
+  }
+
+  function moInit(){
+    moRenderItemGrid();
+    moRenderSixPacks();
+    moRenderDetoxes();
+    moRenderTipButtons();
+    moCalcEstimate();
   }
 
   function setSort(field){
@@ -600,8 +1005,8 @@
         <tr>
           <td class="checkbox-col"><input type="checkbox" ${selectedIds.has(c.id) ? 'checked' : ''} onchange="toggleRowSelect('${c.id}')"></td>
           <td>${c.first_name || ''} ${c.last_name || ''}</td>
-          <td>${c.email || '—'}</td>
-          <td>${c.phone || '—'}</td>
+          <td>${emailLink(c.email)}</td>
+          <td>${phoneLinks(c.phone)}</td>
           <td>${c.address || '—'}</td>
           <td class="num">${c.order_count || 0}</td>
           <td class="num">${money(c.lifetime_spend)}</td>
