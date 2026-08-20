@@ -388,23 +388,26 @@
     </div>
     <div class="builder" style="margin-top:0;">
       <div class="builder-head">
-        <p style="margin:0;">Pick up to 6 bottles total — any mix of flavors</p>
+        <p style="margin:0 0 16px;">Pick up to 6 bottles total — any mix of flavors</p>
       </div>
-      <div class="flavor-check-grid" id="builderGrid"></div>
-      <div class="builder-status">
-        <span><strong class="mono" id="builderCount">0</strong> / 6 flavors selected</span>
-        <button class="add-btn" id="addSixPack" style="padding:18px 32px; font-size:19px; width:100%; margin-top:16px; background:var(--orange); color:#fff;">Add 6-pack to order</button>
-        <p id="sixPackMsg" style="display:none; margin:10px 0 0; font-size:14px; font-weight:700; color:var(--orange); text-align:center;">Choose 6 bottles to add your 6-pack to the order.</p>
+      <button type="button" id="startBuilderBtn" class="add-btn" style="padding:18px 32px; font-size:19px; width:100%; background:var(--orange); color:#fff;">Start building your 6-pack</button>
+      <div id="builderContent" style="display:none;">
+        <div class="flavor-check-grid" id="builderGrid"></div>
+        <div class="builder-status">
+          <span><strong class="mono" id="builderCount">0</strong> / 6 flavors selected</span>
+          <button class="add-btn" id="addSixPack" style="padding:18px 32px; font-size:19px; width:100%; margin-top:16px; background:var(--orange); color:#fff;">Add 6-pack to order</button>
+          <p id="sixPackMsg" style="display:none; margin:10px 0 0; font-size:14px; font-weight:700; color:var(--orange); text-align:center;">Choose 6 bottles to add your 6-pack to the order.</p>
+        </div>
+        <div class="flavor-check" id="shotBuilderCard" style="margin-top:36px; background:#E9D8B4; border-color:var(--line); color:var(--dark);">
+          <span class="fc-info" style="color:var(--dark);"><strong>Add Immunity Shots?</strong> — Ginger &amp; fresh-squeezed orange. <span id="shotBuilderPrice">$5 ea</span></span>
+          <span class="qty-controls">
+            <button class="qbtn" data-action="minus" data-id="shot" style="border-color:var(--dark); background:#fff; color:var(--dark);">–</button>
+            <span class="qty mono" id="qty-shot-builder" style="color:var(--dark);">0</span>
+            <button class="qbtn" data-action="plus" data-id="shot" style="border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
+          </span>
+        </div>
+        <p style="font-size:13px; margin:6px 0 0; color:#E9D8B4;">$5 each, or $4 each when ordering 5 or more.</p>
       </div>
-      <div class="flavor-check" id="shotBuilderCard" style="margin-top:36px; background:#E9D8B4; border-color:var(--line); color:var(--dark);">
-        <span class="fc-info" style="color:var(--dark);"><strong>Add Immunity Shots?</strong> — Ginger &amp; fresh-squeezed orange. <span id="shotBuilderPrice">$5 ea</span></span>
-        <span class="qty-controls">
-          <button class="qbtn" data-action="minus" data-id="shot" style="border-color:var(--dark); background:#fff; color:var(--dark);">–</button>
-          <span class="qty mono" id="qty-shot-builder" style="color:var(--dark);">0</span>
-          <button class="qbtn" data-action="plus" data-id="shot" style="border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
-        </span>
-      </div>
-      <p style="font-size:13px; margin:6px 0 0; color:#E9D8B4;">$5 each, or $4 each when ordering 5 or more.</p>
     </div>
   </div>
 </section>
@@ -462,12 +465,13 @@
   <div class="wrap">
     <div class="section-head">
       <div>
-        <p class="eyebrow">Individual bottles</p>
-        <h2>Add individual bottles to your order</h2>
+        <p class="eyebrow">Extra bottles</p>
+        <h2>Add extra bottles to your order</h2>
       </div>
     </div>
 
-    <div class="menu-grid" id="menuGrid">
+    <button type="button" id="showMenuGrid" class="add-btn" style="padding:18px 32px; font-size:19px; width:100%; margin-bottom:16px; background:var(--orange); color:#fff;">Add extra bottles to your order</button>
+    <div class="menu-grid" id="menuGrid" style="display:none;">
       <div id="menuItems" style="display:contents"></div>
       <div class="item-card" id="shotCard" style="border-left-color:var(--orange);">
         <div class="item-name">Immunity Shot</div>
@@ -1440,6 +1444,16 @@
     const zip = this.value.trim();
     const warning = document.getElementById('zipWarning');
     warning.style.display = (zip.length === 5 && !ALLOWED_DELIVERY_ZIPS.has(zip)) ? 'block' : 'none';
+  });
+
+  document.getElementById('startBuilderBtn').addEventListener('click', function(){
+    document.getElementById('builderContent').style.display = 'block';
+    this.style.display = 'none';
+  });
+
+  document.getElementById('showMenuGrid').addEventListener('click', function(){
+    document.getElementById('menuGrid').style.display = 'grid';
+    this.style.display = 'none';
   });
 
   restoreCartFromStorage();
