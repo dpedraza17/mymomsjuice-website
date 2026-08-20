@@ -596,6 +596,7 @@
     <div class="field" id="addressZipField" style="display:none;">
       <label for="custZip">ZIP code</label>
       <input type="text" id="custZip" placeholder="Zip">
+      <p id="zipWarning" style="display:none; color:var(--orange); font-weight:700; font-size:14px; margin:6px 0 0;">Sorry, we don't currently deliver to this ZIP code. Check pickup or our weekend pop-up instead!</p>
     </div>
     <div class="field" style="margin-bottom:16px;">
       <label for="custNote" id="custNoteLabel" style="font-size:17.5px; font-weight:700;">Add a note (optional)</label>
@@ -1129,6 +1130,25 @@
 
   let mode = 'delivery';
   const DELIVERY_FEE = 6;
+
+  // Zip codes we currently deliver to — keep this in sync with the same
+  // list in server.js, which is the real enforcement point. This copy is
+  // just for instant, friendly feedback before the customer even submits.
+  const ALLOWED_DELIVERY_ZIPS = new Set([
+    '85233','85234','85296','85295','85225','85286','85224',
+    '85202','85210','85204','85201','85203','85213','85205',
+    '85215','85206','85040','85282','85283','85284','85281',
+    '85257','85034','85251','85250','85258','85253','85018',
+    '85254','85260','85032','85020','85016','85014','85013',
+    '85015','85017','85019','85004','85042','85041','85009',
+    '85007','85003','85043','85035','85031','85033','85301',
+    '85302','85304','85306','85345','85305','85303','85037',
+    '85392','85029','85051','85021','85023','85053','85048',
+    '85226','85006','85012','85028','85027','85044','85008',
+    '85307','85298','85022','85054','85308','85050','85256',
+    '85255','85382','85209','85288','85259','85353','85323',
+    '85340','85248',
+  ]);
   let tipPercent = 15;
   let tipMode = 'percent';
   let customTipAmount = 0;
@@ -1347,6 +1367,11 @@
       document.getElementById('custZip').focus();
       return;
     }
+    if(mode==='delivery' && !ALLOWED_DELIVERY_ZIPS.has(document.getElementById('custZip').value.trim())){
+      alert("Sorry, we don't currently deliver to this ZIP code. Please choose pickup or our weekend pop-up instead.");
+      document.getElementById('custZip').focus();
+      return;
+    }
     if(!document.getElementById('custPhone').value.trim()){
       alert('Please enter your phone number before checking out.');
       document.getElementById('custPhone').focus();
@@ -1376,6 +1401,7 @@
           document.getElementById('custState').value.trim(),
           document.getElementById('custZip').value.trim()
         ].filter(Boolean).join(', ') : '',
+        zip: mode==='delivery' ? document.getElementById('custZip').value.trim() : '',
       },
       cart: {
         items: { ...cart },
@@ -1408,6 +1434,12 @@
       payBtn.disabled = false;
       payBtn.textContent = originalLabel;
     }
+  });
+
+  document.getElementById('custZip').addEventListener('input', function(){
+    const zip = this.value.trim();
+    const warning = document.getElementById('zipWarning');
+    warning.style.display = (zip.length === 5 && !ALLOWED_DELIVERY_ZIPS.has(zip)) ? 'block' : 'none';
   });
 
   restoreCartFromStorage();
