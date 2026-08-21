@@ -702,7 +702,16 @@
     if (!saved || typeof saved !== 'object') return;
 
     if (saved.cart && typeof saved.cart === 'object'){
-      Object.keys(saved.cart).forEach(id => { cart[id] = saved.cart[id]; });
+      // Only restore keys that are actually real menu items — protects
+      // against a previously-saved corrupted cart (e.g. from the shot
+      // stepper double-counting bug) getting stuck forever. A customer
+      // with bad data saved from before this fix will have it silently
+      // cleaned up on their next visit instead of hitting the same
+      // "Unknown item" checkout error indefinitely.
+      const validIds = new Set(items.map(it => it.id));
+      Object.keys(saved.cart).forEach(id => {
+        if (validIds.has(id)) cart[id] = saved.cart[id];
+      });
     }
     if (Array.isArray(saved.sixPacks)) sixPacks = saved.sixPacks;
     if (Array.isArray(saved.detoxes)) detoxes = saved.detoxes;
@@ -866,6 +875,7 @@
   document.getElementById('shotCard').addEventListener('click', (e)=>{
     const btn = e.target.closest('.qbtn');
     if(!btn) return;
+    e.stopPropagation();
     if(btn.dataset.action==='plus'){ extras.shot++; showAddedToast('Immunity Shot added to order'); }
     else extras.shot = Math.max(0, extras.shot-1);
     updateShotDisplays();
@@ -875,6 +885,7 @@
   document.getElementById('shotBuilderCard').addEventListener('click', (e)=>{
     const btn = e.target.closest('.qbtn');
     if(!btn) return;
+    e.stopPropagation();
     if(btn.dataset.action==='plus'){ extras.shot++; showAddedToast('Immunity Shot added to order'); }
     else extras.shot = Math.max(0, extras.shot-1);
     updateShotDisplays();
@@ -884,6 +895,7 @@
   document.getElementById('cartShotUpsell').addEventListener('click', (e)=>{
     const btn = e.target.closest('.qbtn');
     if(!btn) return;
+    e.stopPropagation();
     if(btn.dataset.action==='plus'){ extras.shot++; showAddedToast('Immunity Shot added to order'); }
     else extras.shot = Math.max(0, extras.shot-1);
     updateShotDisplays();
