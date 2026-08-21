@@ -249,20 +249,9 @@
         </div>
 
         <div class="mo-section">
-          <h4>Menu Items <span style="font-weight:400; color:var(--muted); font-size:12.5px;">$7 each</span></h4>
-          <div class="mo-item-grid" id="moItemGrid"></div>
-        </div>
-
-        <div class="mo-section">
           <h4>6-Packs <span style="font-weight:400; color:var(--muted); font-size:12.5px;">$36 each &mdash; pick any 6 bottles</span></h4>
           <div id="moSixPacks"></div>
           <button type="button" class="btn ghost" onclick="moAddSixPack()">+ Add a 6-pack</button>
-        </div>
-
-        <div class="mo-section">
-          <h4>Detox Cleanses</h4>
-          <div id="moDetoxes"></div>
-          <button type="button" class="btn ghost" onclick="moAddDetox()">+ Add a detox cleanse</button>
         </div>
 
         <div class="mo-section">
@@ -275,8 +264,21 @@
         </div>
 
         <div class="mo-section">
+          <h4>Menu Items <span style="font-weight:400; color:var(--muted); font-size:12.5px;">$7 each</span></h4>
+          <button type="button" id="moShowItemsBtn" class="btn ghost">+ Add menu items</button>
+          <div class="mo-item-grid" id="moItemGrid" style="display:none; margin-top:10px;"></div>
+        </div>
+
+        <div class="mo-section">
           <h4>Gallons &amp; Half Gallons <span style="font-weight:400; color:var(--muted); font-size:12.5px;">Gallons $30, Half Gallons $19</span></h4>
-          <div id="moGallons"></div>
+          <button type="button" id="moShowGallonsBtn" class="btn ghost">+ Add gallons or half gallons</button>
+          <div id="moGallons" style="display:none; margin-top:10px;"></div>
+        </div>
+
+        <div class="mo-section">
+          <h4>Detox Cleanses</h4>
+          <div id="moDetoxes"></div>
+          <button type="button" class="btn ghost" onclick="moAddDetox()">+ Add a detox cleanse</button>
         </div>
 
         <div class="mo-section">
@@ -943,6 +945,12 @@
     moRenderGallons();
     moRenderTipButtons();
     moCalcEstimate();
+
+    // Re-collapse back to hidden, matching the fresh-page-load state
+    document.getElementById('moItemGrid').style.display = 'none';
+    document.getElementById('moShowItemsBtn').style.display = '';
+    document.getElementById('moGallons').style.display = 'none';
+    document.getElementById('moShowGallonsBtn').style.display = '';
   }
 
   function moInit(){
@@ -952,6 +960,23 @@
     moRenderGallons();
     moRenderTipButtons();
     moCalcEstimate();
+
+    const showItemsBtn = document.getElementById('moShowItemsBtn');
+    if (showItemsBtn && !showItemsBtn.dataset.wired) {
+      showItemsBtn.dataset.wired = '1';
+      showItemsBtn.addEventListener('click', function(){
+        document.getElementById('moItemGrid').style.display = 'grid';
+        this.style.display = 'none';
+      });
+    }
+    const showGallonsBtn = document.getElementById('moShowGallonsBtn');
+    if (showGallonsBtn && !showGallonsBtn.dataset.wired) {
+      showGallonsBtn.dataset.wired = '1';
+      showGallonsBtn.addEventListener('click', function(){
+        document.getElementById('moGallons').style.display = 'block';
+        this.style.display = 'none';
+      });
+    }
   }
 
   function setSort(field){
