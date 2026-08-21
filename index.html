@@ -412,6 +412,19 @@
   </div>
 </section>
 
+<section class="section" id="gallons" style="padding-top:20px;">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Stock up</p>
+        <h2 style="font-size:clamp(30px,5vw,44px);">Gallons &amp; Half Gallons</h2>
+      </div>
+    </div>
+    <p style="margin:0 0 16px;">Gallons — $30 &middot; Half Gallons — $19</p>
+    <div class="menu-grid" id="gallonGrid"></div>
+  </div>
+</section>
+
 <section class="section" id="detox" style="background:#E9D8B4; border-top:1px solid var(--line); border-bottom:1px solid var(--line); color:var(--dark); padding-top:20px;">
   <div class="wrap">
     <div class="section-head">
@@ -660,6 +673,15 @@
   let extras = {shot:0};
   let builderQty = {};
 
+  // Gallons & Half Gallons — same 13-item menu minus the two espresso/matcha
+  // drinks, which aren't offered in these larger sizes. Keyed as
+  // `${flavorId}_gallon` / `${flavorId}_half` -> qty, same flat-map pattern
+  // as the regular item cart.
+  const GALLON_FLAVOR_IDS = ['green','vampiro','mimosa','sunrise','grapefruit','sonsfav','watermelon','pepino','horchata','strawhorchata','stlemonade'];
+  const GALLON_PRICE = 30;
+  const HALF_GALLON_PRICE = 19;
+  let gallonCart = {};
+
   // Persist the cart across a trip to Stripe Checkout and back. Without
   // this, clicking "Pay online" navigates the browser fully away to
   // Stripe's site — destroying all in-memory JS state — so if the customer
@@ -683,7 +705,7 @@
         if (el) customer[id] = el.value;
       });
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({
-        cart, sixPacks, detoxes, extras, customer,
+        cart, sixPacks, detoxes, extras, gallonCart, customer,
         mode: typeof mode !== 'undefined' ? mode : undefined,
         tipMode: typeof tipMode !== 'undefined' ? tipMode : undefined,
         tipPercent: typeof tipPercent !== 'undefined' ? tipPercent : undefined,
@@ -716,6 +738,13 @@
     if (Array.isArray(saved.sixPacks)) sixPacks = saved.sixPacks;
     if (Array.isArray(saved.detoxes)) detoxes = saved.detoxes;
     if (saved.extras && typeof saved.extras === 'object') extras = saved.extras;
+    if (saved.gallonCart && typeof saved.gallonCart === 'object'){
+      const validGallonKeys = new Set();
+      GALLON_FLAVOR_IDS.forEach(id => { validGallonKeys.add(id+'_gallon'); validGallonKeys.add(id+'_half'); });
+      Object.keys(saved.gallonCart).forEach(key => {
+        if (validGallonKeys.has(key)) gallonCart[key] = saved.gallonCart[key];
+      });
+    }
     if (saved.mode) mode = saved.mode;
     if (saved.tipMode) tipMode = saved.tipMode;
     if (typeof saved.tipPercent === 'number') tipPercent = saved.tipPercent;
@@ -743,6 +772,7 @@
   const grid = document.getElementById('menuGrid');
   const menuItems = document.getElementById('menuItems');
   const builderGrid = document.getElementById('builderGrid');
+  const gallonGrid = document.getElementById('gallonGrid');
 
   // Agua de Pepino con Limón is available for Friday delivery, and for both
   // pickup options (Mesa runs Fri/Sat/Sun, the McDowell pop-up runs Sat/Sun —
@@ -805,6 +835,65 @@
       builderGrid.appendChild(row);
     });
   }
+
+  function renderGallons(){
+    gallonGrid.innerHTML = '';
+    const gallonFlavors = GALLON_FLAVOR_IDS
+      .map(id => items.find(it => it.id === id))
+      .filter(Boolean)
+      .sort((a,b)=>{
+        if(a.id === 'pepino') return 1;
+        if(b.id === 'pepino') return -1;
+        return 0;
+      });
+    gallonFlavors.forEach(it=>{
+      const locked = it.id === 'pepino' && !isPepinoAvailable();
+      const row = document.createElement('div');
+      row.className = 'flavor-check' + (locked ? ' disabled' : '');
+      row.innerHTML = `
+        <span class="fc-info"><strong>${it.name}</strong> — ${it.desc}</span>
+        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:8px;">
+          <span class="qty-controls">
+            Gallon
+            <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="gallon" ${locked?'disabled':''}>–</button>
+            <span class="qty mono" id="gqty-${it.id}_gallon">${gallonCart[it.id+'_gallon']||0}</span>
+            <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="gallon" ${locked?'disabled':''}>+</button>
+          </span>
+          <span class="qty-controls">
+            Half Gal
+            <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="half" ${locked?'disabled':''}>–</button>
+            <span class="qty mono" id="gqty-${it.id}_half">${gallonCart[it.id+'_half']||0}</span>
+            <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="half" ${locked?'disabled':''}>+</button>
+          </span>
+        </div>
+      `;
+      gallonGrid.appendChild(row);
+    });
+  }
+
+  gallonGrid.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.qbtn');
+    if(!btn || btn.disabled) return;
+    e.stopPropagation();
+    const flavorId = btn.dataset.flavor;
+    const size = btn.dataset.size;
+    const key = `${flavorId}_${size}`;
+    if(flavorId === 'pepino' && !isPepinoAvailable()){
+      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday delivery and for pickup.');
+      return;
+    }
+    const flavorInfo = items.find(x=>x.id===flavorId);
+    const flavorName = flavorInfo ? flavorInfo.name : 'Item';
+    const sizeLabel = size === 'gallon' ? 'Gallon' : 'Half Gallon';
+    if(btn.dataset.action==='plus'){
+      gallonCart[key] = (gallonCart[key]||0)+1;
+      showAddedToast(`${flavorName} — ${sizeLabel} added to order`);
+    } else {
+      gallonCart[key] = Math.max(0, (gallonCart[key]||0)-1);
+    }
+    document.getElementById('gqty-'+key).textContent = gallonCart[key]||0;
+    updateCartUI();
+  });
 
   grid.addEventListener('click', (e)=>{
     const btn = e.target.closest('button');
@@ -964,6 +1053,7 @@
 
   function totalCount(){
     let c = Object.values(cart).reduce((a,b)=>a+b,0) + sixPacks.length + detoxes.length + extras.shot;
+    c += Object.values(gallonCart).reduce((a,b)=>a+b,0);
     return c;
   }
   function subtotalPrice(){
@@ -972,6 +1062,10 @@
     t += sixPacks.length * 36;
     detoxes.forEach(d => t += d.price);
     t += extras.shot * (extras.shot >= 5 ? 4 : 5);
+    Object.keys(gallonCart).forEach(key=>{
+      const unitPrice = key.endsWith('_gallon') ? GALLON_PRICE : HALF_GALLON_PRICE;
+      t += (gallonCart[key]||0) * unitPrice;
+    });
     return t;
   }
   function tipAmount(){
@@ -998,6 +1092,10 @@
     } else if(type==='shot'){
       extras.shot = 0;
       updateShotDisplays();
+    } else if(type==='gallon'){
+      gallonCart[key] = 0;
+      const qtyEl = document.getElementById('gqty-'+key);
+      if(qtyEl) qtyEl.textContent = 0;
     }
     updateCartUI();
   }
@@ -1013,6 +1111,14 @@
     sixPacks.forEach((flavors,i)=> rows.push({type:'sixpack', key:i, label:`6-pack #${i+1} ($36): ${sixPackLabel(flavors)}`}));
     detoxes.forEach((d,i)=> rows.push({type:'detox', key:i, label:`${d.days}-Day Detox Cleanse ($${d.price})`}));
     if(extras.shot) rows.push({type:'shot', key:'shot', label:`${extras.shot}x Immunity Shot ($${extras.shot>=5?4:5} ea)`});
+    Object.keys(gallonCart).forEach(key=>{
+      if(!gallonCart[key]) return;
+      const [flavorId, size] = key.split(/_(?=gallon$|half$)/);
+      const flavor = items.find(it=>it.id===flavorId);
+      const sizeLabel = size === 'gallon' ? 'Gallon' : 'Half Gallon';
+      const unitPrice = size === 'gallon' ? GALLON_PRICE : HALF_GALLON_PRICE;
+      rows.push({type:'gallon', key, label:`${gallonCart[key]}x ${flavor?flavor.name:'Item'} — ${sizeLabel} ($${unitPrice} ea)`});
+    });
     if(mode === 'delivery' && rows.length > 0) rows.push({type:'fee', key:'deliveryFee', label:`Delivery Fee ($${DELIVERY_FEE})`, noRemove:true});
     if(rows.length===0){
       body.innerHTML = '<p class="cart-empty">Nothing added yet — tap "Add" on any menu item.</p>';
@@ -1335,6 +1441,7 @@
       applyModeUI();
       renderMenu();
       renderBuilder();
+      renderGallons();
       updateCartUI();
     });
   });
@@ -1424,6 +1531,7 @@
         sixPacks: sixPacks,
         detoxes: detoxes.map(d => Number(d.days)),
         shotQty: extras.shot,
+        gallons: { ...gallonCart },
         tipPercent: tipMode === 'percent' ? tipPercent : null,
         tipAmount: tipAmount(),
       },
@@ -1472,6 +1580,7 @@
   applyModeUI();
   renderBuilder();
   renderMenu();
+  renderGallons();
   updateCartUI();
 
   // Cart mutations already trigger a save via updateCartUI(), but typing
