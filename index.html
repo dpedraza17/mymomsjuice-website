@@ -237,6 +237,10 @@
   .detox-card h3.display{font-size:26px !important;}
   .detox-card.featured{background:var(--orange); color:#fff; border-color:var(--orange);}
   .detox-card.featured .item-desc{color:#fff;}
+  .detox-card.disabled{opacity:0.55;}
+  .detox-card.gallon-card{background:var(--dark); color:#fff; border-color:var(--dark);}
+  .detox-card.gallon-card .item-desc{color:rgba(255,255,255,0.85);}
+  .detox-card.gallon-card .mono{color:#fff;}
   .detox-price{font-family:'Space Mono',monospace; font-size:22px; font-weight:700;}
   .detox-card .add-btn{font-size:16px; padding:12px 20px;}
   .pill{align-self:flex-start; font-size:11px; font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.06em; background:var(--yellow); color:var(--dark); padding:4px 10px; border-radius:999px; font-weight:700;}
@@ -412,16 +416,17 @@
   </div>
 </section>
 
-<section class="section" id="gallons" style="padding-top:20px;">
+<section class="section" id="gallons" style="padding-top:20px; background:var(--orange); color:#fff;">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <p class="eyebrow">Stock up</p>
-        <h2 style="font-size:clamp(30px,5vw,44px);">Gallons &amp; Half Gallons</h2>
+        <p class="eyebrow" style="color:#fff;">Stock up</p>
+        <h2 style="font-size:clamp(30px,5vw,44px); color:#fff;">Gallons &amp; Half Gallons</h2>
       </div>
     </div>
-    <p style="margin:0 0 16px;">Gallons — $30 &middot; Half Gallons — $19</p>
-    <div class="menu-grid" id="gallonGrid"></div>
+    <p style="margin:0 0 16px; color:#fff;">Gallons — $30 &middot; Half Gallons — $19</p>
+    <button type="button" id="startGallonsBtn" class="add-btn" style="padding:18px 32px; font-size:19px; width:100%; margin-bottom:16px; background:#fff; color:var(--orange);">Order gallons or half gallons</button>
+    <div class="detox-grid" id="gallonGrid" style="display:none; margin-top:24px;"></div>
   </div>
 </section>
 
@@ -848,26 +853,31 @@
       });
     gallonFlavors.forEach(it=>{
       const locked = it.id === 'pepino' && !isPepinoAvailable();
-      const row = document.createElement('div');
-      row.className = 'flavor-check' + (locked ? ' disabled' : '');
-      row.innerHTML = `
-        <span class="fc-info"><strong>${it.name}</strong> — ${it.desc}</span>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:8px;">
-          <span class="qty-controls">
-            Gallon
-            <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="gallon" ${locked?'disabled':''}>–</button>
-            <span class="qty mono" id="gqty-${it.id}_gallon">${gallonCart[it.id+'_gallon']||0}</span>
-            <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="gallon" ${locked?'disabled':''}>+</button>
-          </span>
-          <span class="qty-controls">
-            Half Gal
-            <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="half" ${locked?'disabled':''}>–</button>
-            <span class="qty mono" id="gqty-${it.id}_half">${gallonCart[it.id+'_half']||0}</span>
-            <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="half" ${locked?'disabled':''}>+</button>
-          </span>
+      const card = document.createElement('div');
+      card.className = 'detox-card gallon-card' + (locked ? ' disabled' : '');
+      card.innerHTML = `
+        <h3 class="display" style="font-size:20px;">${it.name}</h3>
+        <p class="item-desc">${it.desc}</p>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <span><strong>Gallon</strong> <span class="mono">$${GALLON_PRICE}</span></span>
+            <span class="qty-controls">
+              <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="gallon" ${locked?'disabled':''}>–</button>
+              <span class="qty mono" id="gqty-${it.id}_gallon">${gallonCart[it.id+'_gallon']||0}</span>
+              <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="gallon" ${locked?'disabled':''}>+</button>
+            </span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <span><strong>Half Gallon</strong> <span class="mono">$${HALF_GALLON_PRICE}</span></span>
+            <span class="qty-controls">
+              <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="half" ${locked?'disabled':''}>–</button>
+              <span class="qty mono" id="gqty-${it.id}_half">${gallonCart[it.id+'_half']||0}</span>
+              <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="half" ${locked?'disabled':''}>+</button>
+            </span>
+          </div>
         </div>
       `;
-      gallonGrid.appendChild(row);
+      gallonGrid.appendChild(card);
     });
   }
 
@@ -1573,6 +1583,11 @@
 
   document.getElementById('showMenuGrid').addEventListener('click', function(){
     document.getElementById('menuGrid').style.display = 'grid';
+    this.style.display = 'none';
+  });
+
+  document.getElementById('startGallonsBtn').addEventListener('click', function(){
+    document.getElementById('gallonGrid').style.display = 'grid';
     this.style.display = 'none';
   });
 
