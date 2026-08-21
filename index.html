@@ -403,7 +403,7 @@
         </div>
         <div class="flavor-check" id="shotBuilderCard" style="margin-top:36px; background:#E9D8B4; border-color:var(--line); color:var(--dark);">
           <span class="fc-info" style="color:var(--dark);"><strong>Add Immunity Shots?</strong> — Ginger &amp; fresh-squeezed orange. <span id="shotBuilderPrice">$5 ea</span></span>
-          <span class="qty-controls">
+          <span class="qty-controls" style="display:flex; align-items:center; gap:8px;">
             <button class="qbtn" data-action="minus" data-id="shot" style="border-color:var(--dark); background:#fff; color:var(--dark);">–</button>
             <span class="qty mono" id="qty-shot-builder" style="color:var(--dark);">0</span>
             <button class="qbtn" data-action="plus" data-id="shot" style="border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
@@ -830,7 +830,7 @@
       row.className = 'flavor-check' + (locked ? ' disabled' : '');
       row.innerHTML = `
         <span class="fc-info"><strong>${it.name}</strong> — ${it.desc}</span>
-        <span class="qty-controls">
+        <span class="qty-controls" style="display:flex; align-items:center; gap:8px;">
           <button class="qbtn" data-action="minus" data-flavor="${it.id}" ${locked?'disabled':''}>–</button>
           <span class="qty mono" id="bqty-${it.id}">0</span>
           <button class="qbtn" data-action="plus" data-flavor="${it.id}" ${locked?'disabled':''}>+</button>
