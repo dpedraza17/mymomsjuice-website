@@ -1140,6 +1140,15 @@
     summaryHeading.style.fontSize = '19px';
     summaryHeading.style.marginBottom = '6px';
     body.appendChild(summaryHeading);
+    if(mode === 'delivery' && subtotalPrice() < DELIVERY_MINIMUM){
+      const minNotice = document.createElement('p');
+      minNotice.textContent = `Add $${(DELIVERY_MINIMUM - subtotalPrice()).toFixed(2)} more to meet the $${DELIVERY_MINIMUM} delivery minimum.`;
+      minNotice.style.fontSize = '13.5px';
+      minNotice.style.fontWeight = '700';
+      minNotice.style.color = 'var(--orange)';
+      minNotice.style.margin = '0 0 10px';
+      body.appendChild(minNotice);
+    }
     rows.forEach(r=>{
       const row = document.createElement('div');
       row.className = 'cart-line';
@@ -1261,6 +1270,7 @@
 
   let mode = 'delivery';
   const DELIVERY_FEE = 6;
+  const DELIVERY_MINIMUM = 35; // matches DELIVERY_MINIMUM in server.js — keep in sync
 
   // Zip codes we currently deliver to — keep this in sync with the same
   // list in server.js, which is the real enforcement point. This copy is
@@ -1502,6 +1512,10 @@
     if(mode==='delivery' && !ALLOWED_DELIVERY_ZIPS.has(document.getElementById('custZip').value.trim())){
       alert("Sorry, we don't currently deliver to this ZIP code. Please choose pickup or our weekend pop-up instead.");
       document.getElementById('custZip').focus();
+      return;
+    }
+    if(mode==='delivery' && subtotalPrice() < DELIVERY_MINIMUM){
+      alert(`Delivery orders need a $${DELIVERY_MINIMUM} minimum — add $${(DELIVERY_MINIMUM - subtotalPrice()).toFixed(2)} more to your order.`);
       return;
     }
     if(!document.getElementById('custPhone').value.trim()){
