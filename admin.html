@@ -275,6 +275,11 @@
         </div>
 
         <div class="mo-section">
+          <h4>Gallons &amp; Half Gallons <span style="font-weight:400; color:var(--muted); font-size:12.5px;">Gallons $30, Half Gallons $19</span></h4>
+          <div id="moGallons"></div>
+        </div>
+
+        <div class="mo-section">
           <h4>Tip</h4>
           <div class="mo-mode-row" id="moTipButtons"></div>
           <div id="moCustomTipRow" style="display:none; max-width:160px;">
@@ -638,12 +643,20 @@
   const MO_DELIVERY_FEE = 600;
   const MO_TIP_OPTIONS = [0, 10, 15, 20];
 
+  // Gallons & Half Gallons — same 13-item menu minus the two espresso/matcha
+  // drinks. Matches GALLON_FLAVOR_IDS in server.js/index.html — keep all
+  // three in sync.
+  const MO_GALLON_FLAVOR_IDS = ['green','vampiro','mimosa','sunrise','grapefruit','sonsfav','watermelon','pepino','horchata','strawhorchata','stlemonade'];
+  const MO_GALLON_PRICE = 3000;
+  const MO_HALF_GALLON_PRICE = 1900;
+
   let moState = {
     mode: 'pickup',
     cart: {},
     sixPacks: [],
     detoxes: [],
     shotQty: 0,
+    gallons: {},
     tipMode: 'percent',
     tipPercent: 15,
     customTip: 0,
@@ -667,6 +680,44 @@
     const next = Math.max(0, moItemQty(id) + delta);
     moState.cart[id] = next;
     document.getElementById(`moItemQty-${id}`).textContent = next;
+    moCalcEstimate();
+  }
+
+  function moGallonQty(key){ return moState.gallons[key] || 0; }
+
+  function moRenderGallons(){
+    document.getElementById('moGallons').innerHTML = MO_GALLON_FLAVOR_IDS.map(id => {
+      const item = MO_ITEMS.find(it => it.id === id);
+      const name = item ? item.name : id;
+      const gallonKey = id + '_gallon';
+      const halfKey = id + '_half';
+      return `
+        <div class="mo-item-row" style="flex-direction:column; align-items:stretch; gap:8px;">
+          <span style="font-weight:700;">${name}</span>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12.5px; color:var(--muted);">Gallon ($30)</span>
+            <div class="mo-stepper">
+              <button type="button" onclick="moAdjustGallon('${gallonKey}', -1)">&minus;</button>
+              <span id="moGallonQty-${gallonKey}">${moGallonQty(gallonKey)}</span>
+              <button type="button" onclick="moAdjustGallon('${gallonKey}', 1)">+</button>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12.5px; color:var(--muted);">Half Gallon ($19)</span>
+            <div class="mo-stepper">
+              <button type="button" onclick="moAdjustGallon('${halfKey}', -1)">&minus;</button>
+              <span id="moGallonQty-${halfKey}">${moGallonQty(halfKey)}</span>
+              <button type="button" onclick="moAdjustGallon('${halfKey}', 1)">+</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function moAdjustGallon(key, delta){
+    const next = Math.max(0, moGallonQty(key) + delta);
+    moState.gallons[key] = next;
+    document.getElementById(`moGallonQty-${key}`).textContent = next;
     moCalcEstimate();
   }
 
@@ -788,6 +839,10 @@
     moState.detoxes.forEach(d => { total += MO_DETOX_PRICES[d] || 0; });
     const shotUnit = moState.shotQty >= MO_SHOT_BULK_THRESHOLD ? MO_SHOT_PRICE_BULK : MO_SHOT_PRICE_REGULAR;
     total += moState.shotQty * shotUnit;
+    Object.keys(moState.gallons).forEach(key => {
+      const unitPrice = key.endsWith('_gallon') ? MO_GALLON_PRICE : MO_HALF_GALLON_PRICE;
+      total += (moState.gallons[key] || 0) * unitPrice;
+    });
     return total;
   }
 
@@ -818,7 +873,8 @@
       }
     }
     const hasAnyItems = MO_ITEMS.some(item => moItemQty(item.id) > 0) ||
-      moState.sixPacks.length > 0 || moState.detoxes.length > 0 || moState.shotQty > 0;
+      moState.sixPacks.length > 0 || moState.detoxes.length > 0 || moState.shotQty > 0 ||
+      Object.values(moState.gallons).some(qty => qty > 0);
     if (!hasAnyItems){ errEl.textContent = 'Add at least one item before generating a link.'; return; }
 
     const subtotal = moSubtotalCents();
@@ -836,6 +892,7 @@
         sixPacks: moState.sixPacks,
         detoxes: moState.detoxes,
         shotQty: moState.shotQty,
+        gallons: { ...moState.gallons },
         tipPercent: moState.tipMode === 'percent' ? moState.tipPercent : null,
         tipAmount: tipAmount,
       },
@@ -874,7 +931,7 @@
   }
 
   function moReset(){
-    moState = { mode:'pickup', cart:{}, sixPacks:[], detoxes:[], shotQty:0, tipMode:'percent', tipPercent:15, customTip:0 };
+    moState = { mode:'pickup', cart:{}, sixPacks:[], detoxes:[], shotQty:0, gallons:{}, tipMode:'percent', tipPercent:15, customTip:0 };
     document.getElementById('moCustomTip').value = 0;
     document.getElementById('moResult').style.display = 'none';
     document.getElementById('moError').textContent = '';
@@ -883,6 +940,7 @@
     moRenderSixPacks();
     moRenderDetoxes();
     document.getElementById('moShotQty').textContent = '0';
+    moRenderGallons();
     moRenderTipButtons();
     moCalcEstimate();
   }
@@ -891,6 +949,7 @@
     moRenderItemGrid();
     moRenderSixPacks();
     moRenderDetoxes();
+    moRenderGallons();
     moRenderTipButtons();
     moCalcEstimate();
   }
