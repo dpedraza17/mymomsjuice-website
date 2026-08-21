@@ -304,7 +304,7 @@
         <div id="moResult" style="display:none; margin-top:20px; background:var(--paper); border-radius:10px; padding:16px;">
           <label style="display:block; font-size:12.5px; font-weight:700; color:var(--muted); margin-bottom:5px;">Payment link</label>
           <input id="moResultLink" readonly onclick="this.select()" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); font-size:13.5px; font-family:monospace; margin-bottom:10px;">
-          <button class="btn" style="width:100%;" onclick="moCopyLink()">Copy link</button>
+          <button class="btn" id="moCopyLinkBtn" style="width:100%;" onclick="moCopyLink()">Copy link</button>
           <button class="btn ghost" style="margin-top:10px; width:100%;" onclick="moReset()">Start a new order</button>
         </div>
       </div>
@@ -660,7 +660,7 @@
     shotQty: 0,
     gallons: {},
     tipMode: 'percent',
-    tipPercent: 15,
+    tipPercent: 0,
     customTip: 0,
   };
 
@@ -928,12 +928,38 @@
 
   function moCopyLink(){
     const input = document.getElementById('moResultLink');
+    const btn = document.getElementById('moCopyLinkBtn');
     input.select();
-    navigator.clipboard?.writeText(input.value);
+
+    const showCopied = () => {
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.style.background = 'var(--ok)';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.style.background = '';
+      }, 1800);
+    };
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(input.value).then(showCopied).catch(() => {
+        btn.textContent = 'Could not copy — select and copy manually';
+        setTimeout(() => { btn.textContent = 'Copy link'; }, 2500);
+      });
+    } else {
+      // Fallback for older browsers without the async clipboard API
+      try {
+        document.execCommand('copy');
+        showCopied();
+      } catch (e) {
+        btn.textContent = 'Could not copy — select and copy manually';
+        setTimeout(() => { btn.textContent = 'Copy link'; }, 2500);
+      }
+    }
   }
 
   function moReset(){
-    moState = { mode:'pickup', cart:{}, sixPacks:[], detoxes:[], shotQty:0, gallons:{}, tipMode:'percent', tipPercent:15, customTip:0 };
+    moState = { mode:'pickup', cart:{}, sixPacks:[], detoxes:[], shotQty:0, gallons:{}, tipMode:'percent', tipPercent:0, customTip:0 };
     document.getElementById('moCustomTip').value = 0;
     document.getElementById('moResult').style.display = 'none';
     document.getElementById('moError').textContent = '';

@@ -1772,6 +1772,11 @@
       <button type="submit" id="emailPopupSubmit">Sign me up</button>
       <div class="email-popup-status" id="emailPopupStatus"></div>
     </form>
+    <div id="emailPopupSuccess" style="display:none; text-align:center; padding:8px 0;">
+      <div style="font-size:34px; line-height:1;">✅</div>
+      <p style="margin:10px 0 0; font-size:17px; font-weight:800; color:var(--dark);">You're on the list!</p>
+      <p style="margin:4px 0 0; font-size:13.5px; color:var(--dark);">Keep an eye on your inbox for discounts and updates.</p>
+    </div>
   </div>
 </div>
 
@@ -1831,7 +1836,9 @@
         status.textContent = "You're on the list! 🎉";
         status.classList.add('success');
         localStorage.setItem(STORAGE_KEY, '1');
-        setTimeout(dismiss, 1800);
+        form.style.display = 'none';
+        document.getElementById('emailPopupSuccess').style.display = 'block';
+        setTimeout(dismiss, 3000);
       } catch (err) {
         status.textContent = "Something went wrong. Please try again.";
         status.classList.add('error');
