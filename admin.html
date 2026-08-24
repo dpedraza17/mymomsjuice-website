@@ -504,12 +504,19 @@
     return `<a href="mailto:${escAttr(email)}" style="color:var(--orange);">${email}</a>`;
   }
 
-  // Click-to-call on the number itself, plus a small click-to-text next to
-  // it — covers both without needing two full-size separate controls.
+  // Click-to-call on the number itself, plus a click-to-text next to it —
+  // both sized up well beyond the surrounding text since these are the
+  // controls used most often, often at a glance while driving/multitasking.
   function phoneLinks(phone){
     if (!phone) return '—';
     const digits = phone.replace(/[^\d+]/g, '');
-    return `<a href="tel:${escAttr(digits)}" style="color:var(--orange);">${phone}</a> <a href="sms:${escAttr(digits)}" title="Text" style="color:var(--muted); font-size:0.85em; margin-left:2px;">&#128172;</a>`;
+    return `<a href="tel:${escAttr(digits)}" style="color:var(--orange); font-size:1.6em; font-weight:700;">${phone}</a> <a href="sms:${escAttr(digits)}" title="Text" style="color:var(--orange); font-size:1.6em; margin-left:6px; text-decoration:none;">&#128172;</a>`;
+  }
+
+  // Click-to-open in the phone's native maps/navigation app.
+  function addressLink(address){
+    if (!address) return '';
+    return `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener" style="color:var(--orange);">${address}</a>`;
   }
 
   // Supabase auto-populates created_at on insert. If the orders-list API
@@ -549,7 +556,7 @@
             ${typeBadge}${overdueBadge}
             ${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')}
             ${orderedAt ? `<br>Ordered ${orderedAt}` : ''}
-            ${order.order_type === 'delivery' && order.address ? `<br><strong>Deliver to:</strong> ${order.address}` : ''}
+            ${order.order_type === 'delivery' && order.address ? `<br><strong>Deliver to:</strong> ${addressLink(order.address)}` : ''}
           </div>
           <div class="order-items">${items || 'No items listed'}</div>
           <div class="order-meta">
