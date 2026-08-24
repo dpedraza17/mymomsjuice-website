@@ -83,6 +83,10 @@
   .btn.danger{background:var(--warn);}
   .btn:disabled{opacity:0.5; cursor:not-allowed;}
   table{width:100%; border-collapse:collapse; background:var(--card); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);}
+  /* Contains horizontal overflow to just the table itself on narrow
+     screens, instead of the whole page shifting sideways. */
+  .table-scroll{width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  .table-scroll table{min-width:760px;}
   th,td{text-align:left; padding:11px 14px; font-size:13.5px; border-bottom:1px solid var(--line);}
   th{background:var(--dark); color:#fff; font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;}
   tr:last-child td{border-bottom:none;}
@@ -126,6 +130,16 @@
   .mo-block-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
   .mo-block-head .remove-link{color:var(--warn); font-size:12.5px; font-weight:700; cursor:pointer; background:none; border:none;}
   .mo-flavor-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px;}
+  /* Long item names were forcing rows (and the whole grid) wider than the
+     screen on mobile since flex children don't wrap by default — this lets
+     the name wrap instead of pushing the layout sideways. */
+  .mo-flavor-row{min-width:0;}
+  .mo-flavor-row span:first-child{overflow-wrap:anywhere; min-width:0;}
+  .mo-item-row{min-width:0;}
+  @media (max-width:480px){
+    .mo-item-grid{grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));}
+    .mo-flavor-grid{grid-template-columns:1fr;}
+  }
   .mo-flavor-row{display:flex; align-items:center; justify-content:space-between; font-size:12.5px;}
   .mo-flavor-total{font-size:12.5px; font-weight:700; margin-top:8px;}
   .mo-flavor-total.ok{color:var(--ok);}
@@ -191,6 +205,7 @@
           <button class="btn ghost" onclick="exportCustomersCSV()">Export CSV</button>
           <button class="btn danger" id="bulkDeleteBtn" onclick="bulkDeleteSelected()" disabled>Delete selected (<span id="selectedCount">0</span>)</button>
         </div>
+        <div class="table-scroll">
         <table>
           <thead>
             <tr>
@@ -207,6 +222,7 @@
           </thead>
           <tbody id="customerRows"></tbody>
         </table>
+        </div>
         <div class="pagination">
           <button id="prevPageBtn" onclick="changePage(-1)">&larr; Prev</button>
           <span class="page-info" id="pageInfo">Page 1</span>
@@ -220,6 +236,7 @@
           <h2>Newsletter Subscribers <span class="count-pill" id="totalSubscriberCount">0</span></h2>
           <button class="btn ghost" onclick="loadSubscribers()">Refresh</button>
         </div>
+        <div class="table-scroll">
         <table>
           <thead>
             <tr>
@@ -229,6 +246,7 @@
           </thead>
           <tbody id="subscriberRows"></tbody>
         </table>
+        </div>
       </div>
 
       <!-- MANUAL ORDER VIEW -->
@@ -796,7 +814,7 @@
   function moRenderDetoxes(){
     document.getElementById('moDetoxes').innerHTML = moState.detoxes.map((days, i) => `
       <div class="mo-block" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-        <select onchange="moSetDetoxDays(${i}, this.value)" style="max-width:220px;">
+        <select onchange="moSetDetoxDays(${i}, this.value)" style="max-width:220px; min-width:0; flex:1;">
           ${[1,2,3,4,5].map(d => `<option value="${d}" ${Number(days)===d?'selected':''}>${d}-Day Detox Cleanse — ${money(MO_DETOX_PRICES[d]/100)}</option>`).join('')}
         </select>
         <button type="button" class="remove-link" onclick="moRemoveDetox(${i})">Remove</button>
