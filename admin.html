@@ -74,6 +74,7 @@
   .badge.delivery{background:#FDECE2; color:var(--orange);}
   .badge.popup{background:#FBF0DB; color:#8A6318;}
   .badge.overdue-flag{background:#FBE4DA; color:var(--warn);}
+  .order-actions{margin-top:6px;}
   .order-actions button{border:none; border-radius:8px; padding:9px 16px; font-weight:700; font-size:13.5px;}
   .btn-fulfill{background:var(--ok); color:#fff;}
   .btn-undo{background:none; border:1px solid var(--line) !important; color:var(--muted);}
@@ -599,7 +600,10 @@
           <div class="order-items">${items || 'No items listed'}</div>
           <div class="order-meta">
             ${order.customer_note ? `<strong>Note:</strong> ${order.customer_note}<br>` : ''}
-            ${order.customer_email ? emailLink(order.customer_email) : ''} ${order.customer_phone ? ' · ' + phoneLinks(order.customer_phone, order.order_type) : ''}
+            ${order.customer_email ? emailLink(order.customer_email) : ''}
+          </div>
+          <div class="order-meta" style="margin-top:8px;">
+            ${order.customer_phone ? phoneLinks(order.customer_phone, order.order_type) : ''}
           </div>
         </div>
         <div class="order-actions">${action}</div>
