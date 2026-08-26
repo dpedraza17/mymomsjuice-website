@@ -226,7 +226,7 @@
   .item-price{font-family:'Space Mono',monospace; font-weight:700; font-size:19px; white-space:nowrap;}
   .stepper{display:flex; align-items:center; justify-content:space-between; margin-top:auto; flex-wrap:wrap; gap:8px;}
   .stepper .qty-controls{display:flex; align-items:center; gap:8px;}
-  .qbtn{width:34px; height:34px; border-radius:50%; border:2px solid var(--ink); background:var(--card); font-weight:800; font-size:19px; line-height:1; color:var(--ink);}
+  .qbtn{width:34px; height:34px; border-radius:50%; border:2px solid var(--ink); background:var(--card); font-weight:800; font-size:19px; line-height:1; color:var(--ink); touch-action:manipulation;}
   .qty{font-family:'Space Mono',monospace; font-weight:700; min-width:14px; text-align:center; font-size:19px;}
   .add-btn{border:none; background:var(--ink); color:var(--paper); border-radius:999px; padding:6px 11px; font-weight:700; font-size:11px;}
   .add-btn.in-cart{background:var(--green);}
@@ -764,6 +764,9 @@
     if (saved.mode) mode = saved.mode;
     if (saved.tipMode) tipMode = saved.tipMode;
     if (typeof saved.tipPercent === 'number') tipPercent = saved.tipPercent;
+    // If they left with a 0% or 10% tip selected, default them back up to
+    // 15% on return; 15% and 20% selections are left as-is.
+    if (tipMode === 'percent' && (tipPercent === 0 || tipPercent === 10)) tipPercent = 15;
     if (typeof saved.customTipAmount === 'number') customTipAmount = saved.customTipAmount;
     if (saved.customer && typeof saved.customer === 'object'){
       CUSTOMER_FIELD_IDS.forEach(id => {
@@ -1627,7 +1630,21 @@
   renderBuilder();
   renderMenu();
   renderGallons();
+  updateShotDisplays();
   updateCartUI();
+
+  // If bottles or gallons were already added on a previous visit, reveal
+  // those grids immediately instead of leaving them hidden behind their
+  // "Start" button — otherwise a returning customer's restored items are
+  // technically correct but invisible until they click "Start" again.
+  if(Object.values(cart).some(q => q > 0)){
+    document.getElementById('menuGrid').style.display = 'grid';
+    document.getElementById('showMenuGrid').style.display = 'none';
+  }
+  if(Object.values(gallonCart).some(q => q > 0)){
+    document.getElementById('gallonGrid').style.display = 'grid';
+    document.getElementById('startGallonsBtn').style.display = 'none';
+  }
 
   // Cart mutations already trigger a save via updateCartUI(), but typing
   // into these fields doesn't touch the cart — save on every keystroke too,
