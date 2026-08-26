@@ -429,6 +429,36 @@
   </div>
 </section>
 
+<section class="section" id="menu" style="background:var(--card); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Extra bottles</p>
+        <h2>Add extra bottles to your order</h2>
+      </div>
+    </div>
+
+    <button type="button" id="showMenuGrid" class="add-btn" style="padding:18px 32px; font-size:19px; width:100%; margin-bottom:16px; background:var(--orange); color:#fff;">Add extra bottles to your order</button>
+    <div class="menu-grid" id="menuGrid" style="display:none;">
+      <div id="menuItems" style="display:contents"></div>
+      <div class="item-card" id="shotCard" style="border-left-color:var(--orange);">
+        <div class="item-name">Immunity Shot</div>
+        <p class="item-desc">Ginger &amp; fresh-squeezed orange.</p>
+        <p class="item-desc" style="-webkit-line-clamp:1;">4oz bottles</p>
+        <p class="item-desc" style="-webkit-line-clamp:1;">5 or more: $4 each</p>
+        <div class="stepper">
+          <div class="qty-controls">
+            <button class="qbtn" data-action="minus" data-id="shot">–</button>
+            <span class="qty mono" id="qty-shot">0</span>
+            <button class="qbtn" data-action="plus" data-id="shot">+</button>
+          </div>
+          <span class="item-price mono" id="shotPrice">$5 ea</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="detox" style="background:#E9D8B4; border-top:1px solid var(--line); border-bottom:1px solid var(--line); color:var(--dark); padding-top:20px;">
   <div class="wrap">
     <div class="section-head">
@@ -473,36 +503,6 @@
         <p class="item-desc">25 bottles + 5 immunity shots.</p>
         <div class="detox-price mono">$170</div>
         <button class="add-btn" data-detox="5" data-price="170">Add to order</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="menu" style="background:var(--card); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">Extra bottles</p>
-        <h2>Add extra bottles to your order</h2>
-      </div>
-    </div>
-
-    <button type="button" id="showMenuGrid" class="add-btn" style="padding:18px 32px; font-size:19px; width:100%; margin-bottom:16px; background:var(--orange); color:#fff;">Add extra bottles to your order</button>
-    <div class="menu-grid" id="menuGrid" style="display:none;">
-      <div id="menuItems" style="display:contents"></div>
-      <div class="item-card" id="shotCard" style="border-left-color:var(--orange);">
-        <div class="item-name">Immunity Shot</div>
-        <p class="item-desc">Ginger &amp; fresh-squeezed orange.</p>
-        <p class="item-desc" style="-webkit-line-clamp:1;">4oz bottles</p>
-        <p class="item-desc" style="-webkit-line-clamp:1;">5 or more: $4 each</p>
-        <div class="stepper">
-          <div class="qty-controls">
-            <button class="qbtn" data-action="minus" data-id="shot">–</button>
-            <span class="qty mono" id="qty-shot">0</span>
-            <button class="qbtn" data-action="plus" data-id="shot">+</button>
-          </div>
-          <span class="item-price mono" id="shotPrice">$5 ea</span>
-        </div>
       </div>
     </div>
   </div>
