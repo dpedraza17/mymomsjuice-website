@@ -148,6 +148,17 @@
     animation:segShimmerSweep 1.6s ease-in-out infinite;
     pointer-events:none;
   }
+  #showMenuGrid.shimmer-ready{position:relative; overflow:hidden;}
+  #showMenuGrid.shimmer-ready::after{
+    content:'';
+    position:absolute;
+    top:0; left:-45%;
+    width:35%; height:100%;
+    background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 70%, transparent 100%);
+    transform:skewX(-16deg);
+    animation:segShimmerSweep 1.6s ease-in-out infinite;
+    pointer-events:none;
+  }
   #modeBar.toggle-hint .toggle-hint-icon{animation:toggleHintNudge 1.2s ease-in-out 4;}
   @keyframes toggleHintNudge{
     0%,100%{ transform:translateX(0); opacity:0.7; }
@@ -410,6 +421,7 @@
           </span>
         </div>
         <p style="font-size:13px; margin:6px 0 0; color:#E9D8B4;">$5 each, or $4 each when ordering 5 or more.</p>
+        <a href="#menu" id="jumpToExtraBottles" class="add-btn" style="display:block; text-align:center; text-decoration:none; padding:18px 32px; font-size:19px; width:100%; margin-top:16px; background:var(--yellow); color:var(--dark); box-sizing:border-box;">Add extra bottles to your order?</a>
       </div>
     </div>
   </div>
@@ -1022,6 +1034,7 @@
       const msg = document.getElementById('sixPackMsg');
       msg.style.display = 'none';
       clearTimeout(msg._hideTimer);
+      document.getElementById('addSixPack').scrollIntoView({behavior:'smooth', block:'center'});
     }
   });
 
@@ -1597,6 +1610,11 @@
   document.getElementById('showMenuGrid').addEventListener('click', function(){
     document.getElementById('menuGrid').style.display = 'grid';
     this.style.display = 'none';
+    this.classList.remove('shimmer-ready');
+  });
+
+  document.getElementById('jumpToExtraBottles').addEventListener('click', function(){
+    document.getElementById('showMenuGrid').classList.add('shimmer-ready');
   });
 
   document.getElementById('startGallonsBtn').addEventListener('click', function(){
