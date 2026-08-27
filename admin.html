@@ -596,13 +596,15 @@
     return `
       <div class="order-card ${cls}">
         <div class="order-info">
-          <strong>${order.customer_name || 'Customer'}</strong> — Total paid: <strong>${money(order.total)}</strong>${orderedAt ? ` — Ordered ${orderedAt}` : ''}
+          <div style="margin-bottom:8px;">
+            <strong style="font-size:17px;">${order.customer_name || 'Customer'}</strong> — Total paid: <strong>${money(order.total)}</strong>${orderedAt ? ` — Ordered ${orderedAt}` : ''}
+          </div>
           <div class="order-meta">
             ${typeBadge}${overdueBadge}
             <span style="font-size:1.3em;">${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')}</span>
-            ${order.order_type === 'delivery' && order.address ? `<br><strong>Deliver to:</strong> <span style="font-size:1.3em;">${addressLink(order.address)}</span>` : ''}
+            ${order.order_type === 'delivery' && order.address ? `<div style="margin-top:6px;"><strong>Deliver to:</strong> <strong style="font-size:1.3em;">${addressLink(order.address)}</strong></div>` : ''}
           </div>
-          <div class="order-items">${items || 'No items listed'}</div>
+          <div class="order-items" style="font-size:15.5px;">${items || 'No items listed'}</div>
           <div class="order-meta">
             ${order.customer_note ? `<strong>Note:</strong> <span style="font-size:1.3em;">${order.customer_note}</span><br>` : ''}
             ${order.customer_email ? emailLink(order.customer_email) : ''}
