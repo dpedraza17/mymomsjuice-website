@@ -180,6 +180,7 @@
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="orders" onclick="showTab('orders')">Orders</button>
+      <button class="tab-btn" data-tab="fulfilled-orders" onclick="showTab('fulfilled-orders')">Fulfilled Orders</button>
       <button class="tab-btn" data-tab="customers" onclick="showTab('customers')">Customers</button>
       <button class="tab-btn" data-tab="subscribers" onclick="showTab('subscribers')">Subscribers</button>
       <button class="tab-btn" data-tab="manual-order" onclick="showTab('manual-order')">Manual Order</button>
@@ -193,9 +194,13 @@
           <button class="btn ghost" onclick="loadOrders()">Refresh</button>
         </div>
         <div id="unfulfilledList"></div>
+      </div>
 
+      <!-- FULFILLED ORDERS VIEW -->
+      <div class="view" id="view-fulfilled-orders">
         <div class="section-head">
-          <h2>Fulfilled <span class="count-pill" id="fulfilledCount">0</span></h2>
+          <h2>Fulfilled Orders <span class="count-pill" id="fulfilledCount">0</span></h2>
+          <button class="btn ghost" onclick="loadOrders()">Refresh</button>
         </div>
         <div id="fulfilledList"></div>
       </div>
@@ -576,7 +581,7 @@
   function orderCard(order, isFulfilled){
     const cls = isFulfilled ? 'done' : (order.overdue ? 'overdue' : '');
     const modeLabels = { pickup: 'Pickup — Mesa', delivery: 'Delivery', popup: 'Pop-up — 83rd Ave & McDowell' };
-    const typeBadge = `<span class="badge ${order.order_type || ''}">${modeLabels[order.order_type] || order.order_type || 'order'}</span>`;
+    const typeBadge = `<span class="badge ${order.order_type || ''}" style="font-size:1.3em;">${modeLabels[order.order_type] || order.order_type || 'order'}</span>`;
     const overdueBadge = (!isFulfilled && order.overdue) ? `<span class="badge overdue-flag">past due — confirm?</span>` : '';
     const items = Array.isArray(order.items) ? order.items.map(i => {
       const qty = i.qty || 1;
@@ -591,16 +596,15 @@
     return `
       <div class="order-card ${cls}">
         <div class="order-info">
-          <strong>${order.customer_name || 'Customer'}</strong> — Total paid: <strong>${money(order.total)}</strong>
+          <strong>${order.customer_name || 'Customer'}</strong> — Total paid: <strong>${money(order.total)}</strong>${orderedAt ? ` — Ordered ${orderedAt}` : ''}
           <div class="order-meta">
             ${typeBadge}${overdueBadge}
-            ${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')}
-            ${orderedAt ? `<br>Ordered ${orderedAt}` : ''}
-            ${order.order_type === 'delivery' && order.address ? `<br><strong>Deliver to:</strong> ${addressLink(order.address)}` : ''}
+            <span style="font-size:1.3em;">${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')}</span>
+            ${order.order_type === 'delivery' && order.address ? `<br><strong>Deliver to:</strong> <span style="font-size:1.3em;">${addressLink(order.address)}</span>` : ''}
           </div>
           <div class="order-items">${items || 'No items listed'}</div>
           <div class="order-meta">
-            ${order.customer_note ? `<strong>Note:</strong> ${order.customer_note}<br>` : ''}
+            ${order.customer_note ? `<strong>Note:</strong> <span style="font-size:1.3em;">${order.customer_note}</span><br>` : ''}
             ${order.customer_email ? emailLink(order.customer_email) : ''}
           </div>
           <div class="order-meta" style="margin-top:8px;">
