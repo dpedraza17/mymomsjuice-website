@@ -598,8 +598,9 @@
         <div class="order-info">
           <div style="margin-bottom:8px;">
             <strong style="font-size:17px;">${order.customer_name || 'Customer'}</strong> — Total paid: <strong>${money(order.total)}</strong>${orderedAt ? ` — Ordered ${orderedAt}` : ''}
+            ${order.customer_email ? `<br>${emailLink(order.customer_email)}` : ''}
           </div>
-          <div class="order-meta">
+          <div class="order-meta" style="margin-top:12px;">
             ${typeBadge}${overdueBadge}
             <span style="font-size:1.3em;">${order.fulfillment_estimate ? order.fulfillment_estimate : 'Due ' + (order.due_date || '—')}</span>
             ${order.order_type === 'delivery' && order.address ? `<div style="margin-top:6px;"><strong>Deliver to:</strong> <strong style="font-size:1.3em;">${addressLink(order.address)}</strong></div>` : ''}
@@ -607,7 +608,6 @@
           <div class="order-items" style="font-size:15.5px;">${items || 'No items listed'}</div>
           <div class="order-meta">
             ${order.customer_note ? `<strong>Note:</strong> <span style="font-size:1.3em;">${order.customer_note}</span><br>` : ''}
-            ${order.customer_email ? emailLink(order.customer_email) : ''}
           </div>
           <div class="order-meta" style="margin-top:8px;">
             ${order.customer_phone ? phoneLinks(order.customer_phone, order.order_type) : ''}
