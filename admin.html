@@ -25,10 +25,11 @@
     --shadow:0 4px 14px rgba(13,34,19,0.08);
   }
   *{box-sizing:border-box;}
+  html,body{overflow-x:hidden; max-width:100%;}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Karla',sans-serif; -webkit-font-smoothing:antialiased;}
   h1,h2,h3{font-family:'Baloo 2',sans-serif; font-weight:700; margin:0;}
   .mono{font-family:'Space Mono',monospace;}
-  button{font-family:inherit; cursor:pointer;}
+  button{font-family:inherit; cursor:pointer; touch-action:manipulation;}
 
   /* --- Login gate --- */
   #loginScreen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
@@ -960,6 +961,7 @@
     // valid and Stripe collects it instead.
     const payload = {
       mode: moState.mode,
+      source: 'admin', // manual orders placed here skip the customer-facing $35 delivery minimum
       cart: {
         items: { ...moState.cart },
         sixPacks: moState.sixPacks,
@@ -978,7 +980,7 @@
     try {
       const resp = await fetch(MO_CHECKOUT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': getPassword() },
         body: JSON.stringify(payload),
       });
       const data = await resp.json().catch(() => ({}));
