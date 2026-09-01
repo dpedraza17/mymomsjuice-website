@@ -559,6 +559,22 @@
     return `<a href="tel:${escAttr(digits)}" style="color:var(--orange); font-size:1.3em; font-weight:700;">${phone}</a> <a href="${escAttr(smsHref)}" title="Text" style="color:var(--orange); font-size:1.6em; margin-left:6px; text-decoration:none;">&#128172;</a>`;
   }
 
+  // "On the way" ETA texts for delivery orders — one tap opens the
+  // messaging app with the minutes already filled in, ready to send.
+  function etaSmsHref(phone, minutes){
+    const digits = phone.replace(/[^\d+]/g, '');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const message = `Hi, this is My Mom's Juice! Your order is on the way — we should arrive in the next ${minutes} minutes!`;
+    return `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(message)}`;
+  }
+  function etaButtons(phone){
+    if (!phone) return '';
+    return `
+      <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+        ${[10, 20, 30].map(m => `<a href="${escAttr(etaSmsHref(phone, m))}" style="flex:1; min-width:90px; text-align:center; text-decoration:none; background:var(--orange); color:#fff; font-weight:700; font-size:16px; padding:14px 10px; border-radius:10px; touch-action:manipulation;">${m} min</a>`).join('')}
+      </div>`;
+  }
+
   // Click-to-open in the phone's native maps/navigation app.
   function addressLink(address){
     if (!address) return '';
@@ -612,6 +628,7 @@
           </div>
           <div class="order-meta" style="margin-top:8px;">
             ${order.customer_phone ? phoneLinks(order.customer_phone, order.order_type) : ''}
+            ${order.order_type === 'delivery' && order.customer_phone ? etaButtons(order.customer_phone) : ''}
           </div>
         </div>
         <div class="order-actions">${action}</div>
