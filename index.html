@@ -79,8 +79,10 @@
   .email-popup h3{font-size:22px; color:var(--dark); margin:0 0 10px;}
   .email-popup p{font-size:15px; color:var(--dark); opacity:0.85; line-height:1.5; margin:0 0 20px;}
   .email-popup form{display:flex; flex-direction:column; gap:10px;}
-  .email-popup input[type="email"]{padding:12px 14px; border-radius:999px; border:2px solid var(--orange); font-size:15px; font-family:inherit; text-align:center; background:#fff; color:var(--dark);}
-  .email-popup input[type="email"]:focus{outline:none; border-color:var(--dark);}
+  .email-popup .name-row{display:flex; gap:10px;}
+  .email-popup .name-row input{flex:1; min-width:0;}
+  .email-popup input[type="email"], .email-popup input[type="text"]{padding:12px 14px; border-radius:999px; border:2px solid var(--orange); font-size:15px; font-family:inherit; text-align:center; background:#fff; color:var(--dark);}
+  .email-popup input[type="email"]:focus, .email-popup input[type="text"]:focus{outline:none; border-color:var(--dark);}
   .email-popup button[type="submit"]{background:var(--orange); color:#fff; border:none; border-radius:999px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer;}
   .email-popup button[type="submit"]:hover{background:var(--dark);}
   .email-popup button[type="submit"]:disabled{opacity:0.6; cursor:default;}
@@ -354,7 +356,7 @@
     <p class="eyebrow">Fresh &middot; Made to order &middot; Mesa, Arizona</p>
     <h1>Fresh-squeezed, bottled by hand — <em>by a mother &amp; son.</em></h1>
     <p class="lede">Mother &amp; son owned since 2021, every bottle is made by us — fresh juice, lemonade, matcha &amp; coffee.</p>
-    <p class="lede" style="margin-top:14px;">We deliver locally and pop up on 83rd Ave &amp; McDowell (<a href="https://maps.google.com/?q=8367+W+McDowell+Rd+Tolleson+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">8367 W McDowell Rd, Tolleson, AZ</a>) Saturdays and Sundays 8am-12pm. Stop by our pop up this weekend! No pre-order necessary.</p>
+    <p class="lede" style="margin-top:14px;">We deliver locally and pop up on 83rd Ave &amp; McDowell (<a href="https://maps.google.com/?q=8367+W+McDowell+Rd+Tolleson+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">8367 W McDowell Rd, Tolleson, AZ</a>) Fridays 10am-2pm, Saturdays &amp; Sundays 8am-12pm. Stop by our pop up! No pre-order necessary.</p>
     <p class="lede" style="margin-top:14px;">You can also find our juices for sale at The Kitchen's Market (<a href="https://maps.google.com/?q=2655+W+Guadalupe+Rd+Suite+13+Mesa+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">2655 W Guadalupe Rd Suite 13 Mesa, AZ</a>), 5 days a week. Stop by during business hours! No pre-order necessary. Wednesday-Friday 8am-5pm, Saturdays 8am-3pm, Sundays 10am-3pm</p>
     <p class="lede" style="margin-top:14px;">
       <a href="mailto:mymomsjuicellc@gmail.com" style="color:inherit; text-decoration:underline;">mymomsjuicellc@gmail.com</a><br>
@@ -525,7 +527,7 @@
     <div class="section-head">
       <div>
         <p class="eyebrow">Where to find us</p>
-        <h2>The Kitchen's Market (Mesa), Weekend Pop Ups on 83rd Ave &amp; McDowell, Delivery</h2>
+        <h2>The Kitchen's Market (Mesa), Pop-Ups on 83rd Ave &amp; McDowell, Delivery</h2>
       </div>
     </div>
     <div class="find-grid">
@@ -538,10 +540,10 @@
         </ul>
       </div>
       <div class="find-card" id="popupCard">
-        <h3>Weekend Pop-Up on 83rd Ave &amp; McDowell</h3>
+        <h3>Pop-Up on 83rd Ave &amp; McDowell</h3>
         <ul>
-          <li>Saturdays &amp; Sundays, 8am–12pm (8367 W McDowell Rd, Tolleson, AZ).</li>
-          <li>Stop by to purchase during business hours or place a pickup order (highly recommended) — pickup orders for Saturdays and Sundays are due by Thursday.</li>
+          <li>Fridays 10am–2pm, Saturdays &amp; Sundays 8am–12pm (8367 W McDowell Rd, Tolleson, AZ).</li>
+          <li>Stop by to purchase during business hours or place a pickup order (highly recommended) — pickup orders for Friday, Saturday, and Sunday are due by Thursday.</li>
         </ul>
       </div>
       <div class="find-card" id="deliveryCard">
@@ -596,7 +598,7 @@
     </div>
     <div id="popupEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
       Order now and pick up <span id="popupEstimateDate"></span>
-      <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">8367 W McDowell Rd, Tolleson, AZ<br>Sat &amp; Sun 8am–12pm</div>
+      <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">8367 W McDowell Rd, Tolleson, AZ<br>Fri 10am–2pm, Sat &amp; Sun 8am–12pm</div>
     </div>
     <div class="field">
       <label for="custFirstName">First name</label>
@@ -794,9 +796,9 @@
   const gallonGrid = document.getElementById('gallonGrid');
 
   // Agua de Pepino con Limón is available for Friday delivery, and for both
-  // pickup options (Mesa runs Fri/Sat/Sun, the McDowell pop-up runs Sat/Sun —
-  // both already fall within its available days). The only time it's NOT
-  // available is when the next delivery would land on a Tuesday.
+  // pickup options (Mesa runs Fri/Sat/Sun, the McDowell pop-up runs
+  // Fri/Sat/Sun — both already fall within its available days). The only
+  // time it's NOT available is when the next delivery would land on a Tuesday.
   function isPepinoAvailable(){
     if(mode === 'delivery') return getNextDeliveryDow() === 5;
     return true;
@@ -1366,27 +1368,32 @@
     return `Friday, Saturday, or Sunday — ${friStr}–${sunStr}`;
   }
 
-  // 83rd Ave & McDowell pop-up runs Saturday–Sunday. Order by Thursday
-  // 11:59pm (Arizona time) to catch that weekend; ordering Fri or Sat has
-  // already missed the cutoff, so it rolls to the following weekend.
+  // 83rd Ave & McDowell pop-up runs Friday–Sunday. Order by Thursday
+  // 11:59pm (Arizona time) to catch that weekend; ordering Fri/Sat/Sun
+  // itself has already missed the cutoff, so it rolls to the following
+  // weekend.
   function getNextPopupDates(){
     const azNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
     const dow = azNow.getDay(); // 0=Sun ... 6=Sat
-    let daysAhead = (6 - dow + 7) % 7; // days until the next Saturday
-    if (dow === 5 || dow === 6) daysAhead += 7; // Fri/Sat — cutoff already passed, use next week's
-    const saturday = new Date(azNow);
-    saturday.setDate(azNow.getDate() + daysAhead);
-    const sunday = new Date(saturday);
-    sunday.setDate(saturday.getDate() + 1);
+    let daysAhead = (5 - dow + 7) % 7; // days until the next Friday
+    if (daysAhead === 0) daysAhead = 7; // it's already Friday — cutoff passed, use next week's
+    const friday = new Date(azNow);
+    friday.setDate(azNow.getDate() + daysAhead);
+    const saturday = new Date(friday);
+    saturday.setDate(friday.getDate() + 1);
+    const sunday = new Date(friday);
+    sunday.setDate(friday.getDate() + 2);
+    const friMonth = friday.toLocaleDateString('en-US', { month: 'long' });
     const satMonth = saturday.toLocaleDateString('en-US', { month: 'long' });
     const sunMonth = sunday.toLocaleDateString('en-US', { month: 'long' });
-    const satStr = `${satMonth} ${saturday.getDate()}`;
-    const sunStr = (sunMonth === satMonth) ? `${sunday.getDate()}` : `${sunMonth} ${sunday.getDate()}`;
-    return { satStr, sunStr };
+    const friStr = `${friMonth} ${friday.getDate()}`;
+    const satStr = (satMonth === friMonth) ? `${saturday.getDate()}` : `${satMonth} ${saturday.getDate()}`;
+    const sunStr = (sunMonth === friMonth) ? `${sunday.getDate()}` : `${sunMonth} ${sunday.getDate()}`;
+    return { friStr, satStr, sunStr };
   }
   function getNextPopupLabel(){
-    const { satStr, sunStr } = getNextPopupDates();
-    return `Saturday or Sunday — ${satStr}–${sunStr}`;
+    const { friStr, sunStr } = getNextPopupDates();
+    return `Friday, Saturday, or Sunday — ${friStr}–${sunStr}`;
   }
 
   function updateAddressField(){
@@ -1438,8 +1445,8 @@
     }
     const custNote = document.getElementById('custNote');
     if(mode === 'popup'){
-      const { satStr, sunStr } = getNextPopupDates();
-      custNote.placeholder = `Which day will you be picking up, Saturday (${satStr}) or Sunday (${sunStr})?`;
+      const { friStr, satStr, sunStr } = getNextPopupDates();
+      custNote.placeholder = `Which day will you be picking up, Friday (${friStr}), Saturday (${satStr}), or Sunday (${sunStr})?`;
     } else if(mode === 'pickup'){
       const { friStr, satStr, sunStr } = getNextPickupDates();
       custNote.placeholder = `Which day will you be picking up, Friday (${friStr}), Saturday (${satStr}), or Sunday (${sunStr})?`;
@@ -1461,7 +1468,7 @@
       modeNote.textContent = 'Delivery Tuesdays & Fridays — order by midnight the night before';
       deliveryCard.classList.add('active');
     } else {
-      modeNote.textContent = 'Pick up Saturday or Sunday 8am-12pm (order by Thursday) — 8367 W McDowell Rd, Tolleson';
+      modeNote.textContent = 'Pick up Friday (10am-2pm), Saturday or Sunday (8am-12pm) (order by Thursday) — 8367 W McDowell Rd, Tolleson';
       popupCard.classList.add('active');
     }
     updateAddressField();
@@ -1803,6 +1810,10 @@
     <h3 id="emailPopupTitle">Stay in the loop 🍊</h3>
     <p>Enter your email to receive discount codes, be the first to hear about our latest announcements, and stay up to date with us.</p>
     <form id="emailPopupForm">
+      <div class="name-row">
+        <input type="text" id="emailPopupFirstName" placeholder="First name" required autocomplete="given-name">
+        <input type="text" id="emailPopupLastName" placeholder="Last name" required autocomplete="family-name">
+      </div>
       <input type="email" id="emailPopupInput" placeholder="you@example.com" required autocomplete="email">
       <button type="submit" id="emailPopupSubmit">Sign me up</button>
       <div class="email-popup-status" id="emailPopupStatus"></div>
@@ -1827,6 +1838,8 @@
     const overlay = document.getElementById('emailPopupOverlay');
     const closeBtn = document.getElementById('emailPopupClose');
     const form = document.getElementById('emailPopupForm');
+    const firstNameInput = document.getElementById('emailPopupFirstName');
+    const lastNameInput = document.getElementById('emailPopupLastName');
     const input = document.getElementById('emailPopupInput');
     const submitBtn = document.getElementById('emailPopupSubmit');
     const status = document.getElementById('emailPopupStatus');
@@ -1847,7 +1860,9 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = input.value.trim();
-      if (!email) return;
+      const firstName = firstNameInput.value.trim();
+      const lastName = lastNameInput.value.trim();
+      if (!email || !firstName || !lastName) return;
 
       submitBtn.disabled = true;
       status.textContent = '';
@@ -1857,7 +1872,7 @@
         const resp = await fetch(SUBSCRIBE_API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email, firstName, lastName }),
         });
         const data = await resp.json().catch(() => ({}));
 
