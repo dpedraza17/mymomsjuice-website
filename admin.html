@@ -55,6 +55,8 @@
   @media (max-width:480px){
     .tabs{gap:0; padding:10px 8px 0;}
     .tab-btn{padding:10px 8px; font-size:12.5px;}
+    .order-actions{margin-top:28px; width:100%;}
+    .order-actions button{width:100%;}
   }
 
   /* --- Cards / sections --- */
@@ -76,7 +78,7 @@
   .badge.popup{background:#FBF0DB; color:#8A6318;}
   .badge.overdue-flag{background:#FBE4DA; color:var(--warn);}
   .order-actions{margin-top:6px; margin-left:auto;}
-  .order-actions button{border:none; border-radius:8px; padding:9px 16px; font-weight:700; font-size:13.5px;}
+  .order-actions button{border:none; border-radius:10px; padding:14px 10px; font-weight:700; font-size:16px; touch-action:manipulation;}
   .btn-fulfill{background:var(--ok); color:#fff;}
   .btn-undo{background:none; border:1px solid var(--line) !important; color:var(--muted);}
   .btn-fulfill:disabled, .btn-undo:disabled{opacity:0.6; cursor:not-allowed;}
@@ -535,6 +537,14 @@
     return `<a href="mailto:${escAttr(email)}" style="color:var(--orange);">${email}</a>`;
   }
 
+  // Plain phone link for the Customers table — same size/weight as
+  // emailLink, no SMS button (there's no single order to reference here).
+  function phoneLinkPlain(phone){
+    if (!phone) return '—';
+    const digits = phone.replace(/[^\d+]/g, '');
+    return `<a href="tel:${escAttr(digits)}" style="color:var(--orange);">${phone}</a>`;
+  }
+
   // Pre-filled text templates per order type — customer just has to hit
   // send. iOS and Android use different separators before the body param
   // (& vs ?), so we detect platform to pick the right one.
@@ -544,10 +554,11 @@
     popup: "Hi, this is My Mom's Juice! Your order is ready for pick up. Please pick up any day this weekend -- Friday 10am-2pm, Saturday 8am-12pm, Sunday 8am-12pm. We are on 83rd Ave & McDowell. The address is 8367 W McDowell Rd, Tolleson, AZ. Thank you!",
   };
 
-  // Click-to-call on the number itself, plus a click-to-text next to it.
-  // When orderType is passed (order cards only — not the customer table,
-  // which has no single order to reference), the text link pre-fills the
-  // right message for that fulfillment type so it's ready to just hit send.
+  // Click-to-call on the number itself, plus a "Confirmation Text" button
+  // next to it. When orderType is passed (order cards only — not the
+  // customer table, which has no single order to reference), the text
+  // link pre-fills the right message for that fulfillment type so it's
+  // ready to just hit send.
   function phoneLinks(phone, orderType){
     if (!phone) return '—';
     const digits = phone.replace(/[^\d+]/g, '');
@@ -556,7 +567,7 @@
     const smsHref = template
       ? `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(template)}`
       : `sms:${digits}`;
-    return `<a href="tel:${escAttr(digits)}" style="color:var(--orange); font-size:1.3em; font-weight:700;">${phone}</a> <a href="${escAttr(smsHref)}" title="Text" style="color:var(--orange); font-size:1.6em; margin-left:6px; text-decoration:none;">&#128172;</a>`;
+    return `<span style="display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap;"><a href="tel:${escAttr(digits)}" style="color:var(--orange); font-size:1.3em; font-weight:700;">${phone}</a> <a href="${escAttr(smsHref)}" style="display:inline-block; text-align:center; text-decoration:none; background:#F4CE4E; color:#000; font-weight:700; font-size:16px; padding:14px 10px; border-radius:10px; touch-action:manipulation;">Confirmation Text</a></span>`;
   }
 
   // "On the way" ETA texts for delivery orders — one tap opens the
@@ -570,7 +581,7 @@
   function etaButtons(phone){
     if (!phone) return '';
     return `
-      <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+      <div style="display:flex; gap:8px; margin-top:22px; flex-wrap:wrap;">
         ${[10, 20, 30].map(m => `<a href="${escAttr(etaSmsHref(phone, m))}" style="flex:1; min-width:90px; text-align:center; text-decoration:none; background:var(--orange); color:#fff; font-weight:700; font-size:16px; padding:14px 10px; border-radius:10px; touch-action:manipulation;">${m} min</a>`).join('')}
       </div>`;
   }
@@ -1206,7 +1217,7 @@
           <td class="checkbox-col"><input type="checkbox" ${selectedIds.has(c.id) ? 'checked' : ''} onchange="toggleRowSelect('${c.id}')"></td>
           <td>${c.first_name || ''} ${c.last_name || ''}</td>
           <td>${emailLink(c.email)}</td>
-          <td>${phoneLinks(c.phone)}</td>
+          <td>${phoneLinkPlain(c.phone)}</td>
           <td>${c.address || '—'}</td>
           <td class="num">${c.order_count || 0}</td>
           <td class="num">${money(c.lifetime_spend)}</td>
