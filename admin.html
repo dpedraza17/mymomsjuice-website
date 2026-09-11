@@ -21,6 +21,8 @@
     --line:#E4DFD0;
     --ok:#2E7D46;
     --warn:#B4571F;
+    --mesa-bg:#E1F3E4;
+    --popup-bg:#FCE7D3;
     --radius:14px;
     --shadow:0 4px 14px rgba(13,34,19,0.08);
   }
@@ -67,6 +69,25 @@
   .order-card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px 18px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; border-left:5px solid var(--line);}
   .order-card.overdue{border-left-color:var(--warn);}
   .order-card.done{border-left-color:var(--ok); opacity:0.75;}
+  /* Mesa pickups get a light green card, 83rd Ave & McDowell pop-up
+     pickups get a light orange card, deliveries keep the plain white
+     card so the three fulfillment types are easy to tell apart at a
+     glance. */
+  .order-card.loc-mesa{background:var(--mesa-bg);}
+  .order-card.loc-popup{background:var(--popup-bg);}
+
+  /* Big "Friday, September 12" style headers grouping active orders by
+     fulfillment date. */
+  .date-group-header{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:26px; color:var(--dark); margin:32px 0 14px; padding-bottom:8px; border-bottom:3px solid var(--tan);}
+  .date-group-header:first-of-type{margin-top:0;}
+  .date-group-count{font-family:'Space Mono',monospace; font-size:13px; font-weight:700; color:var(--muted); margin-left:8px; vertical-align:middle;}
+  @media (max-width:480px){
+    .date-group-header{font-size:21px;}
+  }
+
+  /* Fulfillment-type filter pills, used above the Fulfilled Orders list. */
+  .filter-btn{background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 14px; font-weight:700; font-size:13px; color:var(--ink); margin:0 8px 8px 0;}
+  .filter-btn.active{background:var(--dark); color:#fff; border-color:var(--dark);}
   .order-info strong{font-size:15.5px;}
   .order-meta{color:var(--muted); font-size:13px; margin-top:4px; line-height:1.5;}
   .order-items{background:var(--paper); border-radius:8px; padding:8px 12px; margin:8px 0; font-size:14px; color:var(--ink); font-weight:600; line-height:1.6;}
@@ -206,7 +227,18 @@
           <h2>Fulfilled Orders <span class="count-pill" id="fulfilledCount">0</span></h2>
           <button class="btn ghost" onclick="loadOrders()">Refresh</button>
         </div>
+        <div>
+          <button type="button" class="filter-btn active" data-type="all" onclick="setFulfilledFilter('all')">All</button>
+          <button type="button" class="filter-btn" data-type="pickup" onclick="setFulfilledFilter('pickup')">Pickup — Mesa</button>
+          <button type="button" class="filter-btn" data-type="popup" onclick="setFulfilledFilter('popup')">Pop-up — 83rd Ave &amp; McDowell</button>
+          <button type="button" class="filter-btn" data-type="delivery" onclick="setFulfilledFilter('delivery')">Delivery</button>
+        </div>
         <div id="fulfilledList"></div>
+        <div class="pagination" id="fulfilledPagination" style="display:none;">
+          <button id="fulfilledPrevBtn" onclick="changeFulfilledPage(-1)">&larr; Prev</button>
+          <span class="page-info" id="fulfilledPageInfo">Page 1</span>
+          <button id="fulfilledNextBtn" onclick="changeFulfilledPage(1)">Next &rarr;</button>
+        </div>
       </div>
 
       <!-- CUSTOMERS VIEW -->
@@ -608,7 +640,8 @@
   }
 
   function orderCard(order, isFulfilled){
-    const cls = isFulfilled ? 'done' : (order.overdue ? 'overdue' : '');
+    const locClass = order.order_type === 'pickup' ? 'loc-mesa' : (order.order_type === 'popup' ? 'loc-popup' : '');
+    const cls = [isFulfilled ? 'done' : (order.overdue ? 'overdue' : ''), locClass].filter(Boolean).join(' ');
     const modeLabels = { pickup: 'Pickup — Mesa', delivery: 'Delivery', popup: 'Pop-up — 83rd Ave & McDowell' };
     const typeBadge = `<span class="badge ${order.order_type || ''}" style="font-size:1.3em;">${modeLabels[order.order_type] || order.order_type || 'order'}</span>`;
     const overdueBadge = (!isFulfilled && order.overdue) ? `<span class="badge overdue-flag">past due — confirm?</span>` : '';
@@ -647,17 +680,135 @@
       </div>`;
   }
 
+  // Turns order.due_date into a real Date we can group/sort by. This is
+  // deliberately forgiving about format, since it's just being read off
+  // whatever the backend sends today:
+  //  - a plain "YYYY-MM-DD" date is parsed as a *local* calendar date
+  //    (the regular Date constructor treats those as UTC midnight, which
+  //    can roll back to the previous day once displayed)
+  //  - anything else is handed to the normal Date constructor
+  //  - a leading weekday name ("Friday, Jan 16, 2026") is stripped first,
+  //    in case that helps the constructor along
+  // If none of that produces a valid date, the order lands in a "Date Not
+  // Set" group at the end instead of breaking the board.
+  function parseOrderDate(order){
+    const raw = order.due_date;
+    if (!raw) return null;
+    const s = String(raw).trim();
+
+    const isoDateOnly = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoDateOnly){
+      const [, y, m, day] = isoDateOnly;
+      return new Date(Number(y), Number(m) - 1, Number(day));
+    }
+
+    let d = new Date(s);
+    if (!isNaN(d.getTime())) return d;
+
+    d = new Date(s.replace(/^[A-Za-z]+,\s*/, ''));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function dateGroupKey(d){
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function dateGroupLabel(d){
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+
+  // Active ("Needs Fulfillment") orders: grouped into a big date header
+  // per fulfillment day, soonest date first, newest-placed order first
+  // within each date.
+  function renderUnfulfilled(orders){
+    const container = document.getElementById('unfulfilledList');
+    if (!orders.length){
+      container.innerHTML = `<div class="empty">Nothing waiting on you right now.</div>`;
+      return;
+    }
+
+    const groups = new Map();
+    const noDateOrders = [];
+
+    orders.forEach(o => {
+      const d = parseOrderDate(o);
+      if (!d){ noDateOrders.push(o); return; }
+      const key = dateGroupKey(d);
+      if (!groups.has(key)) groups.set(key, { date: d, orders: [] });
+      groups.get(key).orders.push(o);
+    });
+
+    const sortedGroups = Array.from(groups.values()).sort((a, b) => a.date - b.date);
+    sortedGroups.forEach(g => g.orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+    noDateOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    let html = sortedGroups.map(g => `
+      <div class="date-group-header">${dateGroupLabel(g.date)}<span class="date-group-count">${g.orders.length} order${g.orders.length === 1 ? '' : 's'}</span></div>
+      ${g.orders.map(o => orderCard(o, false)).join('')}
+    `).join('');
+
+    if (noDateOrders.length){
+      html += `
+        <div class="date-group-header">Date Not Set<span class="date-group-count">${noDateOrders.length} order${noDateOrders.length === 1 ? '' : 's'}</span></div>
+        ${noDateOrders.map(o => orderCard(o, false)).join('')}
+      `;
+    }
+
+    container.innerHTML = html;
+  }
+
+  // Fulfilled orders: filterable by fulfillment type, paginated so it's
+  // not one long endless page.
+  let fulfilledAll = [];
+  let fulfilledTypeFilter = 'all';
+  let fulfilledPage = 1;
+  const FULFILLED_PAGE_SIZE = 15;
+
+  function setFulfilledFilter(type){
+    fulfilledTypeFilter = type;
+    fulfilledPage = 1;
+    document.querySelectorAll('#view-fulfilled-orders .filter-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+    renderFulfilledList();
+  }
+
+  function changeFulfilledPage(delta){
+    fulfilledPage += delta;
+    renderFulfilledList();
+  }
+
+  function renderFulfilledList(){
+    const listEl = document.getElementById('fulfilledList');
+    const paginationEl = document.getElementById('fulfilledPagination');
+    const filtered = fulfilledTypeFilter === 'all'
+      ? fulfilledAll
+      : fulfilledAll.filter(o => o.order_type === fulfilledTypeFilter);
+
+    if (!filtered.length){
+      listEl.innerHTML = `<div class="empty">No fulfilled orders${fulfilledTypeFilter === 'all' ? ' yet' : ' of this type'}.</div>`;
+      paginationEl.style.display = 'none';
+      return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / FULFILLED_PAGE_SIZE));
+    fulfilledPage = Math.min(Math.max(1, fulfilledPage), totalPages);
+    const start = (fulfilledPage - 1) * FULFILLED_PAGE_SIZE;
+
+    listEl.innerHTML = filtered.slice(start, start + FULFILLED_PAGE_SIZE).map(o => orderCard(o, true)).join('');
+
+    paginationEl.style.display = totalPages > 1 ? 'flex' : 'none';
+    document.getElementById('fulfilledPageInfo').textContent = `Page ${fulfilledPage} of ${totalPages}`;
+    document.getElementById('fulfilledPrevBtn').disabled = fulfilledPage <= 1;
+    document.getElementById('fulfilledNextBtn').disabled = fulfilledPage >= totalPages;
+  }
+
   function renderOrders(unfulfilled, fulfilled){
     document.getElementById('unfulfilledCount').textContent = unfulfilled.length;
     document.getElementById('fulfilledCount').textContent = fulfilled.length;
 
-    document.getElementById('unfulfilledList').innerHTML = unfulfilled.length
-      ? unfulfilled.map(o => orderCard(o, false)).join('')
-      : `<div class="empty">Nothing waiting on you right now.</div>`;
+    renderUnfulfilled(unfulfilled);
 
-    document.getElementById('fulfilledList').innerHTML = fulfilled.length
-      ? fulfilled.map(o => orderCard(o, true)).join('')
-      : `<div class="empty">No fulfilled orders yet.</div>`;
+    fulfilledAll = fulfilled;
+    fulfilledPage = 1;
+    renderFulfilledList();
   }
 
   async function setFulfilled(orderId, fulfilled, btn){
