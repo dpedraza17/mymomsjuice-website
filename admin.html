@@ -47,22 +47,18 @@
   header{background:var(--dark); color:#fff; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20;}
   header h1{font-size:19px; color:#fff;}
   header .sub{font-family:'Space Mono',monospace; font-size:11px; color:var(--tan); margin-top:2px;}
-  /* Tabs scroll sideways when they don't fit (phones). The auto margins on the
-     first/last tab center the row when it fits, but start-align it when it
-     overflows — unlike justify-content:center, which pushes both ends off-screen. */
-  .tabs{display:flex; gap:6px; padding:14px 24px 0; max-width:1100px; margin:0 auto; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
-  .tabs::-webkit-scrollbar{display:none;}
-  .tab-btn:first-child{margin-left:auto;}
-  .tab-btn:last-child{margin-right:auto;}
-  .tab-btn{flex:0 0 auto; background:none; border:none; padding:12px 18px; font-weight:700; font-size:15px; color:var(--muted); border-bottom:3px solid transparent; white-space:nowrap;}
+  .tabs{display:flex; gap:6px; padding:14px 24px 0; max-width:1100px; margin:0 auto; justify-content:center;}
+  .tab-btn{background:none; border:none; padding:12px 18px; font-weight:700; font-size:15px; color:var(--muted); border-bottom:3px solid transparent; white-space:nowrap;}
   .tab-btn.active{color:var(--dark); border-bottom-color:var(--orange);}
   main{max-width:1100px; margin:0 auto; padding:20px 24px 60px;}
   .view{display:none;}
   .view.active{display:block;}
 
   @media (max-width:480px){
-    .tabs{gap:0; padding:10px 8px 0;}
-    .tab-btn{padding:10px 8px; font-size:12.5px;}
+    /* All five tabs share the width equally so they always fit on a phone.
+       Longer labels (Fulfilled Orders, Manual Order) wrap onto two lines. */
+    .tabs{gap:0; padding:10px 4px 0; justify-content:stretch;}
+    .tab-btn{flex:1 1 0; min-width:0; padding:8px 2px; font-size:clamp(10px, 3vw, 12.5px); line-height:1.2; white-space:normal; overflow-wrap:anywhere; text-align:center; display:flex; align-items:center; justify-content:center;}
     .order-actions{margin-top:28px; width:100%;}
     .order-actions button{width:100%;}
   }
@@ -551,8 +547,6 @@
   function showTab(name){
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
-    const activeBtn = document.querySelector('.tab-btn.active');
-    if (activeBtn && activeBtn.scrollIntoView) activeBtn.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
   }
 
   // ---- Modals ----
