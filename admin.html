@@ -55,10 +55,8 @@
   .view.active{display:block;}
 
   @media (max-width:480px){
-    /* All five tabs share the width equally so they always fit on a phone.
-       Longer labels (Fulfilled Orders, Manual Order) wrap onto two lines. */
-    .tabs{gap:0; padding:10px 4px 0; justify-content:stretch;}
-    .tab-btn{flex:1 1 0; min-width:0; padding:8px 2px; font-size:clamp(10px, 3vw, 12.5px); line-height:1.2; white-space:normal; overflow-wrap:anywhere; text-align:center; display:flex; align-items:center; justify-content:center;}
+    .tabs{gap:0; padding:10px 8px 0;}
+    .tab-btn{padding:10px 8px; font-size:12.5px;}
     .order-actions{margin-top:28px; width:100%;}
     .order-actions button{width:100%;}
   }
@@ -96,6 +94,8 @@
   .order-item-line{display:flex; justify-content:space-between; gap:12px; padding:2px 0;}
   .order-item-line + .order-item-line{border-top:1px solid var(--line); margin-top:2px;}
   .order-item-price{color:var(--muted); font-weight:600; white-space:nowrap;}
+  .order-item-line.discount{color:#1E7A3C; font-weight:700;}
+  .order-item-line.discount .order-item-price{color:#1E7A3C;}
   .badge{display:inline-block; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; padding:2px 8px; border-radius:6px; margin-right:6px;}
   .badge.pickup{background:#E9F1E9; color:var(--ok);}
   .badge.delivery{background:#FDECE2; color:var(--orange);}
@@ -560,7 +560,7 @@
     renderOrders(data.unfulfilled || [], data.fulfilled || []);
   }
 
-  function money(n){ return '$' + Number(n || 0).toFixed(2); }
+  function money(n){ n = Number(n || 0); return (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2); }
 
   function escAttr(s){
     return String(s || '').replace(/"/g, '&quot;');
@@ -650,7 +650,8 @@
     const items = Array.isArray(order.items) ? order.items.map(i => {
       const qty = i.qty || 1;
       const lineTotal = (typeof i.price === 'number') ? money((i.price * qty) / 100) : '';
-      return `<div class="order-item-line"><span>${qty}× ${i.name}</span>${lineTotal ? `<span class="order-item-price">${lineTotal}</span>` : ''}</div>`;
+      const isDiscount = (typeof i.price === 'number') && i.price < 0;
+      return `<div class="order-item-line${isDiscount ? ' discount' : ''}"><span>${qty}× ${i.name}</span>${lineTotal ? `<span class="order-item-price">${lineTotal}</span>` : ''}</div>`;
     }).join('') : '';
     const action = isFulfilled
       ? `<button class="btn-undo" onclick="setFulfilled('${order.id}', false, this)">Move back to unfulfilled</button>`
