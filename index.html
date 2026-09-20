@@ -325,6 +325,12 @@
     .item-desc{font-size:13.5px;}
     .item-price{font-size:16.5px;}
   }
+  .delivery-toggle{display:flex; gap:10px; margin-top:12px; justify-content:center;}
+  .delivery-opt{flex:1 1 0; max-width:210px; padding:10px 8px; border-radius:12px; border:3px solid var(--dark); background:#fff; color:var(--dark); font:inherit; font-weight:800; font-size:16px; line-height:1.25; cursor:pointer; text-align:center;}
+  .delivery-opt .opt-date{display:block; font-size:14px; font-weight:700;}
+  .delivery-opt .opt-tag{display:block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; margin-top:2px; opacity:.75;}
+  .delivery-opt.selected{background:var(--dark); color:var(--yellow);}
+  .delivery-opt.selected .opt-tag{opacity:1;}
 </style>
 </head>
 <body>
@@ -388,7 +394,8 @@
         <button type="button" class="mode-btn" data-mode="popup">Pick up on 83rd Ave & McDowell</button>
       </div>
       <div id="homeDeliveryEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
-        Order now and get it delivered <span id="homeDeliveryEstimateDate"></span>
+        Order now and get it delivered:
+        <div class="delivery-toggle" id="homeDeliveryToggle" role="radiogroup" aria-label="Delivery day"></div>
       </div>
       <div id="homePickupEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
         Order now and pick up <span id="homePickupEstimateDate"></span>
@@ -597,7 +604,8 @@
       </div>
     </div>
     <div id="deliveryEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
-      Order now and get it delivered <span id="deliveryEstimateDate"></span>
+      Order now and get it delivered:
+      <div class="delivery-toggle" id="deliveryToggle" role="radiogroup" aria-label="Delivery day"></div>
     </div>
     <div id="pickupEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
       Order now and pick up <span id="pickupEstimateDate"></span>
@@ -807,7 +815,7 @@
   // Fri/Sat/Sun — both already fall within its available days). The only
   // time it's NOT available is when the next delivery would land on a Tuesday.
   function isPepinoAvailable(){
-    if(mode === 'delivery') return getNextDeliveryDow() === 5;
+    if(mode === 'delivery') return getSelectedDelivery().dow === 5;
     return true;
   }
 
@@ -1294,6 +1302,8 @@
   overlay.addEventListener('click', closeCartFn);
 
   let mode = 'delivery';
+  let deliveryChoice = 0; // 0 = next delivery day (default), 1 = push to the following one
+  let shownDeliveryIso = null; // the delivery date currently displayed, sent with the order
   const DELIVERY_FEE = 6; // standard/default delivery fee — matches DELIVERY_FEE in server.js
   const DELIVERY_MINIMUM = 35; // matches DELIVERY_MINIMUM in server.js — keep in sync
 
@@ -1377,6 +1387,78 @@
     return `${dayName}, ${dateStr}`;
   }
 
+  // The two delivery days offered right now: the next one (default, same
+  // lead-time rule as always) and the one after it — Tuesday -> that
+  // week's Friday, Friday -> the following Tuesday.
+  function getDeliveryOptions(){
+    const azNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
+    const dow = azNow.getDay();
+    const firstDow = getNextDeliveryDow();
+    let daysAhead = (firstDow - dow + 7) % 7;
+    if (daysAhead === 0) daysAhead = 7;
+    const first = new Date(azNow);
+    first.setDate(azNow.getDate() + daysAhead);
+    const second = new Date(first);
+    second.setDate(first.getDate() + (firstDow === 2 ? 3 : 4));
+    const pad = n => String(n).padStart(2, '0');
+    return [first, second].map(d => ({
+      dow: d.getDay(),
+      iso: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+      dayName: d.toLocaleDateString('en-US', { weekday: 'long' }),
+      dateStr: d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
+      label: `${d.toLocaleDateString('en-US', { weekday: 'long' })}, ${d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`,
+    }));
+  }
+  function getSelectedDelivery(){
+    const opts = getDeliveryOptions();
+    return opts[deliveryChoice] || opts[0];
+  }
+  function cartHasPepino(){
+    return (cart.pepino || 0) > 0
+      || sixPacks.some(sp => sp && (sp.pepino || 0) > 0)
+      || (gallonCart.pepino_gallon || 0) > 0
+      || (gallonCart.pepino_half || 0) > 0;
+  }
+  // Draws the two-button day picker in both delivery banners (home + cart)
+  // and remembers exactly which date is on screen so that's what gets sent.
+  // The earlier delivery day is always selected by default.
+  function updateDeliverySwapUI(){
+    const opts = getDeliveryOptions();
+    const sel = opts[deliveryChoice] || opts[0];
+    shownDeliveryIso = sel.iso;
+    ['deliveryToggle', 'homeDeliveryToggle'].forEach(id => {
+      const box = document.getElementById(id);
+      if (!box) return;
+      if (box.querySelectorAll('.delivery-opt').length !== 2){
+        box.innerHTML = '<button type="button" class="delivery-opt" data-choice="0" role="radio"></button>'
+                      + '<button type="button" class="delivery-opt" data-choice="1" role="radio"></button>';
+      }
+      box.querySelectorAll('.delivery-opt').forEach((btn, i) => {
+        const o = opts[i];
+        const on = (i === deliveryChoice);
+        btn.innerHTML = `${on ? '✓ ' : ''}${o.dayName}<span class="opt-date">${o.dateStr}</span>`
+                      + (i === 0 ? '<span class="opt-tag">Soonest</span>' : '<span class="opt-tag">Later</span>');
+        btn.classList.toggle('selected', on);
+        btn.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
+    });
+  }
+  function chooseDeliveryDay(index){
+    if (index === deliveryChoice) return;
+    const target = getDeliveryOptions()[index];
+    if (!target) return;
+    if (target.dow === 2 && cartHasPepino()){
+      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery. Remove it from your order to switch to Tuesday delivery.');
+      return;
+    }
+    deliveryChoice = index;
+    applyModeUI();
+    renderMenu();
+    renderBuilder();
+    renderGallons();
+    updateCartUI();
+  }
+
   // Mesa pickup runs Friday–Sunday. Order by Thursday 11:59pm (Arizona time)
   // to catch that weekend; ordering Fri/Sat/Sun itself has already missed
   // the cutoff, so it rolls to the following weekend.
@@ -1439,7 +1521,6 @@
     document.getElementById('deliveryTimesNote').style.display = (mode==='delivery') ? 'block' : 'none';
     const deliveryEstimate = document.getElementById('deliveryEstimate');
     if(mode === 'delivery'){
-      document.getElementById('deliveryEstimateDate').textContent = getNextDeliveryLabel();
       deliveryEstimate.style.display = 'block';
     } else {
       deliveryEstimate.style.display = 'none';
@@ -1458,9 +1539,9 @@
     } else {
       popupEstimate.style.display = 'none';
     }
+    updateDeliverySwapUI();
     const homeDeliveryEstimate = document.getElementById('homeDeliveryEstimate');
     if(mode === 'delivery'){
-      document.getElementById('homeDeliveryEstimateDate').textContent = getNextDeliveryLabel();
       homeDeliveryEstimate.style.display = 'block';
     } else {
       homeDeliveryEstimate.style.display = 'none';
@@ -1521,6 +1602,14 @@
       renderBuilder();
       renderGallons();
       updateCartUI();
+    });
+  });
+
+  ['deliveryToggle', 'homeDeliveryToggle'].forEach(id => {
+    const box = document.getElementById(id);
+    if (box) box.addEventListener('click', (e) => {
+      const btn = e.target.closest('.delivery-opt');
+      if (btn) chooseDeliveryDay(Number(btn.dataset.choice));
     });
   });
 
@@ -1594,6 +1683,7 @@
 
     const payload = {
       mode,
+      deliveryDate: mode === 'delivery' ? shownDeliveryIso : undefined,
       customer: {
         firstName: document.getElementById('custFirstName').value.trim(),
         lastName: document.getElementById('custLastName').value.trim(),
