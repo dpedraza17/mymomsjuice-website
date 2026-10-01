@@ -601,8 +601,17 @@
   // a "Text" button that opens a text thread pre-filled with a friendly
   // check-in using the customer's first name. iOS and Android use
   // different separators before the body param (& vs ?).
+  // Full international format (+1XXXXXXXXXX) for text links. A bare 10-digit
+  // number can open a separate thread that iOS treats as SMS-only, while the
+  // +1 form matches the same iMessage-capable thread you get typing it in.
+  function smsNumber(phone){
+    const d = String(phone || '').replace(/\D/g, '');
+    if (d.length === 10) return '+1' + d;
+    if (d.length === 11 && d.startsWith('1')) return '+' + d;
+    return String(phone || '').replace(/[^\d+]/g, '');
+  }
   function checkInSmsHref(phone, firstName){
-    const digits = phone.replace(/[^\d+]/g, '');
+    const digits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const name = (firstName || '').trim();
     const greeting = name ? `Hi ${name}, how have you been!` : `Hi, how have you been!`;
@@ -633,18 +642,19 @@
   function phoneLinks(phone, orderType){
     if (!phone) return '—';
     const digits = phone.replace(/[^\d+]/g, '');
+    const smsDigits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const template = SMS_TEMPLATES[orderType];
     const smsHref = template
-      ? `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(template)}`
-      : `sms:${digits}`;
+      ? `sms:${smsDigits}${isIOS ? '&' : '?'}body=${encodeURIComponent(template)}`
+      : `sms:${smsDigits}`;
     return `<span style="display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap;"><a href="tel:${escAttr(digits)}" style="color:var(--orange); font-size:1.3em; font-weight:700;">${phone}</a> <a href="${escAttr(smsHref)}" style="display:inline-block; text-align:center; text-decoration:none; background:#F4CE4E; color:#000; font-weight:700; font-size:16px; padding:14px 10px; border-radius:10px; touch-action:manipulation;">Confirmation Text</a></span>`;
   }
 
   // "On the way" ETA texts for delivery orders — one tap opens the
   // messaging app with the minutes already filled in, ready to send.
   function etaSmsHref(phone, minutes){
-    const digits = phone.replace(/[^\d+]/g, '');
+    const digits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const message = `Hi, this is My Mom's Juice! Your order is on the way — we should arrive in the next ${minutes} minutes!`;
     return `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(message)}`;
