@@ -119,6 +119,13 @@
   table{width:100%; border-collapse:collapse; background:var(--card); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);}
   /* Contains horizontal overflow to just the table itself on narrow
      screens, instead of the whole page shifting sideways. */
+  .range-bar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;}
+  .range-bar .range-label{font-size:12px; color:var(--muted); font-weight:700; margin-right:2px;}
+  .range-bar input[type=date]{padding:8px 10px; border-radius:10px; border:1px solid var(--line); font-size:13px; background:var(--card); color:var(--ink);}
+  .range-bar .range-sep{font-size:12px; color:var(--muted);}
+  .range-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; width:100%;}
+  .chip{background:var(--card); border:1px solid var(--line); color:var(--ink); border-radius:999px; padding:8px 14px; font-weight:700; font-size:13px; touch-action:manipulation; cursor:pointer;}
+  .chip.active{background:var(--orange); border-color:var(--orange); color:#fff;}
   .table-scroll{width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;}
   .table-scroll table{min-width:760px;}
   th,td{text-align:left; padding:11px 14px; font-size:13.5px; border-bottom:1px solid var(--line);}
@@ -252,8 +259,26 @@
           <input type="search" id="customerSearch" placeholder="Search by name, email, or phone..." oninput="onSearchChange()">
           <button class="btn" onclick="openModal('addCustomerModal')">+ Add customer</button>
           <button class="btn secondary" onclick="openModal('importModal')">Import CSV</button>
-          <button class="btn ghost" onclick="exportCustomersCSV()">Export CSV</button>
+          <button class="btn ghost" id="exportCsvBtn" onclick="exportCustomersCSV()">Export CSV</button>
           <button class="btn danger" id="bulkDeleteBtn" onclick="bulkDeleteSelected()" disabled>Delete selected (<span id="selectedCount">0</span>)</button>
+        </div>
+        <div class="range-bar" id="lastVisitBar">
+          <div class="range-row">
+            <span class="range-label">Last visit:</span>
+            <button class="chip active" data-preset="all" onclick="applyVisitPreset('all')">All</button>
+            <button class="chip" data-preset="3" onclick="applyVisitPreset('3')">Last 3 months</button>
+            <button class="chip" data-preset="6" onclick="applyVisitPreset('6')">Last 6 months</button>
+            <button class="chip" data-preset="9" onclick="applyVisitPreset('9')">Last 9 months</button>
+            <button class="chip" data-preset="12" onclick="applyVisitPreset('12')">Last 12 months</button>
+            <button class="chip" data-preset="12plus" onclick="applyVisitPreset('12plus')">Over 12 months</button>
+          </div>
+          <div class="range-row">
+            <span class="range-label">Date range:</span>
+            <input type="date" id="visitFrom" onchange="onVisitRangeChange()">
+            <span class="range-sep">to</span>
+            <input type="date" id="visitTo" onchange="onVisitRangeChange()">
+            <span class="range-sep" id="filterSummary"></span>
+          </div>
         </div>
         <div class="table-scroll">
         <table>
@@ -261,8 +286,8 @@
             <tr>
               <th class="checkbox-col"><input type="checkbox" id="selectAllBox" onchange="toggleSelectAll()"></th>
               <th class="sortable" onclick="setSort('name')">Name<span class="sort-arrow" id="arrow-name"></span></th>
-              <th class="sortable" onclick="setSort('email')">Email<span class="sort-arrow" id="arrow-email"></span></th>
               <th class="sortable" onclick="setSort('phone')">Phone<span class="sort-arrow" id="arrow-phone"></span></th>
+              <th class="sortable" onclick="setSort('email')">Email<span class="sort-arrow" id="arrow-email"></span></th>
               <th class="sortable" onclick="setSort('address')">Address<span class="sort-arrow" id="arrow-address"></span></th>
               <th class="sortable" onclick="setSort('order_count')">Orders<span class="sort-arrow" id="arrow-order_count"></span></th>
               <th class="sortable" onclick="setSort('lifetime_spend')">Lifetime spend<span class="sort-arrow" id="arrow-lifetime_spend"></span></th>
@@ -1321,11 +1346,76 @@
     if (arrow) arrow.textContent = sortAsc ? '▲' : '▼';
   }
 
+  // ---- Last-visit date filter ----
+  // Turns a customer's last_visit into a local YYYY-MM-DD key so it can be
+  // compared directly with the date inputs. Returns '' if missing/unparseable.
+  function visitKey(v){
+    if (!v) return '';
+    const str = String(v).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
+    const d = new Date(str);
+    return isNaN(d) ? '' : dateKey(d);
+  }
+  function dateKey(d){
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${m}-${day}`;
+  }
+  function monthsAgo(n, extraDays){
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setMonth(d.getMonth() - n);
+    d.setDate(d.getDate() + (extraDays || 0));
+    return dateKey(d);
+  }
+
+  // Quick-range buttons. Each one stands on its own: "within the last N
+  // months" (so Last 6 includes the last 3 too), and 12plus = older than a year.
+  function applyVisitPreset(preset){
+    const from = document.getElementById('visitFrom');
+    const to = document.getElementById('visitTo');
+    let f = '', t = '';
+    switch(preset){
+      case '3':
+      case '6':
+      case '9':
+      case '12':     f = monthsAgo(Number(preset)); t = monthsAgo(0); break;
+      case '12plus': f = '';                        t = monthsAgo(12, -1); break;
+      default: break; // 'all' clears both
+    }
+    from.value = f;
+    to.value = t;
+    setActivePreset(preset);
+    onSearchChange();
+  }
+  function setActivePreset(preset){
+    document.querySelectorAll('#lastVisitBar .chip').forEach(b => {
+      b.classList.toggle('active', b.dataset.preset === preset);
+    });
+  }
+  // Typing/picking dates by hand un-highlights the quick buttons.
+  function onVisitRangeChange(){
+    const f = document.getElementById('visitFrom').value;
+    const t = document.getElementById('visitTo').value;
+    setActivePreset(!f && !t ? 'all' : '');
+    onSearchChange();
+  }
+
   function onSearchChange(){
     const q = (document.getElementById('customerSearch').value || '').toLowerCase();
+    const fromKey = document.getElementById('visitFrom').value;
+    const toKey = document.getElementById('visitTo').value;
+    const dateFiltered = !!(fromKey || toKey);
     filteredCustomers = allCustomers.filter(c => {
       const hay = `${c.first_name || ''} ${c.last_name || ''} ${c.email || ''} ${c.phone || ''}`.toLowerCase();
-      return hay.includes(q);
+      if (!hay.includes(q)) return false;
+      if (dateFiltered){
+        const k = visitKey(c.last_visit);
+        if (!k) return false; // no visit date -> can't be in a date range
+        if (fromKey && k < fromKey) return false;
+        if (toKey && k > toKey) return false;
+      }
+      return true;
     });
     currentPage = 1;
     applySort();
@@ -1375,6 +1465,12 @@
   function renderCustomers(){
     document.getElementById('totalCustomerCount').textContent = allCustomers.length;
 
+    const isFiltered = filteredCustomers.length !== allCustomers.length;
+    document.getElementById('exportCsvBtn').textContent =
+      isFiltered ? `Export CSV (${filteredCustomers.length})` : 'Export CSV';
+    document.getElementById('filterSummary').textContent =
+      isFiltered ? `${filteredCustomers.length} of ${allCustomers.length} customers` : '';
+
     const pageItems = getCurrentPageItems();
 
     document.getElementById('customerRows').innerHTML = pageItems.length
@@ -1382,8 +1478,8 @@
         <tr>
           <td class="checkbox-col"><input type="checkbox" ${selectedIds.has(c.id) ? 'checked' : ''} onchange="toggleRowSelect('${c.id}')"></td>
           <td>${c.first_name || ''} ${c.last_name || ''}</td>
-          <td>${emailLink(c.email)}</td>
           <td>${phoneLinkPlain(c.phone, c.first_name)}</td>
+          <td>${emailLink(c.email)}</td>
           <td>${c.address || '—'}</td>
           <td class="num">${c.order_count || 0}</td>
           <td class="num">${money(c.lifetime_spend)}</td>
@@ -1479,7 +1575,9 @@
   }
 
   function exportCustomersCSV(){
-    const csv = Papa.unparse(allCustomers.map(c => ({
+    // Exports whatever is currently filtered (search + last-visit range),
+    // across all pages — not just the page on screen.
+    const csv = Papa.unparse(filteredCustomers.map(c => ({
       first_name: c.first_name, last_name: c.last_name, email: c.email,
       phone: c.phone, address: c.address, order_count: c.order_count,
       lifetime_spend: c.lifetime_spend, last_visit: c.last_visit,
