@@ -572,12 +572,23 @@
     return `<a href="mailto:${escAttr(email)}" style="color:var(--orange);">${email}</a>`;
   }
 
-  // Plain phone link for the Customers table — same size/weight as
-  // emailLink, no SMS button (there's no single order to reference here).
-  function phoneLinkPlain(phone){
+  // Phone link for the Customers table: click-to-call on the number, plus
+  // a "Text" button that opens a text thread pre-filled with a friendly
+  // check-in using the customer's first name. iOS and Android use
+  // different separators before the body param (& vs ?).
+  function checkInSmsHref(phone, firstName){
+    const digits = phone.replace(/[^\d+]/g, '');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const name = (firstName || '').trim();
+    const greeting = name ? `Hi ${name}, how have you been!` : `Hi, how have you been!`;
+    const message = `${greeting} I know it's been a little while since your last order. We hope all is well! 🙏🏽\n\nWhenever you’re ready for your next order we would be happy to assist 😊\n\n-David (the son) from mymomsjuice.com`;
+    return `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(message)}`;
+  }
+  function phoneLinkPlain(phone, firstName){
     if (!phone) return '—';
     const digits = phone.replace(/[^\d+]/g, '');
-    return `<a href="tel:${escAttr(digits)}" style="color:var(--orange);">${phone}</a>`;
+    const smsHref = checkInSmsHref(phone, firstName);
+    return `<span style="display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;"><a href="tel:${escAttr(digits)}" style="color:var(--orange);">${phone}</a> <a href="${escAttr(smsHref)}" title="Text ${escAttr(firstName || 'customer')}" style="display:inline-block; text-decoration:none; background:#F4CE4E; color:#000; font-weight:700; font-size:12px; padding:5px 10px; border-radius:8px; touch-action:manipulation;">💬 Text</a></span>`;
   }
 
   // Pre-filled text templates per order type — customer just has to hit
@@ -1372,7 +1383,7 @@
           <td class="checkbox-col"><input type="checkbox" ${selectedIds.has(c.id) ? 'checked' : ''} onchange="toggleRowSelect('${c.id}')"></td>
           <td>${c.first_name || ''} ${c.last_name || ''}</td>
           <td>${emailLink(c.email)}</td>
-          <td>${phoneLinkPlain(c.phone)}</td>
+          <td>${phoneLinkPlain(c.phone, c.first_name)}</td>
           <td>${c.address || '—'}</td>
           <td class="num">${c.order_count || 0}</td>
           <td class="num">${money(c.lifetime_spend)}</td>
