@@ -954,6 +954,92 @@
   const builderGrid = document.getElementById('builderGrid');
   const gallonGrid = document.getElementById('gallonGrid');
 
+  // One-off date shifts, keyed by DELIVERY date (YYYY-MM-DD). If a customer
+  // adds any listed item while that delivery day is selected, their delivery
+  // is automatically moved to the next delivery day (Friday) and they get a
+  // pop-up explaining why. Detox cleanses include Watermelon Water, so they
+  // count too. Pickup is Fri-Sun, so it never lands on these dates.
+  // Add another line here for any future one-day outage; entries stop
+  // mattering on their own once the date passes.
+  const DELIVERY_SHIFT_ITEMS = {
+    '2026-10-13': ['stlemonade','horchata','chatamatcha','horchatalatte','strawhorchata','watermelon'],
+  };
+  function gallonBaseId(key){ return String(key).replace(/_(gallon|half)$/,''); }
+  function itemNameById(id){
+    if(id === 'detox') return 'Detox Cleanse';
+    const it = items.find(x=>x.id===id);
+    return it ? it.name : id;
+  }
+  function cartItemIds(){
+    const ids = new Set();
+    Object.keys(cart).forEach(id=>{ if(cart[id] > 0) ids.add(id); });
+    Object.keys(gallonCart).forEach(k=>{ if(gallonCart[k] > 0) ids.add(gallonBaseId(k)); });
+    sixPacks.forEach(sp=>{ Object.keys(sp||{}).forEach(id=>{ if(sp[id] > 0) ids.add(id); }); });
+    if(detoxes.length) ids.add('detox');
+    return ids;
+  }
+  // ids may include 'detox' (which stands in for Watermelon Water).
+  function shiftItemsHit(ids, iso){
+    const list = DELIVERY_SHIFT_ITEMS[iso] || [];
+    return [...new Set(ids)].filter(id => id === 'detox' ? list.includes('watermelon') : list.includes(id));
+  }
+  function blockedIdsForDelivery(d){
+    const out = [...(DELIVERY_SHIFT_ITEMS[d.iso] || [])];
+    if(d.dow === 2) out.push('pepino');
+    return out;
+  }
+  // If the selected delivery day can't take these items, move the order to
+  // Friday and tell the customer. Returns true if it moved the date.
+  function moveToFridayIfNeeded(ids){
+    if(mode !== 'delivery') return false;
+    const old = getSelectedDelivery();
+    const hit = shiftItemsHit(ids, old.iso);
+    if(!hit.length) return false;
+    const opts = getDeliveryOptions();
+    const idx = opts.findIndex(o => o.dow === 5 && !shiftItemsHit(hit, o.iso).length);
+    if(idx < 0) return false;
+    autoMoved = { choice: deliveryChoice, iso: old.iso };
+    deliveryChoice = idx;
+    applyModeUI();
+    renderMenu();
+    renderBuilder();
+    renderGallons();
+    updateCartUI();
+    const nw = opts[idx];
+    const names = hit.map(itemNameById).join(', ');
+    const blockedOld = blockedIdsForDelivery(old);
+    const stillOk = items.filter(it => !blockedOld.includes(it.id)).map(it => it.name).join(', ');
+    alert(`Heads up: ${names} ${hit.length > 1 ? 'aren\'t' : 'isn\'t'} available this Tuesday only. Your delivery date has been changed from ${old.dayName}, ${old.dateStr} to ${nw.dayName}, ${nw.dateStr}.\n\nStill available for ${old.dayName} delivery: ${stillOk}.`);
+    return true;
+  }
+  // Remembers an automatic move to Friday so it can be undone if the customer
+  // removes the unavailable items. Cleared whenever they pick a day themselves.
+  let autoMoved = null; // { choice: index of the original day, iso: its date }
+  function maybeRestoreOriginalDay(){
+    if(!autoMoved || mode !== 'delivery') return;
+    const opts = getDeliveryOptions();
+    const orig = opts[autoMoved.choice];
+    if(!orig || orig.iso !== autoMoved.iso){ autoMoved = null; return; } // stale
+    if(deliveryChoice === autoMoved.choice){ autoMoved = null; return; }
+    const inCart = cartItemIds();
+    const stillBlocked = blockedIdsForDelivery(orig).some(id => inCart.has(id))
+      || (inCart.has('detox') && shiftItemsHit(['detox'], orig.iso).length);
+    if(stillBlocked) return;
+    const from = getSelectedDelivery();
+    deliveryChoice = autoMoved.choice;
+    autoMoved = null;
+    applyModeUI();
+    renderMenu();
+    renderBuilder();
+    renderGallons();
+    updateCartUI();
+    alert(`Your delivery date has been changed back to ${orig.dayName}, ${orig.dateStr} (from ${from.dayName}, ${from.dateStr}) because the unavailable items were removed from your order.`);
+  }
+  // Covers carts restored from an earlier visit and switching back to delivery.
+  function ensureDeliveryOkForCart(){
+    return moveToFridayIfNeeded([...cartItemIds()]);
+  }
+
   // Agua de Pepino con Limón is available for Friday delivery, and for both
   // pickup options (Mesa runs Fri/Sat/Sun, the McDowell pop-up runs
   // Fri/Sat/Sun — both already fall within its available days). The only
@@ -1078,6 +1164,7 @@
     }
     document.getElementById('gqty-'+key).textContent = gallonCart[key]||0;
     updateCartUI();
+    if(btn.dataset.action==='plus') moveToFridayIfNeeded([flavorId]);
   });
 
   grid.addEventListener('click', (e)=>{
@@ -1103,6 +1190,7 @@
       addBtn.classList.toggle('in-cart', !!cart[id]);
     }
     updateCartUI();
+    if(btn.dataset.action==='plus' || btn.dataset.action==='add') moveToFridayIfNeeded([id]);
   });
 
   let toastTimer;
@@ -1261,6 +1349,7 @@
     flashAdded(e.currentTarget, 'Added to order!');
     showAddedToast('6-pack added to order');
     updateCartUI();
+    moveToFridayIfNeeded(Object.keys(flavors));
   });
 
   document.querySelectorAll('[data-detox]').forEach(btn=>{
@@ -1269,6 +1358,7 @@
       flashAdded(e.currentTarget, 'Added to order!');
       showAddedToast(`${btn.dataset.detox}-Day Cleanse added to order`);
       updateCartUI();
+      moveToFridayIfNeeded(['detox']);
     });
   });
 
@@ -1520,6 +1610,7 @@
     tot.className = 'cart-total';
     tot.innerHTML = `<span>Estimated total</span><span id="cartTotalDisplay">$${totalPrice().toFixed(2)}</span>`;
     body.appendChild(tot);
+    maybeRestoreOriginalDay();
   }
 
   // Increase/decrease a line right from the cart. Every change is mirrored
@@ -1750,10 +1841,15 @@
     if (index === deliveryChoice) return;
     const target = getDeliveryOptions()[index];
     if (!target) return;
-    if (target.dow === 2 && cartHasPepino()){
-      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery. Remove it from your order to switch to Tuesday delivery.');
+    const inCart = cartItemIds();
+    const hitIds = blockedIdsForDelivery(target).filter(id=>inCart.has(id));
+    if (inCart.has('detox') && shiftItemsHit(['detox'], target.iso).length) hitIds.push('detox');
+    if (hitIds.length){
+      const nm = [...new Set(hitIds)].map(itemNameById).join(', ');
+      alert(`${nm} ${hitIds.length > 1 ? 'aren\'t' : 'isn\'t'} available this Tuesday only. Remove ${hitIds.length > 1 ? 'them' : 'it'} from your order to switch to ${target.dayName} delivery.`);
       return;
     }
+    autoMoved = null;
     deliveryChoice = index;
     applyModeUI();
     renderMenu();
@@ -1905,6 +2001,7 @@
       renderBuilder();
       renderGallons();
       updateCartUI();
+      ensureDeliveryOkForCart();
     });
   });
 
@@ -1930,6 +2027,7 @@
   document.getElementById('payOnline').addEventListener('click', async ()=>{
     saveCartToStorage();
     if(!requireModeSelected()) return;
+    if(ensureDeliveryOkForCart()) return;
     if(!document.getElementById('custFirstName').value.trim()){
       alert('Please enter your first name before checking out.');
       document.getElementById('custFirstName').focus();
@@ -2067,6 +2165,7 @@
   });
 
   restoreCartFromStorage();
+  setTimeout(ensureDeliveryOkForCart, 400);
   applyModeUI();
   renderBuilder();
   renderMenu();
