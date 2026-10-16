@@ -613,7 +613,7 @@
   function checkInSmsHref(phone, firstName){
     const digits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const message = `Hi just wanted to see if you would like to place an order for juices this weekend?`;
+    const message = `Hi good afternoon! We’re taking orders for this weekend and we wanted to see if you needed anything. Let us know, thank you! mymomsjuice.com`;
     return `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(message)}`;
   }
   function phoneLinkPlain(phone, firstName){
