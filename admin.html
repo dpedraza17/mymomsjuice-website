@@ -461,6 +461,7 @@
       <input id="editLastName">
       <label>Email</label>
       <input id="editEmail" type="email">
+      <div id="editAlsoEmails" style="font-size:12.5px; color:var(--muted); margin:-4px 0 10px;"></div>
       <label>Phone</label>
       <input id="editPhone" type="tel">
       <label>Address</label>
@@ -888,10 +889,67 @@
   let sortField = 'name';
   let sortAsc = true; // default: first name A -> Z
 
+  // Merge duplicate customers that share a phone number. Phones are compared
+  // by their last 10 digits, so "+1 602-555-1234" and "(602) 555-1234" match.
+  // Each merged customer keeps every email (c.emails), the combined order
+  // count / spend, the most recent visit, and the ids of all the underlying
+  // records (c._ids) so edit and delete apply to the whole group.
+  // Customers with no phone number are never merged.
+  function phoneKey(phone){
+    let d = String(phone || '').replace(/\D/g, '');
+    if (d.length === 11 && d.startsWith('1')) d = d.slice(1);
+    return d.length >= 7 ? d : '';
+  }
+  function mergeCustomersByPhone(list){
+    const groups = new Map();
+    const out = [];
+    list.forEach(c => {
+      const key = phoneKey(c.phone);
+      if (!key){ out.push([c]); return; }
+      if (!groups.has(key)){ const g = []; groups.set(key, g); out.push(g); }
+      groups.get(key).push(c);
+    });
+    return out.map(g => {
+      // Primary record = the one with the most orders (ties: first in list)
+      const sorted = g.slice().sort((a, b) => Number(b.order_count || 0) - Number(a.order_count || 0));
+      const primary = sorted[0];
+      const emails = [];
+      g.forEach(c => {
+        const e = (c.email || '').trim();
+        if (e && !emails.some(x => x.toLowerCase() === e.toLowerCase())) emails.push(e);
+      });
+      // Put the primary's email first
+      const pe = (primary.email || '').trim().toLowerCase();
+      emails.sort((a, b) => (b.toLowerCase() === pe) - (a.toLowerCase() === pe));
+      const pick = f => primary[f] || (g.find(c => c[f]) || {})[f] || '';
+      let lastVisit = '';
+      g.forEach(c => {
+        if (!c.last_visit) return;
+        if (!lastVisit || new Date(c.last_visit) > new Date(lastVisit)) lastVisit = c.last_visit;
+      });
+      return Object.assign({}, primary, {
+        first_name: pick('first_name'),
+        last_name: pick('last_name'),
+        address: pick('address'),
+        email: emails[0] || '',
+        emails: emails,
+        order_count: g.reduce((n, c) => n + Number(c.order_count || 0), 0),
+        lifetime_spend: g.reduce((n, c) => n + Number(c.lifetime_spend || 0), 0),
+        last_visit: lastVisit || primary.last_visit,
+        _ids: g.map(c => c.id),
+        _records: g,
+      });
+    });
+  }
+  function idsFor(id){
+    const c = allCustomers.find(x => x.id === id);
+    return c && c._ids ? c._ids : [id];
+  }
+
   async function loadCustomers(){
     const res = await authedFetch('customers-list');
     const data = await res.json();
-    allCustomers = data.customers || [];
+    allCustomers = mergeCustomersByPhone(data.customers || []);
     selectedIds.clear();
     onSearchChange();
   }
@@ -1415,7 +1473,7 @@
     const toKey = document.getElementById('visitTo').value;
     const dateFiltered = !!(fromKey || toKey);
     filteredCustomers = allCustomers.filter(c => {
-      const hay = `${c.first_name || ''} ${c.last_name || ''} ${c.email || ''} ${c.phone || ''}`.toLowerCase();
+      const hay = `${c.first_name || ''} ${c.last_name || ''} ${(c.emails || [c.email || '']).join(' ')} ${c.phone || ''}`.toLowerCase();
       if (!hay.includes(q)) return false;
       if (dateFiltered){
         const k = visitKey(c.last_visit);
@@ -1487,7 +1545,7 @@
           <td class="checkbox-col"><input type="checkbox" ${selectedIds.has(c.id) ? 'checked' : ''} onchange="toggleRowSelect('${c.id}')"></td>
           <td>${c.first_name || ''} ${c.last_name || ''}</td>
           <td>${phoneLinkPlain(c.phone, c.first_name)}</td>
-          <td>${emailLink(c.email)}</td>
+          <td>${(c.emails && c.emails.length ? c.emails : [c.email]).map(e => emailLink(e)).join('<br>')}</td>
           <td>${c.address || '—'}</td>
           <td class="num">${c.order_count || 0}</td>
           <td class="num">${money(c.lifetime_spend)}</td>
@@ -1515,6 +1573,8 @@
     document.getElementById('editFirstName').value = c.first_name || '';
     document.getElementById('editLastName').value = c.last_name || '';
     document.getElementById('editEmail').value = c.email || '';
+    const others = (c.emails || []).filter(e => e.toLowerCase() !== (c.email || '').toLowerCase());
+    document.getElementById('editAlsoEmails').textContent = others.length ? 'Also saved under this contact: ' + others.join(', ') : '';
     document.getElementById('editPhone').value = c.phone || '';
     document.getElementById('editAddress').value = c.address || '';
     document.getElementById('editCustomerStatus').textContent = '';
@@ -1522,20 +1582,28 @@
   }
 
   async function submitEditCustomer(){
-    const payload = {
-      id: document.getElementById('editId').value,
+    const id = document.getElementById('editId').value;
+    const c = allCustomers.find(x => x.id === id);
+    const shared = {
       first_name: document.getElementById('editFirstName').value,
       last_name: document.getElementById('editLastName').value,
-      email: document.getElementById('editEmail').value,
       phone: document.getElementById('editPhone').value,
       address: document.getElementById('editAddress').value,
     };
+    // The email field edits the main record; any other records merged into
+    // this contact keep their own email but get the same name/phone/address.
+    const records = c && c._records ? c._records : [{ id: id, email: '' }];
+    const payloads = records.map(r => Object.assign({ id: r.id }, shared, {
+      email: r.id === id ? document.getElementById('editEmail').value : (r.email || ''),
+    }));
     const status = document.getElementById('editCustomerStatus');
     status.textContent = 'Saving...';
     try {
-      const res = await authedFetch('customers-update', { method: 'POST', body: JSON.stringify(payload) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+      for (const payload of payloads){
+        const res = await authedFetch('customers-update', { method: 'POST', body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+      }
       status.textContent = 'Saved!';
       loadCustomers();
       setTimeout(() => closeModal('editCustomerModal'), 500);
@@ -1546,7 +1614,7 @@
 
   async function deleteOneCustomer(id){
     if (!confirm('Delete this customer? This cannot be undone.')) return;
-    await authedFetch('customers-delete', { method: 'POST', body: JSON.stringify({ ids: [id] }) });
+    await authedFetch('customers-delete', { method: 'POST', body: JSON.stringify({ ids: idsFor(id) }) });
     selectedIds.delete(id);
     loadCustomers();
   }
@@ -1554,7 +1622,7 @@
   async function bulkDeleteSelected(){
     if (selectedIds.size === 0) return;
     if (!confirm(`Delete ${selectedIds.size} selected customer(s)? This cannot be undone.`)) return;
-    await authedFetch('customers-delete', { method: 'POST', body: JSON.stringify({ ids: Array.from(selectedIds) }) });
+    await authedFetch('customers-delete', { method: 'POST', body: JSON.stringify({ ids: Array.from(selectedIds).flatMap(idsFor) }) });
     selectedIds.clear();
     loadCustomers();
   }
@@ -1586,7 +1654,7 @@
     // Exports whatever is currently filtered (search + last-visit range),
     // across all pages — not just the page on screen.
     const csv = Papa.unparse(filteredCustomers.map(c => ({
-      first_name: c.first_name, last_name: c.last_name, email: c.email,
+      first_name: c.first_name, last_name: c.last_name, email: (c.emails && c.emails.length ? c.emails : [c.email || '']).join('; '),
       phone: c.phone, address: c.address, order_count: c.order_count,
       lifetime_spend: c.lifetime_spend, last_visit: c.last_visit,
     })));
