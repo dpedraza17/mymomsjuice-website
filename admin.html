@@ -613,9 +613,7 @@
   function checkInSmsHref(phone, firstName){
     const digits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const name = (firstName || '').trim();
-    const greeting = name ? `Hi ${name}, how have you been!` : `Hi, how have you been!`;
-    const message = `${greeting} I know it's been a little while since your last order. We hope all is well! 🙏🏽\n\nWhenever you’re ready for your next order we would be happy to assist 😊\n\n-David (the son) from mymomsjuice.com`;
+    const message = `Hi just wanted to see if you would like to place an order for juices this weekend?`;
     return `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(message)}`;
   }
   function phoneLinkPlain(phone, firstName){
