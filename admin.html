@@ -614,7 +614,9 @@
   function checkInSmsHref(phone, firstName){
     const digits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const message = `Hi good afternoon! We’re taking orders for this weekend and we wanted to see if you needed anything. Let us know, thank you! mymomsjuice.com`;
+    const name = (firstName || '').trim();
+    const greeting = name ? `Hi ${name},` : 'Hi,';
+    const message = `${greeting} my mom & I hope you’re doing well. We were wondering if you had a few minutes to leave us a Google review? It would be such a huge help. In exchange we would like to offer a discount or some free juices on your next order. Please and thank you! https://maps.app.goo.gl/pphVESX6YFZaS79r8?g_st=ic`;
     return `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(message)}`;
   }
   function phoneLinkPlain(phone, firstName){
