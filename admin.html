@@ -242,6 +242,19 @@
           <button type="button" class="filter-btn" data-type="popup" onclick="setFulfilledFilter('popup')">Pop-up — 83rd Ave &amp; McDowell</button>
           <button type="button" class="filter-btn" data-type="delivery" onclick="setFulfilledFilter('delivery')">Delivery</button>
         </div>
+        <div class="toolbar" style="margin-bottom:10px;">
+          <input type="search" id="fulfilledSearch" placeholder="Search fulfilled orders by name..." oninput="onFulfilledSearchChange()">
+        </div>
+        <div class="range-bar">
+          <div class="range-row">
+            <span class="range-label">Order date:</span>
+            <input type="date" id="fulfilledFrom" onchange="onFulfilledSearchChange()">
+            <span class="range-sep">to</span>
+            <input type="date" id="fulfilledTo" onchange="onFulfilledSearchChange()">
+            <button type="button" class="chip" onclick="clearFulfilledSearch()">Clear</button>
+            <span class="range-sep" id="fulfilledFilterSummary"></span>
+          </div>
+        </div>
         <div id="fulfilledList"></div>
         <div class="pagination" id="fulfilledPagination" style="display:none;">
           <button id="fulfilledPrevBtn" onclick="changeFulfilledPage(-1)">&larr; Prev</button>
@@ -270,7 +283,9 @@
             <button class="chip" data-preset="6" onclick="applyVisitPreset('6')">Last 6 months</button>
             <button class="chip" data-preset="9" onclick="applyVisitPreset('9')">Last 9 months</button>
             <button class="chip" data-preset="12" onclick="applyVisitPreset('12')">Last 12 months</button>
-            <button class="chip" data-preset="12plus" onclick="applyVisitPreset('12plus')">Over 12 months</button>
+            <button class="chip" data-preset="24" onclick="applyVisitPreset('24')">Last 24 months</button>
+            <button class="chip" data-preset="36" onclick="applyVisitPreset('36')">Last 36 months</button>
+            <button class="chip" data-preset="48" onclick="applyVisitPreset('48')">Last 48 months</button>
           </div>
           <div class="range-row">
             <span class="range-label">Date range:</span>
@@ -825,15 +840,55 @@
     renderFulfilledList();
   }
 
+  // Local YYYY-MM-DD for an order: the day it was due/fulfilled for, falling
+  // back to the day it was placed if no due date is set.
+  function fulfilledDateKey(o){
+    const d = parseOrderDate(o);
+    if (d) return dateKey(d);
+    if (o.created_at){
+      const c = new Date(o.created_at);
+      if (!isNaN(c.getTime())) return dateKey(c);
+    }
+    return '';
+  }
+
+  function onFulfilledSearchChange(){
+    fulfilledPage = 1;
+    renderFulfilledList();
+  }
+
+  function clearFulfilledSearch(){
+    document.getElementById('fulfilledSearch').value = '';
+    document.getElementById('fulfilledFrom').value = '';
+    document.getElementById('fulfilledTo').value = '';
+    onFulfilledSearchChange();
+  }
+
   function renderFulfilledList(){
     const listEl = document.getElementById('fulfilledList');
     const paginationEl = document.getElementById('fulfilledPagination');
-    const filtered = fulfilledTypeFilter === 'all'
-      ? fulfilledAll
-      : fulfilledAll.filter(o => o.order_type === fulfilledTypeFilter);
+    const q = (document.getElementById('fulfilledSearch').value || '').trim().toLowerCase();
+    const fromKey = document.getElementById('fulfilledFrom').value;
+    const toKey = document.getElementById('fulfilledTo').value;
+    const searching = !!(q || fromKey || toKey);
+    const filtered = fulfilledAll.filter(o => {
+      if (fulfilledTypeFilter !== 'all' && o.order_type !== fulfilledTypeFilter) return false;
+      if (q && !String(o.customer_name || '').toLowerCase().includes(q)) return false;
+      if (fromKey || toKey){
+        const k = fulfilledDateKey(o);
+        if (!k) return false;
+        if (fromKey && k < fromKey) return false;
+        if (toKey && k > toKey) return false;
+      }
+      return true;
+    });
+    document.getElementById('fulfilledFilterSummary').textContent =
+      searching ? `${filtered.length} of ${fulfilledAll.length} orders` : '';
 
     if (!filtered.length){
-      listEl.innerHTML = `<div class="empty">No fulfilled orders${fulfilledTypeFilter === 'all' ? ' yet' : ' of this type'}.</div>`;
+      listEl.innerHTML = searching
+        ? `<div class="empty">No fulfilled orders match that search.</div>`
+        : `<div class="empty">No fulfilled orders${fulfilledTypeFilter === 'all' ? ' yet' : ' of this type'}.</div>`;
       paginationEl.style.display = 'none';
       return;
     }
@@ -1438,7 +1493,7 @@
   }
 
   // Quick-range buttons. Each one stands on its own: "within the last N
-  // months" (so Last 6 includes the last 3 too), and 12plus = older than a year.
+  // months" (so Last 6 includes the last 3 too).
   function applyVisitPreset(preset){
     const from = document.getElementById('visitFrom');
     const to = document.getElementById('visitTo');
@@ -1447,8 +1502,10 @@
       case '3':
       case '6':
       case '9':
-      case '12':     f = monthsAgo(Number(preset)); t = monthsAgo(0); break;
-      case '12plus': f = '';                        t = monthsAgo(12, -1); break;
+      case '12':
+      case '24':
+      case '36':
+      case '48':     f = monthsAgo(Number(preset)); t = monthsAgo(0); break;
       default: break; // 'all' clears both
     }
     from.value = f;
