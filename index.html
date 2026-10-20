@@ -439,7 +439,7 @@
       My cart <span class="cart-count" id="cartCount">0</span>
     </button>
   </div>
-  <div class="free-del-banner">🚚 Free delivery on orders of $65 or more</div>
+  <div class="free-del-banner">🚚 Free delivery on orders of $100 or more</div>
 </header>
 
 <section class="hero">
@@ -685,7 +685,7 @@
         <h3>Delivery</h3>
         <ul>
           <li><strong>Delivery:</strong> Tuesdays, Fridays, Saturdays &amp; Sundays. Orders are due by midnight the night before.</li>
-          <li><strong>Free delivery on orders of $65 or more</strong> (before tip).</li>
+          <li><strong>Free delivery on orders of $100 or more</strong> (before tip).</li>
           <li><strong>You must be present at time of delivery</strong> — we cannot leave your order outside.</li>
         </ul>
         <p style="font-weight:700; margin:14px 0 4px;">Delivery times:</p>
@@ -805,7 +805,7 @@
     </div>
     <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Tuesdays, Fridays, Saturdays &amp; Sundays. Orders are due by midnight the night before.</p>
-      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Free delivery on orders of $65 or more (before tip).</p>
+      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Free delivery on orders of $100 or more (before tip).</p>
       <p style="margin:0 0 14px; font-size:18px; font-weight:700; line-height:1.5; background:#FFEB3B; color:var(--dark); display:inline-block; padding:4px 8px; border-radius:6px;">You must be present at time of delivery — we cannot leave your order outside.</p>
       <p style="font-weight:800; font-size:18px; margin:0 0 6px;">Delivery times:</p>
       <ul style="margin:0 0 10px; padding-left:20px; font-size:17px; font-weight:600; line-height:1.5;">
@@ -852,7 +852,7 @@
   const HYDRATION_BULK_PRICE = 25;   // each, when ordering 2+ — matches HYDRATION_BULK_PRICE in server.js
   const HYDRATION_BULK_THRESHOLD = 2;
   function hydrationUnitPrice(){ return extras.hydration >= HYDRATION_BULK_THRESHOLD ? HYDRATION_BULK_PRICE : HYDRATION_PRICE; }
-  const FREE_DELIVERY_THRESHOLD = 65; // matches FREE_DELIVERY_THRESHOLD in server.js — keep in sync
+  const FREE_DELIVERY_THRESHOLD = 100; // matches FREE_DELIVERY_THRESHOLD in server.js — keep in sync
   let builderQty = {};
 
   // Gallons & Half Gallons — same 13-item menu minus Chata Matcha, which
