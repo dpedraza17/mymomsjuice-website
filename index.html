@@ -397,8 +397,8 @@
     .item-desc{font-size:13.5px;}
     .item-price{font-size:16.5px;}
   }
-  .delivery-toggle{display:flex; gap:10px; margin-top:12px; justify-content:center;}
-  .delivery-opt{flex:1 1 0; max-width:215px; min-height:78px; padding:12px 8px 10px; border-radius:14px; border:3px solid var(--dark); background:#fff; color:var(--dark); font:inherit; font-weight:800; font-size:17px; line-height:1.25; cursor:pointer; text-align:center; box-shadow:0 3px 0 rgba(13,34,19,.35); -webkit-tap-highlight-color:transparent;}
+  .delivery-toggle{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; justify-content:center;}
+  .delivery-opt{flex:1 1 calc(50% - 10px); max-width:215px; min-height:78px; padding:12px 8px 10px; border-radius:14px; border:3px solid var(--dark); background:#fff; color:var(--dark); font:inherit; font-weight:800; font-size:17px; line-height:1.25; cursor:pointer; text-align:center; box-shadow:0 3px 0 rgba(13,34,19,.35); -webkit-tap-highlight-color:transparent;}
   .delivery-opt:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(13,34,19,.35);}
   .delivery-opt .opt-radio{display:inline-block; width:16px; height:16px; border-radius:50%; border:3px solid currentColor; box-sizing:border-box; vertical-align:-2px; margin-right:7px;}
   .delivery-opt.selected .opt-radio{background:var(--yellow); box-shadow:inset 0 0 0 3px var(--dark);}
@@ -408,7 +408,8 @@
   .delivery-opt.selected .opt-tag{opacity:1;}
   .delivery-opt{min-width:0;}
   @media (max-width:480px){
-    .delivery-toggle{gap:6px;}
+    .delivery-toggle{gap:8px;}
+    .delivery-opt{flex-basis:calc(50% - 8px);}
     .delivery-opt{font-size:14.5px; padding:10px 4px 8px;}
     .delivery-opt .opt-radio{width:13px; height:13px; margin-right:4px;}
     .delivery-opt .opt-date{font-size:13px;}
@@ -683,7 +684,7 @@
       <div class="find-card" id="deliveryCard">
         <h3>Delivery</h3>
         <ul>
-          <li><strong>Delivery:</strong> Tuesdays, Fridays &amp; Sundays. Tuesday and Friday orders are due by midnight the night before; Sunday orders are due by Saturday at 6pm.</li>
+          <li><strong>Delivery:</strong> Tuesdays, Fridays, Saturdays &amp; Sundays. Orders are due by midnight the night before.</li>
           <li><strong>Free delivery on orders of $65 or more</strong> (before tip).</li>
           <li><strong>You must be present at time of delivery</strong> — we cannot leave your order outside.</li>
         </ul>
@@ -803,7 +804,7 @@
       <textarea id="custNote" rows="3" placeholder="Gate code, apartment number, anything else we should know" style="width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); resize:vertical;"></textarea>
     </div>
     <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
-      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Tuesdays, Fridays &amp; Sundays. Tuesday and Friday orders are due by midnight the night before; Sunday orders are due by Saturday at 6pm.</p>
+      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Tuesdays, Fridays, Saturdays &amp; Sundays. Orders are due by midnight the night before.</p>
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Free delivery on orders of $65 or more (before tip).</p>
       <p style="margin:0 0 14px; font-size:18px; font-weight:700; line-height:1.5; background:#FFEB3B; color:var(--dark); display:inline-block; padding:4px 8px; border-radius:6px;">You must be present at time of delivery — we cannot leave your order outside.</p>
       <p style="font-weight:800; font-size:18px; margin:0 0 6px;">Delivery times:</p>
@@ -979,18 +980,19 @@
     return it ? it.name : id;
   }
 
-  // Sunday delivery: these six are available in every size (16oz, half
-  // gallon, gallon). Everything else is 16oz only on Sundays, unless the
-  // order is placed by Thursday 11:59pm (Arizona time) before that Sunday,
+  // Weekend (Saturday & Sunday) delivery: these six are available in every
+  // size (16oz, half gallon, gallon). Everything else is 16oz only on
+  // weekends, unless the order is placed by Thursday 11:59pm (Arizona time)
+  // before that weekend day,
   // in which case half gallons and gallons are open for everything that
   // normally comes in those sizes. Immunity shots and the other non-juice
   // items aren't size-limited, so they're always available.
-  const SUNDAY_ALL_SIZE_IDS = ['green','vampiro','sonsfav','mimosa','sunrise','grapefruit'];
+  const WEEKEND_ALL_SIZE_IDS = ['green','vampiro','sonsfav','mimosa','sunrise','grapefruit'];
 
   // size is 'bottle' (16oz), 'half' or 'gallon'. d is a delivery option.
   function sizeAllowedOnDelivery(d, id, size){
-    if(d.dow !== 0 || size === 'bottle') return true;
-    return SUNDAY_ALL_SIZE_IDS.includes(id) || d.bigSizesOk;
+    if(!(d.dow === 0 || d.dow === 6) || size === 'bottle') return true;
+    return WEEKEND_ALL_SIZE_IDS.includes(id) || d.bigSizesOk;
   }
   function lineAllowedOnDelivery(d, id, size){
     if((DELIVERY_SHIFT_ITEMS[d.iso] || []).includes(id)) return false;
@@ -1019,9 +1021,9 @@
     });
     return out;
   }
-  function sundayRuleText(){
-    const big = SUNDAY_ALL_SIZE_IDS.map(itemNameById).join(', ');
-    return `For Sunday delivery, ${big} are available in all sizes. Everything else is available in the 16oz bottle only (half gallons and gallons of everything are available when the order is placed by Thursday night).`;
+  function weekendRuleText(d){
+    const big = WEEKEND_ALL_SIZE_IDS.map(itemNameById).join(', ');
+    return `For ${d.dayName} delivery, ${big} are available in all sizes. Everything else is available in the 16oz bottle only (half gallons and gallons of everything are available when the order is placed by Thursday night).`;
   }
 
   // If the selected delivery day can't take what's in the cart, move the
@@ -1049,7 +1051,7 @@
       const stillOk = items.filter(it => !shifted.includes(it.id) && !(old.dow === 2 && it.id === 'pepino')).map(it => it.name).join(', ');
       msg += `\n\nStill available for ${old.dayName} delivery: ${stillOk}.`;
     }
-    if(old.dow === 0) msg += `\n\n${sundayRuleText()}`;
+    if(old.dow === 0 || old.dow === 6) msg += `\n\n${weekendRuleText(old)}`;
     alert(msg);
     return true;
   }
@@ -1078,8 +1080,8 @@
     return moveToOtherDayIfNeeded();
   }
 
-  // Agua de Pepino con Limón is available for Friday and Sunday delivery
-  // (16oz only on Sundays, like everything not on the Sunday all-sizes list),
+  // Agua de Pepino con Limón is available for Friday, Saturday and Sunday
+  // delivery (16oz only on weekends, like everything not on the all-sizes list),
   // and for both pickup options. The only time it's NOT available is when
   // the selected delivery lands on a Tuesday.
   function isPepinoAvailable(){
@@ -1154,8 +1156,8 @@
     const sizeOk = (id, size) => !sel || sizeAllowedOnDelivery(sel, id, size);
     const note = document.getElementById('gallonSundayNote');
     if(note){
-      if(sel && sel.dow === 0 && !sel.bigSizesOk){
-        note.textContent = `Sunday delivery selected: ${sundayRuleText().replace('For Sunday delivery, ', '')} Choose Tuesday or Friday delivery for half gallons and gallons of everything.`;
+      if(sel && (sel.dow === 0 || sel.dow === 6) && !sel.bigSizesOk){
+        note.textContent = `${sel.dayName} delivery selected: ${weekendRuleText(sel).replace(`For ${sel.dayName} delivery, `, '')} Choose Tuesday or Friday delivery for half gallons and gallons of everything.`;
         note.style.display = 'block';
       } else {
         note.style.display = 'none';
@@ -1172,7 +1174,7 @@
       card.innerHTML = `
         <h3 class="display" style="font-size:20px;">${it.name}</h3>
         <p class="item-desc">${it.desc}</p>
-        ${sundayOnly ? '<p class="item-desc" style="font-weight:700;">Sunday delivery: 16oz bottle only</p>' : ''}
+        ${sundayOnly ? `<p class="item-desc" style="font-weight:700;">${sel.dayName} delivery: 16oz bottle only</p>` : ''}
         <div style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
             <span><strong>Gallon</strong> <span class="mono">$${GALLON_PRICE}</span></span>
@@ -1204,7 +1206,7 @@
     const size = btn.dataset.size;
     const key = `${flavorId}_${size}`;
     if(flavorId === 'pepino' && !isPepinoAvailable()){
-      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday and Sunday delivery and for pickup.');
+      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday, Saturday and Sunday delivery and for pickup.');
       return;
     }
     const flavorInfo = items.find(x=>x.id===flavorId);
@@ -1226,7 +1228,7 @@
     if(!btn) return;
     const id = btn.dataset.id;
     if(id === 'pepino' && !isPepinoAvailable()){
-      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday and Sunday delivery and for pickup.');
+      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday, Saturday and Sunday delivery and for pickup.');
       return;
     }
     const itemInfo = items.find(x=>x.id===id);
@@ -1672,7 +1674,7 @@
   function adjustCartLine(type, key, delta){
     const isPepino = (type==='item' && key==='pepino') || (type==='gallon' && key.startsWith('pepino_'));
     if(delta > 0 && isPepino && !isPepinoAvailable()){
-      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday and Sunday delivery and for pickup.');
+      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday, Saturday and Sunday delivery and for pickup.');
       return;
     }
     if(type==='item'){
@@ -1805,26 +1807,26 @@
   const popupCard = document.getElementById('popupCard');
   const addressFieldIds = ['addressField','addressCityField','addressStateField','addressZipField'];
 
-  // Delivery days are Tuesday, Friday & Sunday. Tuesday/Friday orders are due
-  // by 11:59pm the night before; Sunday orders are due by Saturday at 6pm.
+  // Delivery days are Tuesday, Friday, Saturday & Sunday. Orders are due by
+  // 11:59pm the night before.
   // Past the cutoff, that day rolls off the list. Uses Arizona time
   // (America/Phoenix, no DST) regardless of the customer's own clock.
-  const DELIVERY_DOWS = [0, 2, 5]; // Sun, Tue, Fri
-  const DELIVERY_OPTION_COUNT = 3;
+  const DELIVERY_DOWS = [0, 2, 5, 6]; // Sun, Tue, Fri, Sat
+  const DELIVERY_OPTION_COUNT = 4;
   function azNowDate(){
     return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
   }
   // Last moment an order can be placed for a delivery on date d.
   function deliveryCutoff(d){
-    if(d.getDay() === 0) return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 18, 0, 0); // Sat 6:00pm
     return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 23, 59, 59); // night before
   }
-  // Last moment to order half gallons / gallons of everything for a Sunday d.
-  function sundayBigSizeCutoff(d){
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 3, 23, 59, 59); // Thu 11:59pm
+  // Last moment to order half gallons / gallons of everything for a Saturday
+  // or Sunday d: the Thursday night before it.
+  function weekendBigSizeCutoff(d){
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - (d.getDay() === 0 ? 3 : 2), 23, 59, 59); // Thu 11:59pm
   }
 
-  // The next three delivery days still open for orders, soonest first.
+  // The next four delivery days still open for orders, soonest first.
   function getDeliveryOptions(){
     const azNow = azNowDate();
     const days = [];
@@ -1838,7 +1840,7 @@
     return days.map(d => ({
       dow: d.getDay(),
       iso: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-      bigSizesOk: d.getDay() !== 0 || azNow <= sundayBigSizeCutoff(d),
+      bigSizesOk: !(d.getDay() === 0 || d.getDay() === 6) || azNow <= weekendBigSizeCutoff(d),
       dayName: d.toLocaleDateString('en-US', { weekday: 'long' }),
       dateStr: d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
       shortDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -1892,7 +1894,7 @@
     const hit = cartConflictsFor(target);
     if (hit.length){
       alert(`${hit.join(', ')} ${hit.length > 1 ? 'aren\'t' : 'isn\'t'} available for ${target.dayName} delivery. Remove ${hit.length > 1 ? 'them' : 'it'} from your order to switch to ${target.dayName} delivery.`
-        + (target.dow === 0 ? `\n\n${sundayRuleText()}` : ''));
+        + ((target.dow === 0 || target.dow === 6) ? `\n\n${weekendRuleText(target)}` : ''));
       return;
     }
     autoMoved = null;
@@ -2027,7 +2029,7 @@
       modeNote.textContent = "Pickup at The Kitchen's Market (order by Thursday) — Friday (8am-5pm), Saturday(8am-3pm) or Sunday(10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
       pickupCard.classList.add('active');
     } else if(mode==='delivery'){
-      modeNote.textContent = 'Delivery Tuesdays, Fridays & Sundays — order by midnight the night before (Sunday: order by Saturday 6pm)';
+      modeNote.textContent = 'Delivery Tuesdays, Fridays, Saturdays & Sundays — order by midnight the night before';
       deliveryCard.classList.add('active');
     } else {
       modeNote.textContent = 'Pick up Friday (10am-2pm), Saturday or Sunday (8am-12pm) (order by Thursday) — 8367 W McDowell Rd, Tolleson';
