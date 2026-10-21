@@ -629,9 +629,12 @@
   function checkInSmsHref(phone, firstName){
     const digits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const name = (firstName || '').trim();
-    const greeting = name ? `Hi ${name},` : 'Hi,';
-    const message = `${greeting} my mom & I hope you’re doing well. We were wondering if you had a few minutes to leave us a Google review? It would be such a huge help. In exchange we would like to offer a discount or some free juices on your next order. Please and thank you! https://maps.app.goo.gl/pphVESX6YFZaS79r8?g_st=ic`;
+    const message = `Hey just wanted to let you know we are now delivering Saturdays and Sundays! We hope this works better for you.
+
+My mom or I do all of our deliveries! It’s been that way since day 1 over 5 years ago.
+
+Order online at mymomsjuice.com
+Thank you so much!`;
     return `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(message)}`;
   }
   function phoneLinkPlain(phone, firstName){
