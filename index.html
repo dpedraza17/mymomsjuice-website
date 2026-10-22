@@ -836,7 +836,7 @@
     {id:'sonsfav', name:"The Son's Favorite", desc:'Orange & carrot', cat:'juice', color:'var(--orange)', emoji:'🥕', price:7},
     {id:'watermelon', name:'Watermelon Water', desc:'Fresh watermelon, nothing else', cat:'juice', color:'var(--magenta)', emoji:'🍉', price:7},
     {id:'pepino', name:'Agua de Pepino con Limón', desc:'Cucumber, lime, agave', cat:'juice', color:'var(--green)', emoji:'🥒', price:7},
-    {id:'horchatalatte', name:'Horchata Latte', desc:'Homemade horchata with 2 shots of espresso', cat:'horchata', color:'var(--tan)', emoji:'☕', price:7},
+    {id:'horchatalatte', name:'Horchata Latte', desc:'Horchata made from scratch w/ 2 shots of espresso', gallonDesc:'Horchata made from scratch with espresso. Pour your own iced coffee every morning!', cat:'horchata', color:'var(--tan)', emoji:'☕', price:7},
     {id:'horchata', name:"My Mom's Horchata", desc:'Traditional horchata, homemade style', cat:'horchata', color:'var(--tan)', emoji:'🌾', price:7},
     {id:'chatamatcha', name:'Chata Matcha', desc:'Ceremonial grade matcha & traditional horchata', cat:'horchata', color:'var(--green)', emoji:'🍵', price:7},
     {id:'strawhorchata', name:'Strawberry Horchata', desc:'Homemade horchata with fresh strawberry', cat:'horchata', color:'var(--magenta)', emoji:'🍓', price:7},
@@ -1173,7 +1173,7 @@
       card.className = 'detox-card gallon-card' + (locked ? ' disabled' : '');
       card.innerHTML = `
         <h3 class="display" style="font-size:20px;">${it.name}</h3>
-        <p class="item-desc">${it.desc}</p>
+        <p class="item-desc">${it.gallonDesc || it.desc}</p>
         ${sundayOnly ? `<p class="item-desc" style="font-weight:700;">${sel.dayName} delivery: 16oz bottle only</p>` : ''}
         <div style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
