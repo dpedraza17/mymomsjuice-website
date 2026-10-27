@@ -684,7 +684,7 @@
       <div class="find-card" id="deliveryCard">
         <h3>Delivery</h3>
         <ul>
-          <li><strong>Delivery:</strong> Tuesdays, Fridays, Saturdays &amp; Sundays. Orders are due by midnight the night before.</li>
+          <li><strong>Delivery:</strong> Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before.</li>
           <li><strong>Free delivery on orders of $100 or more</strong> (before tip).</li>
           <li><strong>You must be present at time of delivery</strong> — we cannot leave your order outside.</li>
         </ul>
@@ -804,7 +804,7 @@
       <textarea id="custNote" rows="3" placeholder="Gate code, apartment number, anything else we should know" style="width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); resize:vertical;"></textarea>
     </div>
     <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
-      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Tuesdays, Fridays, Saturdays &amp; Sundays. Orders are due by midnight the night before.</p>
+      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before.</p>
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Free delivery on orders of $100 or more (before tip).</p>
       <p style="margin:0 0 14px; font-size:18px; font-weight:700; line-height:1.5; background:#FFEB3B; color:var(--dark); display:inline-block; padding:4px 8px; border-radius:6px;">You must be present at time of delivery — we cannot leave your order outside.</p>
       <p style="font-weight:800; font-size:18px; margin:0 0 6px;">Delivery times:</p>
@@ -996,7 +996,7 @@
   }
   function lineAllowedOnDelivery(d, id, size){
     if((DELIVERY_SHIFT_ITEMS[d.iso] || []).includes(id)) return false;
-    if(d.dow === 2 && id === 'pepino') return false;
+    if(d.dow === 3 && id === 'pepino') return false;
     return sizeAllowedOnDelivery(d, id, size);
   }
   // Everything in the cart that can't be delivered on day d, as display names.
@@ -1048,7 +1048,7 @@
     let msg = `Heads up: ${hit.join(', ')} ${hit.length > 1 ? 'aren\'t' : 'isn\'t'} available for ${old.dayName} delivery. Your delivery date has been changed from ${old.dayName}, ${old.dateStr} to ${nw.dayName}, ${nw.dateStr}.`;
     const shifted = DELIVERY_SHIFT_ITEMS[old.iso] || [];
     if(shifted.length){
-      const stillOk = items.filter(it => !shifted.includes(it.id) && !(old.dow === 2 && it.id === 'pepino')).map(it => it.name).join(', ');
+      const stillOk = items.filter(it => !shifted.includes(it.id) && !(old.dow === 3 && it.id === 'pepino')).map(it => it.name).join(', ');
       msg += `\n\nStill available for ${old.dayName} delivery: ${stillOk}.`;
     }
     if(old.dow === 0 || old.dow === 6) msg += `\n\n${weekendRuleText(old)}`;
@@ -1080,12 +1080,12 @@
     return moveToOtherDayIfNeeded();
   }
 
-  // Agua de Pepino con Limón is available for Friday, Saturday and Sunday
+  // Agua de Pepino con Limón is available for Friday and Sunday
   // delivery (16oz only on weekends, like everything not on the all-sizes list),
   // and for both pickup options. The only time it's NOT available is when
-  // the selected delivery lands on a Tuesday.
+  // the selected delivery lands on a Wednesday.
   function isPepinoAvailable(){
-    if(mode === 'delivery') return getSelectedDelivery().dow !== 2;
+    if(mode === 'delivery') return getSelectedDelivery().dow !== 3;
     return true;
   }
 
@@ -1112,7 +1112,7 @@
             <span class="qty mono" id="qty-${it.id}">${cart[it.id]||0}</span>
             <button class="qbtn" data-action="plus" data-id="${it.id}" aria-label="Add one ${it.name}" ${locked?'disabled':''}>+</button>
           </div>
-          <button class="add-btn ${cart[it.id]?'in-cart':''}" data-action="add" data-id="${it.id}" ${locked?'disabled':''}>${locked?'Not avail. Tue':(cart[it.id]?'Added to order':'Add to order')}</button>
+          <button class="add-btn ${cart[it.id]?'in-cart':''}" data-action="add" data-id="${it.id}" ${locked?'disabled':''}>${locked?'Not avail. Wed':(cart[it.id]?'Added to order':'Add to order')}</button>
         </div>
       `;
       menuItems.appendChild(card);
@@ -1157,7 +1157,7 @@
     const note = document.getElementById('gallonSundayNote');
     if(note){
       if(sel && (sel.dow === 0 || sel.dow === 6) && !sel.bigSizesOk){
-        note.textContent = `${sel.dayName} delivery selected: ${weekendRuleText(sel).replace(`For ${sel.dayName} delivery, `, '')} Choose Tuesday or Friday delivery for half gallons and gallons of everything.`;
+        note.textContent = `${sel.dayName} delivery selected: ${weekendRuleText(sel).replace(`For ${sel.dayName} delivery, `, '')} Choose Wednesday or Friday delivery for half gallons and gallons of everything.`;
         note.style.display = 'block';
       } else {
         note.style.display = 'none';
@@ -1206,7 +1206,7 @@
     const size = btn.dataset.size;
     const key = `${flavorId}_${size}`;
     if(flavorId === 'pepino' && !isPepinoAvailable()){
-      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday, Saturday and Sunday delivery and for pickup.');
+      alert('Agua de Pepino con Limón isn\'t available for Wednesday delivery — it\'s available for Friday and Sunday delivery and for pickup.');
       return;
     }
     const flavorInfo = items.find(x=>x.id===flavorId);
@@ -1228,7 +1228,7 @@
     if(!btn) return;
     const id = btn.dataset.id;
     if(id === 'pepino' && !isPepinoAvailable()){
-      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday, Saturday and Sunday delivery and for pickup.');
+      alert('Agua de Pepino con Limón isn\'t available for Wednesday delivery — it\'s available for Friday and Sunday delivery and for pickup.');
       return;
     }
     const itemInfo = items.find(x=>x.id===id);
@@ -1674,7 +1674,7 @@
   function adjustCartLine(type, key, delta){
     const isPepino = (type==='item' && key==='pepino') || (type==='gallon' && key.startsWith('pepino_'));
     if(delta > 0 && isPepino && !isPepinoAvailable()){
-      alert('Agua de Pepino con Limón isn\'t available for Tuesday delivery — it\'s available for Friday, Saturday and Sunday delivery and for pickup.');
+      alert('Agua de Pepino con Limón isn\'t available for Wednesday delivery — it\'s available for Friday and Sunday delivery and for pickup.');
       return;
     }
     if(type==='item'){
@@ -1807,11 +1807,11 @@
   const popupCard = document.getElementById('popupCard');
   const addressFieldIds = ['addressField','addressCityField','addressStateField','addressZipField'];
 
-  // Delivery days are Tuesday, Friday, Saturday & Sunday. Orders are due by
+  // Delivery days are Wednesday, Friday & Sunday. Orders are due by
   // 11:59pm the night before.
   // Past the cutoff, that day rolls off the list. Uses Arizona time
   // (America/Phoenix, no DST) regardless of the customer's own clock.
-  const DELIVERY_DOWS = [0, 2, 5, 6]; // Sun, Tue, Fri, Sat
+  const DELIVERY_DOWS = [0, 3, 5]; // Sun, Wed, Fri
   const DELIVERY_OPTION_COUNT = 4;
   function azNowDate(){
     return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
@@ -2029,7 +2029,7 @@
       modeNote.textContent = "Pickup at The Kitchen's Market (order by Thursday) — Friday (8am-5pm), Saturday(8am-3pm) or Sunday(10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
       pickupCard.classList.add('active');
     } else if(mode==='delivery'){
-      modeNote.textContent = 'Delivery Tuesdays, Fridays, Saturdays & Sundays — order by midnight the night before';
+      modeNote.textContent = 'Delivery Wednesdays, Fridays & Sundays — order by midnight the night before';
       deliveryCard.classList.add('active');
     } else {
       modeNote.textContent = 'Pick up Friday (10am-2pm), Saturday or Sunday (8am-12pm) (order by Thursday) — 8367 W McDowell Rd, Tolleson';
