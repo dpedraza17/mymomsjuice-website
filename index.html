@@ -86,6 +86,9 @@
   .email-popup button[type="submit"]{background:var(--orange); color:#fff; border:none; border-radius:999px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer;}
   .email-popup button[type="submit"]:hover{background:var(--dark);}
   .email-popup button[type="submit"]:disabled{opacity:0.6; cursor:default;}
+  .email-popup .popup-ok{background:var(--orange); color:#fff; border:none; border-radius:999px; padding:12px 32px; font-size:15px; font-weight:700; cursor:pointer;}
+  .email-popup .popup-alt{background:transparent; color:var(--dark); border:2px solid var(--dark); border-radius:999px; padding:10px 24px; font-size:15px; font-weight:700; cursor:pointer;}
+  .email-popup .popup-ok:hover{background:var(--dark);}
   .email-popup-status{font-size:13px; margin-top:10px; min-height:16px;}
   .email-popup-status.success{color:var(--green);}
   .email-popup-status.error{color:var(--orange);}
@@ -1033,6 +1036,10 @@
       msg += `\n\nStill available for ${old.dayName} delivery: ${stillOk}.`;
     }
     if(old.dow === 0 || old.dow === 6) msg += `\n\n${weekendRuleText(old)}`;
+    if(old.dow === 3 && hit.some(h => h.indexOf('Pepino') !== -1)){
+      showPepinoPopup({ moved:true, from:old, to:nw, origIndex:autoMoved.choice });
+      return true;
+    }
     alert(msg);
     return true;
   }
@@ -1067,6 +1074,65 @@
   // the selected delivery lands on a Wednesday.
   const PEPINO_MSG = 'Agua de Pepino con Limón is only available for Fridays, Saturdays & Sundays (order by Thursday).';
   const PEPINO_NOTE = '<span style="display:block; font-weight:700; font-size:13.5px; color:var(--yellow);">Not available Wednesdays</span>';
+  let pepinoPopupState = null; // { switchIndex } or { moved, from, to, origIndex }
+  function showPepinoPopup(state){
+    const ov = document.getElementById('pepinoPopupOverlay');
+    if(!ov) return;
+    state = state || {};
+    pepinoPopupState = state;
+    const moved = !!state.moved;
+    const switching = typeof state.switchIndex === 'number';
+    const withPack = sixPacks.some(sp => sp && (sp.pepino || 0) > 0);
+    const text = document.getElementById('pepinoPopupText');
+    const remove = document.getElementById('pepinoPopupRemove');
+    const keep = document.getElementById('pepinoPopupKeep');
+    if(moved){
+      text.textContent = 'Agua de Pepino con Limón isn\'t available on Wednesdays, so your delivery day was changed to ' + state.to.dayName + ', ' + state.to.dateStr + '. It\'s only available for Fridays, Saturdays & Sundays (order by Thursday).';
+      remove.textContent = 'Switch back to Wednesday, ' + state.from.dateStr + ' delivery and remove Cucumber Lime from cart';
+      keep.textContent = 'Keep ' + state.to.dayName + ', ' + state.to.dateStr + ' delivery';
+    } else if(switching){
+      text.textContent = 'This flavor is only available for Fridays, Saturdays & Sundays (order by Thursday). To switch to Wednesday delivery, we\'ll need to remove it from your cart' + (withPack ? ' (including any 6-pack that has it in it).' : '.');
+      const wed = getDeliveryOptions()[state.switchIndex];
+      remove.textContent = 'Switch back to Wednesday' + (wed ? ', ' + wed.dateStr : '') + ' delivery and remove Cucumber Lime from cart';
+      const cur = getSelectedDelivery();
+      keep.textContent = cur ? 'Keep ' + cur.dayName + ', ' + cur.dateStr + ' delivery' : 'Keep current delivery';
+    } else {
+      text.textContent = 'This flavor is only available for Fridays, Saturdays & Sundays (order by Thursday).';
+    }
+    document.getElementById('pepinoPopupOk').style.display = (moved || switching) ? 'none' : '';
+    document.getElementById('pepinoPopupSwitch').style.display = (moved || switching) ? 'flex' : 'none';
+    ov.classList.add('show');
+    const btn = document.getElementById((moved || switching) ? 'pepinoPopupKeep' : 'pepinoPopupOk');
+    if(btn) btn.focus();
+  }
+  function removePepinoFromCart(){
+    delete cart.pepino;
+    delete gallonCart.pepino_gallon;
+    delete gallonCart.pepino_half;
+    sixPacks = sixPacks.filter(sp => !(sp && (sp.pepino || 0) > 0));
+    renderMenu();
+    renderBuilder();
+    renderGallons();
+    updateCartUI();
+  }
+  (function(){
+    // Delegated so it works wherever this script sits relative to the popup markup.
+    const close = ()=>{ const ov = document.getElementById('pepinoPopupOverlay'); if(ov) ov.classList.remove('show'); };
+    document.addEventListener('click', e=>{
+      const ov = document.getElementById('pepinoPopupOverlay');
+      if(!ov) return;
+      if(e.target.closest('#pepinoPopupRemove')){
+        const st = pepinoPopupState || {};
+        const idx = st.moved ? st.origIndex : st.switchIndex;
+        close();
+        removePepinoFromCart();
+        if(typeof idx === 'number') chooseDeliveryDay(idx);
+      } else if(e.target === ov || e.target.closest('#pepinoPopupClose') || e.target.closest('#pepinoPopupOk') || e.target.closest('#pepinoPopupKeep')){
+        close();
+      }
+    });
+    document.addEventListener('keydown', e=>{ if(e.key === 'Escape') close(); });
+  })();
   function isPepinoAvailable(){
     if(mode === 'delivery') return getSelectedDelivery().dow !== 3;
     return true;
@@ -1187,10 +1253,6 @@
     const flavorId = btn.dataset.flavor;
     const size = btn.dataset.size;
     const key = `${flavorId}_${size}`;
-    if(flavorId === 'pepino' && !isPepinoAvailable()){
-      alert(PEPINO_MSG);
-      return;
-    }
     const flavorInfo = items.find(x=>x.id===flavorId);
     const flavorName = flavorInfo ? flavorInfo.name : 'Item';
     const sizeLabel = size === 'gallon' ? 'Gallon' : 'Half Gallon';
@@ -1209,10 +1271,6 @@
     const btn = e.target.closest('button');
     if(!btn) return;
     const id = btn.dataset.id;
-    if(id === 'pepino' && !isPepinoAvailable()){
-      alert(PEPINO_MSG);
-      return;
-    }
     const itemInfo = items.find(x=>x.id===id);
     const itemName = itemInfo ? itemInfo.name : 'Item';
     if(btn.dataset.action==='plus' || btn.dataset.action==='add'){
@@ -1346,10 +1404,6 @@
     if(!btn || btn.disabled) return;
     const id = btn.dataset.flavor;
     const current = builderQty[id] || 0;
-    if(btn.dataset.action==='plus' && id === 'pepino' && !isPepinoAvailable()){
-      alert(PEPINO_MSG);
-      return;
-    }
     if(btn.dataset.action==='plus'){
       if(builderTotal() >= 6) return;
       builderQty[id] = current + 1;
@@ -1647,11 +1701,6 @@
   // Increase/decrease a line right from the cart. Every change is mirrored
   // back to the matching controls on the page so both always agree.
   function adjustCartLine(type, key, delta){
-    const isPepino = (type==='item' && key==='pepino') || (type==='gallon' && key.startsWith('pepino_'));
-    if(delta > 0 && isPepino && !isPepinoAvailable()){
-      alert(PEPINO_MSG);
-      return;
-    }
     if(type==='item'){
       cart[key] = Math.max(0, (cart[key]||0) + delta);
       const qtyEl = document.getElementById('qty-'+key);
@@ -1867,6 +1916,10 @@
     const target = getDeliveryOptions()[index];
     if (!target) return;
     const hit = cartConflictsFor(target);
+    if (hit.length && target.dow === 3 && cartHasPepino()){
+      showPepinoPopup({ switchIndex: index });
+      return;
+    }
     if (hit.length){
       alert(`${hit.join(', ')} ${hit.length > 1 ? 'aren\'t' : 'isn\'t'} available for ${target.dayName} delivery. Remove ${hit.length > 1 ? 'them' : 'it'} from your order to switch to ${target.dayName} delivery.`
         + ((target.dow === 0 || target.dow === 6) ? `\n\n${weekendRuleText(target)}` : ''));
@@ -2383,6 +2436,18 @@
     </div>
   </div>
 </footer>
+
+<div class="email-popup-overlay" id="pepinoPopupOverlay" style="z-index:10000;">
+  <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="pepinoPopupTitle">
+    <h3 id="pepinoPopupTitle">Agua de Pepino con Limón (Cucumber Lime) Not Available Wednesdays</h3>
+    <p id="pepinoPopupText">This flavor is only available for Fridays, Saturdays &amp; Sundays (order by Thursday).</p>
+    <button type="button" class="popup-ok" id="pepinoPopupOk">Got it</button>
+    <div id="pepinoPopupSwitch" style="display:none; flex-direction:column; gap:10px;">
+      <button type="button" class="popup-ok" id="pepinoPopupRemove">Switch back to Wednesday delivery and remove Cucumber Lime from cart</button>
+      <button type="button" class="popup-alt" id="pepinoPopupKeep">Keep it in my cart</button>
+    </div>
+  </div>
+</div>
 
 <div class="email-popup-overlay" id="emailPopupOverlay">
   <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="emailPopupTitle">
