@@ -640,8 +640,9 @@ Thank you so much!`;
   function phoneLinkPlain(phone, firstName){
     if (!phone) return '—';
     const digits = phone.replace(/[^\d+]/g, '');
-    const smsHref = checkInSmsHref(phone, firstName);
-    return `<span style="display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;"><a href="tel:${escAttr(digits)}" style="color:var(--orange);">${phone}</a> <a href="${escAttr(smsHref)}" title="Text ${escAttr(firstName || 'customer')}" style="display:inline-block; text-decoration:none; background:#F4CE4E; color:#000; font-weight:700; font-size:12px; padding:5px 10px; border-radius:8px; touch-action:manipulation;">💬 Text</a></span>`;
+    // "Text" button removed from the Customers tab for now (checkInSmsHref is
+    // kept above so it can be re-added easily).
+    return `<a href="tel:${escAttr(digits)}" style="color:var(--orange);">${phone}</a>`;
   }
 
   // Pre-filled text templates per order type — customer just has to hit
