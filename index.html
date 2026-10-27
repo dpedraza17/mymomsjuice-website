@@ -316,10 +316,15 @@
   .cart-head{display:flex; justify-content:space-between; align-items:center; padding:18px 20px; border-bottom:1px solid var(--line);}
   .cart-close{background:none; border:none; font-size:22px; font-weight:700; color:var(--ink);}
   .cart-body-wrap{flex:1; overflow-y:auto; padding:22px 24px; min-height:260px;}
-  .cart-line{display:flex; justify-content:space-between; align-items:center; gap:14px; padding:16px 0; border-bottom:1px solid var(--line);}
+  .cart-line{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px 14px; padding:16px 0; border-bottom:1px solid var(--line);}
   .cart-remove{width:30px; text-align:center; background:none; border:none; color:var(--muted); font-size:22px; line-height:1; padding:4px 6px; flex-shrink:0; cursor:pointer;}
   .cart-remove:hover{color:var(--orange);}
-  .cart-line-name{font-weight:700; font-size:17.5px; line-height:1.4; flex:1; min-width:0;}
+  /* Name gets its own full-width row when the drawer is narrow (phones), so long
+     names like 6-pack flavor lists aren't squeezed beside the +/- buttons. */
+  .cart-line-name{font-weight:700; font-size:17.5px; line-height:1.4; flex:1 1 190px; min-width:0;}
+  .cart-line-nostep .cart-line-name{flex:1 1 0;}
+  @media (max-width:600px){ .cart-line:not(.cart-line-nostep) .cart-line-name{flex:1 1 100%;} }
+  .cart-line .cart-line-price{margin-left:auto;}
   .cart-line-zero .cart-line-name{color:rgba(246,249,241,.45);}
   .cart-line-zero .cart-line-name .cart-unit{color:var(--ink); font-weight:600;}
   .cart-line-zero .cart-line-price, .cart-line-zero .cart-qty{opacity:.45;}
@@ -1581,7 +1586,7 @@
     }
     rows.forEach(r=>{
       const row = document.createElement('div');
-      row.className = 'cart-line';
+      row.className = 'cart-line' + (typeof r.qty === 'number' ? '' : ' cart-line-nostep');
       // Optional add-ons sitting at 0 are grayed out so nobody mistakes them
       // for something already in their order. The + button stays bright.
       const isZeroAddon = r.qty === 0 && (r.type === 'hydration' || r.type === 'sticks');
