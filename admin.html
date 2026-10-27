@@ -649,9 +649,9 @@ Thank you so much!`;
   // send. iOS and Android use different separators before the body param
   // (& vs ?), so we detect platform to pick the right one.
   const SMS_TEMPLATES = {
-    delivery: "Hi, this is My Mom's Juice! We wanted to confirm your delivery for today. Will you or someone else be available to receive the order today?",
-    pickup: "Hi, this is My Mom's Juice! Your order is ready for pick up. Please pick up any day this weekend -- Friday 8am-5pm, Saturday 8am-3pm, Sunday 10am-3pm. Pick up at The Kitchen's Market -- 2655 W Guadalupe Rd Suite 13 Mesa, AZ. Thank you!",
-    popup: "Hi, this is My Mom's Juice! Your order is ready for pick up. Please pick up any day this weekend -- Friday 10am-2pm, Saturday 8am-12pm, Sunday 8am-12pm. We are on 83rd Ave & McDowell. The address is 8367 W McDowell Rd, Tolleson, AZ. Thank you!",
+    delivery: "Hi{name}, this is My Mom's Juice! We wanted to confirm your delivery for today. Will you or someone else be available to receive the order today? 🍊",
+    pickup: "Hi{name}, this is My Mom's Juice! Your order is ready for pick up. Please pick up any day this weekend -- Friday 8am-5pm, Saturday 8am-3pm, Sunday 10am-3pm. Pick up at The Kitchen's Market -- 2655 W Guadalupe Rd Suite 13 Mesa, AZ. Thank you! 🍊",
+    popup: "Hi{name}, this is My Mom's Juice! Your order is ready for pick up. Please pick up any day this weekend -- Friday 10am-2pm, Saturday 8am-12pm, Sunday 8am-12pm. We are on 83rd Ave & McDowell. The address is 8367 W McDowell Rd, Tolleson, AZ. Thank you! 🍊",
   };
 
   // Click-to-call on the number itself, plus a "Confirmation Text" button
@@ -659,12 +659,13 @@ Thank you so much!`;
   // customer table, which has no single order to reference), the text
   // link pre-fills the right message for that fulfillment type so it's
   // ready to just hit send.
-  function phoneLinks(phone, orderType){
+  function phoneLinks(phone, orderType, customerName){
     if (!phone) return '—';
     const digits = phone.replace(/[^\d+]/g, '');
     const smsDigits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const template = SMS_TEMPLATES[orderType];
+    const firstName = String(customerName || '').trim().split(/\s+/)[0];
+    const template = SMS_TEMPLATES[orderType] && SMS_TEMPLATES[orderType].replace('{name}', firstName ? ' ' + firstName : '');
     const smsHref = template
       ? `sms:${smsDigits}${isIOS ? '&' : '?'}body=${encodeURIComponent(template)}`
       : `sms:${smsDigits}`;
@@ -673,17 +674,18 @@ Thank you so much!`;
 
   // "On the way" ETA texts for delivery orders — one tap opens the
   // messaging app with the minutes already filled in, ready to send.
-  function etaSmsHref(phone, minutes){
+  function etaSmsHref(phone, minutes, customerName){
     const digits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const message = `Hi, this is My Mom's Juice! Your order is on the way — we should arrive in the next ${minutes} minutes!`;
+    const firstName = String(customerName || '').trim().split(/\s+/)[0];
+    const message = `Hi${firstName ? ' ' + firstName : ''}, this is My Mom's Juice! Your order is on the way — we should arrive in the next ${minutes} minutes! 🍊`;
     return `sms:${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(message)}`;
   }
-  function etaButtons(phone){
+  function etaButtons(phone, customerName){
     if (!phone) return '';
     return `
       <div style="display:flex; gap:8px; margin-top:22px; flex-wrap:wrap;">
-        ${[10, 20, 30].map(m => `<a href="${escAttr(etaSmsHref(phone, m))}" style="flex:1; min-width:90px; text-align:center; text-decoration:none; background:var(--orange); color:#fff; font-weight:700; font-size:16px; padding:14px 10px; border-radius:10px; touch-action:manipulation;">${m} min</a>`).join('')}
+        ${[10, 20, 30].map(m => `<a href="${escAttr(etaSmsHref(phone, m, customerName))}" style="flex:1; min-width:90px; text-align:center; text-decoration:none; background:var(--orange); color:#fff; font-weight:700; font-size:16px; padding:14px 10px; border-radius:10px; touch-action:manipulation;">${m} min</a>`).join('')}
       </div>`;
   }
 
@@ -741,8 +743,8 @@ Thank you so much!`;
             ${order.customer_note ? `<strong>Note:</strong> <span style="font-size:1.3em;">${order.customer_note}</span><br>` : ''}
           </div>
           <div class="order-meta" style="margin-top:8px;">
-            ${order.customer_phone ? phoneLinks(order.customer_phone, order.order_type) : ''}
-            ${order.order_type === 'delivery' && order.customer_phone ? etaButtons(order.customer_phone) : ''}
+            ${order.customer_phone ? phoneLinks(order.customer_phone, order.order_type, order.customer_name) : ''}
+            ${order.order_type === 'delivery' && order.customer_phone ? etaButtons(order.customer_phone, order.customer_name) : ''}
           </div>
         </div>
         <div class="order-actions">${action}</div>
