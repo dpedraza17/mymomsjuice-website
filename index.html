@@ -147,8 +147,8 @@
   .mode-bar{border-top:3px solid var(--orange); border-bottom:3px solid var(--orange); background:var(--dark); padding:16px 0; scroll-margin-top:130px;}
   .mode-inner{max-width:1080px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; justify-content:center;}
   .mode-label{font-size:24px; font-weight:900; color:#fff; letter-spacing:0.3px;}
-  .seg{display:inline-flex; background:var(--paper); border:3px solid var(--orange); border-radius:999px; padding:6px; gap:6px;}
-  .seg button{border:none; background:transparent; border-radius:999px; padding:16px 30px; font-weight:800; font-size:19px; color:var(--ink);}
+  .seg{display:inline-flex; flex-wrap:wrap; justify-content:center; background:var(--paper); border:3px solid var(--orange); border-radius:999px; padding:6px; gap:6px;}
+  .seg button{border:none; background:transparent; border-radius:999px; padding:14px 22px; font-weight:800; font-size:18px; color:var(--ink);}
   .seg button.active{background:var(--orange); color:#fff;}
   .mode-note{font-size:16px; color:#fff; font-weight:700; text-align:center;}
   .mode-bar.needs-attention{animation:modePulse 0.6s ease 2;}
@@ -456,6 +456,7 @@
         <button type="button" class="mode-btn" data-mode="pickup">Pick up in Mesa</button>
         <button type="button" class="mode-btn active" data-mode="delivery">Get delivery</button>
         <button type="button" class="mode-btn" data-mode="popup">Pick up on 83rd Ave & McDowell</button>
+        <button type="button" class="mode-btn" data-mode="popup16th">Pick up on 16th St & McDowell</button>
       </div>
       <div id="homeDeliveryEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
         Choose your delivery day:
@@ -467,6 +468,9 @@
       </div>
       <div id="homePopupEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
         Order now and pick up <span id="homePopupEstimateDate"></span>
+      </div>
+      <div id="homePopup16Estimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
+        Order now and pick up <span id="homePopup16EstimateDate"></span>
       </div>
       <span class="mode-note" id="modeNote">Please choose one to continue</span>
     </div>
@@ -546,7 +550,8 @@
     <p class="eyebrow">Fresh &middot; Made to order &middot; Mesa, Arizona</p>
     <h1>Fresh-squeezed, bottled by hand — <em>by a mother &amp; son.</em></h1>
     <p class="lede">Mother &amp; son owned since 2021, every bottle is made by us — fresh juice, lemonade, matcha &amp; coffee.</p>
-    <p class="lede" style="margin-top:14px;">We deliver locally and pop up on 83rd Ave &amp; McDowell (<a href="https://maps.google.com/?q=8367+W+McDowell+Rd+Tolleson+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">8367 W McDowell Rd, Tolleson, AZ</a>) Fridays 10am-2pm, Saturdays &amp; Sundays 8am-12pm. Stop by our pop up! No pre-order necessary.</p>
+    <p class="lede" style="margin-top:14px;">We deliver locally and pop up on 83rd Ave &amp; McDowell (<a href="https://maps.google.com/?q=8367+W+McDowell+Rd+Tolleson+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">8367 W McDowell Rd, Tolleson, AZ</a>) Fridays 10am-2pm, Saturdays 9am-1pm, Sundays 9am-2pm. Stop by our pop up! No pre-order necessary.</p>
+    <p class="lede" style="margin-top:14px;">We also pop up every Saturday 9am-1pm on 16th St &amp; McDowell (<a href="https://maps.google.com/?q=1710+N+16th+St+Phoenix+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">1710 N 16th St, Phoenix, AZ</a>). Stop by! No pre-order necessary.</p>
     <p class="lede" style="margin-top:14px;">You can also find our juices for sale at The Kitchen's Market (<a href="https://maps.google.com/?q=2655+W+Guadalupe+Rd+Suite+13+Mesa+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">2655 W Guadalupe Rd Suite 13 Mesa, AZ</a>), 5 days a week. Stop by during business hours! No pre-order necessary. Wednesday-Friday 8am-5pm, Saturdays 8am-3pm, Sundays 10am-3pm</p>
     <p class="lede" style="margin-top:14px;">
       <a href="mailto:mymomsjuicellc@gmail.com" style="color:inherit; text-decoration:underline;">mymomsjuicellc@gmail.com</a><br>
@@ -649,7 +654,7 @@
     <div class="section-head">
       <div>
         <p class="eyebrow">Where to find us</p>
-        <h2>3 ways to get your juices</h2>
+        <h2>4 ways to get your juices</h2>
       </div>
     </div>
     <div class="find-grid">
@@ -664,14 +669,21 @@
       <div class="find-card" id="popupCard">
         <h3>Pop-Up on 83rd Ave &amp; McDowell</h3>
         <ul>
-          <li>Fridays 10am–2pm, Saturdays &amp; Sundays 8am–12pm (8367 W McDowell Rd, Tolleson, AZ).</li>
-          <li>Stop by to purchase during business hours or place a pickup order (highly recommended) — pickup orders for Friday, Saturday, and Sunday are due by Thursday.</li>
+          <li>Fridays 10am–2pm, Saturdays 9am–1pm, Sundays 9am–2pm (8367 W McDowell Rd, Tolleson, AZ).</li>
+          <li>Stop by to purchase during business hours or place a pickup order (highly recommended) — orders are due Thursday night for Friday pickup, Friday at 8pm for Saturday pickup, and Saturday at 8pm for Sunday pickup. After Thursday night, only our six main juices can be ordered — all other flavors are due by Thursday night.</li>
+        </ul>
+      </div>
+      <div class="find-card" id="popup16Card">
+        <h3>Pop-Up on 16th St &amp; McDowell</h3>
+        <ul>
+          <li>Every Saturday 9am–1pm (1710 N 16th St, Phoenix, AZ).</li>
+          <li>Stop by to purchase during business hours or place a pickup order (highly recommended) — pickup orders for Saturday are due by Friday at 8pm. After Thursday night, only our six main juices can be ordered — all other flavors are due by Thursday night.</li>
         </ul>
       </div>
       <div class="find-card" id="deliveryCard">
         <h3>Delivery</h3>
         <ul>
-          <li><strong>Delivery:</strong> Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before.</li>
+          <li><strong>Delivery:</strong> Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before (Sunday delivery orders are due Saturday at 8pm).</li>
           <li><strong>Free delivery on orders of $100 or more</strong> (before tip).</li>
           <li><strong>You must be present at time of delivery</strong> — we cannot leave your order outside.</li>
         </ul>
@@ -739,6 +751,7 @@
           <button type="button" class="mode-btn" data-mode="pickup">Pick up in Mesa</button>
           <button type="button" class="mode-btn active" data-mode="delivery">Get delivery</button>
           <button type="button" class="mode-btn" data-mode="popup">Pick up on 83rd Ave &amp; McDowell</button>
+          <button type="button" class="mode-btn" data-mode="popup16th">Pick up on 16th St &amp; McDowell</button>
         </div>
       </div>
     </div>
@@ -753,7 +766,11 @@
     </div>
     <div id="popupEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
       Order now and pick up <span id="popupEstimateDate"></span>
-      <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">8367 W McDowell Rd, Tolleson, AZ<br>Fri 10am–2pm, Sat &amp; Sun 8am–12pm</div>
+      <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">8367 W McDowell Rd, Tolleson, AZ<br>Fri 10am–2pm · Sat 9am–1pm · Sun 9am–2pm<br>Order by Thu night for Fri, Fri 8pm for Sat, Sat 8pm for Sun (after Thu night: six main juices only)</div>
+    </div>
+    <div id="popup16Estimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
+      Order now and pick up <span id="popup16EstimateDate"></span>
+      <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">1710 N 16th St, Phoenix, AZ<br>Saturdays 9am–1pm<br>Order by Friday 8pm for Saturday pickup (after Thu night: six main juices only)</div>
     </div>
     <div class="field">
       <label for="custFirstName">First name</label>
@@ -793,7 +810,7 @@
       <textarea id="custNote" rows="3" placeholder="Gate code, apartment number, anything else we should know" style="width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); resize:vertical;"></textarea>
     </div>
     <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
-      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before.</p>
+      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before (Sunday delivery orders are due Saturday at 8pm).</p>
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Free delivery on orders of $100 or more (before tip).</p>
       <p style="margin:0 0 14px; font-size:18px; font-weight:700; line-height:1.5; background:#FFEB3B; color:var(--dark); display:inline-block; padding:4px 8px; border-radius:6px;">You must be present at time of delivery — we cannot leave your order outside.</p>
       <p style="font-weight:800; font-size:18px; margin:0 0 6px;">Delivery times:</p>
@@ -980,7 +997,7 @@
 
   // size is 'bottle' (16oz), 'half' or 'gallon'. d is a delivery option.
   function sizeAllowedOnDelivery(d, id, size){
-    if(!(d.dow === 0 || d.dow === 6) || size === 'bottle') return true;
+    if(!(d.dow === 0 || d.dow === 6)) return true;
     return WEEKEND_ALL_SIZE_IDS.includes(id) || d.bigSizesOk;
   }
   function lineAllowedOnDelivery(d, id, size){
@@ -1012,13 +1029,14 @@
   }
   function weekendRuleText(d){
     const big = WEEKEND_ALL_SIZE_IDS.map(itemNameById).join(', ');
-    return `For ${d.dayName} delivery, ${big} are available in all sizes. Everything else is available in the 16oz bottle only (half gallons and gallons of everything are available when the order is placed by Thursday night).`;
+    return `For ${d.dayName} delivery, only our six main juices (${big}) can be ordered after Thursday night. All other flavors are due by Thursday night.`;
   }
 
   // If the selected delivery day can't take what's in the cart, move the
   // order to the next day that can and tell the customer. Returns true if it
   // moved the date.
   function moveToOtherDayIfNeeded(){
+    if(mode === 'popup' || mode === 'popup16th') return removeLateRestrictedItems();
     if(mode !== 'delivery') return false;
     const old = getSelectedDelivery();
     const hit = cartConflictsFor(old);
@@ -1070,6 +1088,7 @@
   }
   // Covers carts restored from an earlier visit and switching back to delivery.
   function ensureDeliveryOkForCart(){
+    if(mode === 'popup' || mode === 'popup16th') return removeLateRestrictedItems();
     return moveToOtherDayIfNeeded();
   }
 
@@ -1205,12 +1224,14 @@
         if(b.id === 'pepino') return -1;
         return 0;
       });
-    const sel = (mode === 'delivery') ? getSelectedDelivery() : null;
+    const sel = (mode === 'delivery') ? getSelectedDelivery() : popupLateSel();
     const sizeOk = (id, size) => !sel || sizeAllowedOnDelivery(sel, id, size);
     const note = document.getElementById('gallonSundayNote');
     if(note){
       if(sel && (sel.dow === 0 || sel.dow === 6) && !sel.bigSizesOk){
-        note.textContent = `${sel.dayName} delivery selected: ${weekendRuleText(sel).replace(`For ${sel.dayName} delivery, `, '')} Choose Wednesday or Friday delivery for half gallons and gallons of everything.`;
+        note.textContent = sel.isPopup
+          ? popupLateRuleText()
+          : `${sel.dayName} delivery selected: ${weekendRuleText(sel).replace(`For ${sel.dayName} delivery, `, '')} Choose Wednesday or Friday delivery for all other flavors.`;
         note.style.display = 'block';
       } else {
         note.style.display = 'none';
@@ -1227,7 +1248,7 @@
         <h3 class="display" style="font-size:20px;">${it.name}</h3>
         <p class="item-desc">${it.gallonDesc || it.desc}</p>
         ${it.id==='pepino' ? PEPINO_NOTE : ''}
-        ${sundayOnly ? `<p class="item-desc" style="font-weight:700;">${sel.dayName} delivery: 16oz bottle only</p>` : ''}
+        ${sundayOnly ? `<p class="item-desc" style="font-weight:700;">${sel.isPopup ? 'Pop-up pickup' : sel.dayName + ' delivery'}: order by Thursday night</p>` : ''}
         <div style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
             <span><strong>Gallon (128oz)</strong> <span class="mono">$${GALLON_PRICE}</span></span>
@@ -1834,6 +1855,7 @@
   const pickupCard = document.getElementById('pickupCard');
   const deliveryCard = document.getElementById('deliveryCard');
   const popupCard = document.getElementById('popupCard');
+  const popup16Card = document.getElementById('popup16Card');
   const addressFieldIds = ['addressField','addressCityField','addressStateField','addressZipField'];
 
   // Delivery days are Wednesday, Friday & Sunday. Orders are due by
@@ -1847,6 +1869,8 @@
   }
   // Last moment an order can be placed for a delivery on date d.
   function deliveryCutoff(d){
+    // Sunday delivery: Saturday 8pm. Wednesday/Friday: 11:59pm the night before.
+    if(d.getDay() === 0) return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 20, 0, 0);
     return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 23, 59, 59); // night before
   }
   // Last moment to order half gallons / gallons of everything for a Saturday
@@ -1966,32 +1990,78 @@
     return `Friday, Saturday, or Sunday — ${friStr}–${sunStr}`;
   }
 
-  // 83rd Ave & McDowell pop-up runs Friday–Sunday. Order by Thursday
-  // 11:59pm (Arizona time) to catch that weekend; ordering Fri/Sat/Sun
-  // itself has already missed the cutoff, so it rolls to the following
-  // weekend.
-  function getNextPopupDates(){
-    const azNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
-    const dow = azNow.getDay(); // 0=Sun ... 6=Sat
-    let daysAhead = (5 - dow + 7) % 7; // days until the next Friday
-    if (daysAhead === 0) daysAhead = 7; // it's already Friday — cutoff passed, use next week's
-    const friday = new Date(azNow);
-    friday.setDate(azNow.getDate() + daysAhead);
-    const saturday = new Date(friday);
-    saturday.setDate(friday.getDate() + 1);
-    const sunday = new Date(friday);
-    sunday.setDate(friday.getDate() + 2);
-    const friMonth = friday.toLocaleDateString('en-US', { month: 'long' });
-    const satMonth = saturday.toLocaleDateString('en-US', { month: 'long' });
-    const sunMonth = sunday.toLocaleDateString('en-US', { month: 'long' });
-    const friStr = `${friMonth} ${friday.getDate()}`;
-    const satStr = (satMonth === friMonth) ? `${saturday.getDate()}` : `${satMonth} ${saturday.getDate()}`;
-    const sunStr = (sunMonth === friMonth) ? `${sunday.getDate()}` : `${sunMonth} ${sunday.getDate()}`;
-    return { friStr, satStr, sunStr };
+  // Pop-up pickup (83rd Ave & McDowell: Fri/Sat/Sun, 16th St & McDowell: Sat).
+  // Order cutoffs, Arizona time: Friday pickup — Thursday 11:59pm; Saturday
+  // pickup — Friday 8pm; Sunday pickup — Saturday 8pm. Matches popupCutoff /
+  // popupInfo in server.js — keep both in sync.
+  const POPUP_DAYS = { popup: [5, 6, 0], popup16th: [6] };
+  function popupCutoff(d){
+    if(d.getDay() === 5) return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 23, 59, 59);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 20, 0, 0); // Sat/Sun pickup
   }
-  function getNextPopupLabel(){
-    const { friStr, sunStr } = getNextPopupDates();
-    return `Friday, Saturday, or Sunday — ${friStr}–${sunStr}`;
+  // The pickup days still open for the soonest weekend. bigSizesOk is true
+  // until Thursday 11:59pm; after that only the six main juices come in half
+  // gallons and gallons (everything else is the 16oz bottle only).
+  function getPopupInfo(kind){
+    const now = azNowDate();
+    const allowed = POPUP_DAYS[kind] || POPUP_DAYS.popup;
+    const open = [];
+    for(let i = 0; i <= 14; i++){
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      if(!allowed.includes(d.getDay())) continue;
+      if(now > popupCutoff(d)) continue;
+      if(open.length && Math.round((d - open[0]) / 86400000) > 2) break;
+      open.push(d);
+    }
+    const first = open[0];
+    const thu = new Date(first.getFullYear(), first.getMonth(), first.getDate() - ((first.getDay() + 3) % 7), 23, 59, 59);
+    const md = d => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    const days = open.map(d => ({ name: d.toLocaleDateString('en-US', { weekday: 'long' }), md: md(d) }));
+    const names = days.map(x => x.name);
+    let label;
+    if(open.length === 1){
+      label = `${names[0]} — ${md(first)}`;
+    } else {
+      const last = open[open.length - 1];
+      const list = names.slice(0, -1).join(', ') + (names.length > 2 ? ',' : '') + ' or ' + names[names.length - 1];
+      const lastStr = last.getMonth() === first.getMonth() ? String(last.getDate()) : md(last);
+      label = `${list} — ${md(first)}–${lastStr}`;
+    }
+    return { days, label, bigSizesOk: now <= thu };
+  }
+  function getNextPopupLabel(){ return getPopupInfo('popup').label; }
+  function getNextPopup16Label(){ return getPopupInfo('popup16th').label; }
+  // For pop-up orders placed after Thursday night: a stand-in "day" that the
+  // weekend size rules can check the cart against. null = no restriction.
+  function popupLateSel(){
+    if(mode !== 'popup' && mode !== 'popup16th') return null;
+    if(getPopupInfo(mode).bigSizesOk) return null;
+    return { dow: 6, bigSizesOk: false, dayName: 'Pop-up', iso: 'popup-late', isPopup: true };
+  }
+  function popupLateRuleText(){
+    const big = WEEKEND_ALL_SIZE_IDS.map(itemNameById).join(', ');
+    return `After Thursday night, only our six main juices (${big}) can be ordered for pop-up pickup. All other flavors are due by Thursday night.`;
+  }
+  // Removes anything a late pop-up order can't include (flavors outside the
+  // six main juices, 6-packs containing them, detox cleanses, gallons).
+  function removeLateRestrictedItems(){
+    const sel = popupLateSel();
+    if(!sel) return false;
+    const hit = cartConflictsFor(sel);
+    if(!hit.length) return false;
+    const okId = id => sizeAllowedOnDelivery(sel, id, 'bottle');
+    Object.keys(cart).forEach(id=>{ if(cart[id] > 0 && !okId(id)) delete cart[id]; });
+    sixPacks = sixPacks.filter(sp => Object.keys(sp || {}).every(id => !(sp[id] > 0) || okId(id)));
+    if(detoxes.length && !okId('watermelon')) detoxes.length = 0;
+    Object.keys(gallonCart).forEach(k=>{
+      if(gallonCart[k] > 0 && !okId(gallonBaseId(k))) delete gallonCart[k];
+    });
+    renderMenu();
+    renderBuilder();
+    renderGallons();
+    updateCartUI();
+    alert(`${hit.join(', ')} ${hit.length > 1 ? 'were' : 'was'} removed from your order.\n\n${popupLateRuleText()}`);
+    return true;
   }
 
   function updateAddressField(){
@@ -2019,6 +2089,13 @@
     } else {
       popupEstimate.style.display = 'none';
     }
+    const popup16Estimate = document.getElementById('popup16Estimate');
+    if(mode === 'popup16th'){
+      document.getElementById('popup16EstimateDate').textContent = getNextPopup16Label();
+      popup16Estimate.style.display = 'block';
+    } else {
+      popup16Estimate.style.display = 'none';
+    }
     updateDeliverySwapUI();
     const homeDeliveryEstimate = document.getElementById('homeDeliveryEstimate');
     if(mode === 'delivery'){
@@ -2040,10 +2117,21 @@
     } else {
       homePopupEstimate.style.display = 'none';
     }
+    const homePopup16Estimate = document.getElementById('homePopup16Estimate');
+    if(mode === 'popup16th'){
+      document.getElementById('homePopup16EstimateDate').textContent = getNextPopup16Label();
+      homePopup16Estimate.style.display = 'block';
+    } else {
+      homePopup16Estimate.style.display = 'none';
+    }
     const custNote = document.getElementById('custNote');
-    if(mode === 'popup'){
-      const { friStr, satStr, sunStr } = getNextPopupDates();
-      custNote.placeholder = `Which day will you be picking up, Friday (${friStr}), Saturday (${satStr}), or Sunday (${sunStr})?`;
+    if(mode === 'popup16th'){
+      custNote.placeholder = 'Anything else we should know about your order?';
+    } else if(mode === 'popup'){
+      const pd = getPopupInfo('popup').days;
+      custNote.placeholder = pd.length > 1
+        ? `Which day will you be picking up, ${pd.slice(0, -1).map(x => `${x.name} (${x.md})`).join(', ')}${pd.length > 2 ? ',' : ''} or ${pd[pd.length - 1].name} (${pd[pd.length - 1].md})?`
+        : `Pickup ${pd[0].name} (${pd[0].md}) — anything else we should know about your order?`;
     } else if(mode === 'pickup'){
       const { friStr, satStr, sunStr } = getNextPickupDates();
       custNote.placeholder = `Which day will you be picking up, Friday (${friStr}), Saturday (${satStr}), or Sunday (${sunStr})?`;
@@ -2058,14 +2146,18 @@
     pickupCard.classList.remove('active');
     deliveryCard.classList.remove('active');
     popupCard.classList.remove('active');
+    popup16Card.classList.remove('active');
     if(mode==='pickup'){
       modeNote.textContent = "Pickup at The Kitchen's Market (order by Thursday) — Friday (8am-5pm), Saturday(8am-3pm) or Sunday(10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
       pickupCard.classList.add('active');
     } else if(mode==='delivery'){
-      modeNote.textContent = 'Delivery Wednesdays, Fridays & Sundays — order by midnight the night before';
+      modeNote.textContent = 'Delivery Wednesdays, Fridays & Sundays — order by midnight the night before (Sunday: Saturday 8pm)';
       deliveryCard.classList.add('active');
+    } else if(mode==='popup16th'){
+      modeNote.textContent = 'Pick up Saturday (9am-1pm) (order by Friday 8pm) — 1710 N 16th St, Phoenix';
+      popup16Card.classList.add('active');
     } else {
-      modeNote.textContent = 'Pick up Friday (10am-2pm), Saturday or Sunday (8am-12pm) (order by Thursday) — 8367 W McDowell Rd, Tolleson';
+      modeNote.textContent = 'Pick up Friday (10am-2pm), Saturday (9am-1pm) or Sunday (9am-2pm) (order by Thursday for Fri, Friday 8pm for Sat, Saturday 8pm for Sun) — 8367 W McDowell Rd, Tolleson';
       popupCard.classList.add('active');
     }
     updateAddressField();
