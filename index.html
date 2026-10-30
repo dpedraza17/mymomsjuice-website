@@ -234,6 +234,10 @@
   @media (min-width:640px){ .menu-grid{grid-template-columns:repeat(3,1fr);} }
   .item-card{background:var(--card); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:6px; border-left:5px solid var(--dot,var(--green)); min-height:190px;}
   .item-card.disabled{opacity:0.55;}
+  /* Not available for the delivery/pickup day currently chosen: faded, still tappable so the "remove / change day" pop-up can explain. */
+  .item-card.unavailable, .flavor-check.unavailable, .detox-card.unavailable{opacity:0.42; filter:grayscale(0.7); transition:opacity .2s, filter .2s;}
+  .detox-card .unavailable{opacity:0.42; filter:grayscale(0.7);}
+  .na-note{font-weight:700; font-size:12.5px; color:var(--orange);}
   .qbtn:disabled, .add-btn:disabled{opacity:0.4; cursor:not-allowed;}
   .item-top{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
   .item-name{font-family:'Baloo 2',sans-serif; font-weight:700; font-size:23px; line-height:1.2;}
@@ -464,13 +468,19 @@
         <div class="delivery-hint">Tap a day to choose</div>
       </div>
       <div id="homePickupEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
-        Order now and pick up <span id="homePickupEstimateDate"></span>
+        Choose your pickup day:
+        <div class="delivery-toggle" id="homePickupToggle" role="radiogroup" aria-label="Pickup day"></div>
+        <div class="delivery-hint">Tap a day to choose</div>
       </div>
       <div id="homePopupEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
-        Order now and pick up <span id="homePopupEstimateDate"></span>
+        Choose your pickup day:
+        <div class="delivery-toggle" id="homePopupToggle" role="radiogroup" aria-label="Pickup day"></div>
+        <div class="delivery-hint">Tap a day to choose</div>
       </div>
       <div id="homePopup16Estimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
-        Order now and pick up <span id="homePopup16EstimateDate"></span>
+        Choose your pickup day:
+        <div class="delivery-toggle" id="homePopup16Toggle" role="radiogroup" aria-label="Pickup day"></div>
+        <div class="delivery-hint">Tap a day to choose</div>
       </div>
       <span class="mode-note" id="modeNote">Please choose one to continue</span>
     </div>
@@ -550,7 +560,7 @@
     <p class="eyebrow">Fresh &middot; Made to order &middot; Mesa, Arizona</p>
     <h1>Fresh-squeezed, bottled by hand — <em>by a mother &amp; son.</em></h1>
     <p class="lede">Mother &amp; son owned since 2021, every bottle is made by us — fresh juice, lemonade, matcha &amp; coffee.</p>
-    <p class="lede" style="margin-top:14px;">We deliver locally and pop up on 83rd Ave &amp; McDowell (<a href="https://maps.google.com/?q=8367+W+McDowell+Rd+Tolleson+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">8367 W McDowell Rd, Tolleson, AZ</a>) Fridays 10am-2pm, Saturdays 9am-1pm, Sundays 9am-2pm. Stop by our pop up! No pre-order necessary.</p>
+    <p class="lede" style="margin-top:14px;">We deliver locally and pop up on 83rd Ave &amp; McDowell (<a href="https://maps.google.com/?q=8367+W+McDowell+Rd+Tolleson+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">8367 W McDowell Rd, Tolleson, AZ</a>) Saturdays 9am-1pm, Sundays 9am-2pm. Stop by our pop up! No pre-order necessary.</p>
     <p class="lede" style="margin-top:14px;">We also pop up every Saturday 9am-1pm on 16th St &amp; McDowell (<a href="https://maps.google.com/?q=1710+N+16th+St+Phoenix+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">1710 N 16th St, Phoenix, AZ</a>). Stop by! No pre-order necessary.</p>
     <p class="lede" style="margin-top:14px;">You can also find our juices for sale at The Kitchen's Market (<a href="https://maps.google.com/?q=2655+W+Guadalupe+Rd+Suite+13+Mesa+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">2655 W Guadalupe Rd Suite 13 Mesa, AZ</a>), 5 days a week. Stop by during business hours! No pre-order necessary. Wednesday-Friday 8am-5pm, Saturdays 8am-3pm, Sundays 10am-3pm</p>
     <p class="lede" style="margin-top:14px;">
@@ -669,15 +679,15 @@
       <div class="find-card" id="popupCard">
         <h3>Pop-Up on 83rd Ave &amp; McDowell</h3>
         <ul>
-          <li>Fridays 10am–2pm, Saturdays 9am–1pm, Sundays 9am–2pm (8367 W McDowell Rd, Tolleson, AZ).</li>
-          <li>Stop by to purchase during business hours or place a pickup order (highly recommended) — orders are due Thursday night for Friday pickup, Friday at 8pm for Saturday pickup, and Saturday at 8pm for Sunday pickup. After Thursday night, only our six main juices can be ordered — all other flavors are due by Thursday night.</li>
+          <li>Saturdays 9am–1pm, Sundays 9am–2pm (8367 W McDowell Rd, Tolleson, AZ).</li>
+          <li>Stop by to purchase during business hours or place a pickup order (highly recommended) — orders are due Friday at 8pm for Saturday pickup and Saturday at 8pm for Sunday pickup. After Thursday night, only our 7 main juice bottles (Green Juice, El Vampiro, The Son's Favorite, Mimosa Juice, Watermelon, Citrus Sunrise, Fresh Grapefruit) can be ordered — all other flavors are due by Thursday night.</li>
         </ul>
       </div>
       <div class="find-card" id="popup16Card">
         <h3>Pop-Up on 16th St &amp; McDowell</h3>
         <ul>
           <li>Every Saturday 9am–1pm (1710 N 16th St, Phoenix, AZ).</li>
-          <li>Stop by to purchase during business hours or place a pickup order (highly recommended) — pickup orders for Saturday are due by Friday at 8pm. After Thursday night, only our six main juices can be ordered — all other flavors are due by Thursday night.</li>
+          <li>Stop by to purchase during business hours or place a pickup order (highly recommended) — pickup orders for Saturday are due by Friday at 8pm. After Thursday night, only our 7 main juice bottles (Green Juice, El Vampiro, The Son's Favorite, Mimosa Juice, Watermelon, Citrus Sunrise, Fresh Grapefruit) can be ordered — all other flavors are due by Thursday night.</li>
         </ul>
       </div>
       <div class="find-card" id="deliveryCard">
@@ -761,16 +771,22 @@
       <div class="delivery-hint">Tap a day to choose</div>
     </div>
     <div id="pickupEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
-      Order now and pick up <span id="pickupEstimateDate"></span>
+      Choose your pickup day:
+        <div class="delivery-toggle" id="pickupToggle" role="radiogroup" aria-label="Pickup day"></div>
+        <div class="delivery-hint">Tap a day to choose</div>
       <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">The Kitchen's Market<br>2655 W Guadalupe Rd Suite 13, Mesa, AZ<br>Fri 8am–5pm · Sat 8am–3pm · Sun 10am–3pm</div>
     </div>
     <div id="popupEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
-      Order now and pick up <span id="popupEstimateDate"></span>
-      <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">8367 W McDowell Rd, Tolleson, AZ<br>Fri 10am–2pm · Sat 9am–1pm · Sun 9am–2pm<br>Order by Thu night for Fri, Fri 8pm for Sat, Sat 8pm for Sun (after Thu night: six main juices only)</div>
+      Choose your pickup day:
+        <div class="delivery-toggle" id="popupToggle" role="radiogroup" aria-label="Pickup day"></div>
+        <div class="delivery-hint">Tap a day to choose</div>
+      <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">8367 W McDowell Rd, Tolleson, AZ<br>Sat 9am–1pm · Sun 9am–2pm<br>Order by Fri 8pm for Sat, Sat 8pm for Sun (after Thu night: 7 main juices only)</div>
     </div>
     <div id="popup16Estimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
-      Order now and pick up <span id="popup16EstimateDate"></span>
-      <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">1710 N 16th St, Phoenix, AZ<br>Saturdays 9am–1pm<br>Order by Friday 8pm for Saturday pickup (after Thu night: six main juices only)</div>
+      Choose your pickup day:
+        <div class="delivery-toggle" id="popup16Toggle" role="radiogroup" aria-label="Pickup day"></div>
+        <div class="delivery-hint">Tap a day to choose</div>
+      <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">1710 N 16th St, Phoenix, AZ<br>Saturdays 9am–1pm<br>Order by Friday 8pm for Saturday pickup (after Thu night: 7 main juices only)</div>
     </div>
     <div class="field">
       <label for="custFirstName">First name</label>
@@ -807,7 +823,7 @@
     </div>
     <div class="field" style="margin-bottom:16px;">
       <label for="custNote" id="custNoteLabel" style="font-size:17.5px; font-weight:700;">Add a note (optional)</label>
-      <textarea id="custNote" rows="3" placeholder="Gate code, apartment number, anything else we should know" style="width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); resize:vertical;"></textarea>
+      <textarea id="custNote" rows="3" placeholder="Leave a note…" style="width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); resize:vertical;"></textarea>
     </div>
     <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before (Sunday delivery orders are due Saturday at 8pm).</p>
@@ -840,7 +856,7 @@
     {id:'sunrise', name:'Citrus Sunrise', desc:'Fresh-squeezed rio red grapefruit & orange juice', cat:'juice', color:'var(--yellow)', emoji:'🍋', price:7},
     {id:'grapefruit', name:'Fresh Grapefruit', desc:'Fresh-squeezed rio red grapefruit', cat:'juice', color:'var(--yellow)', emoji:'🍋', price:7},
     {id:'sonsfav', name:"The Son's Favorite", desc:'Orange & carrot', cat:'juice', color:'var(--orange)', emoji:'🥕', price:7},
-    {id:'watermelon', name:'Watermelon Water', desc:'Fresh watermelon, nothing else', cat:'juice', color:'var(--magenta)', emoji:'🍉', price:7},
+    {id:'watermelon', name:'Watermelon', desc:'Fresh watermelon, nothing else', cat:'juice', color:'var(--magenta)', emoji:'🍉', price:7},
     {id:'pepino', name:'Agua de Pepino con Limón', desc:'Cucumber, lime, agave', cat:'juice', color:'var(--green)', emoji:'🥒', price:7},
     {id:'horchatalatte', name:'Horchata Latte', desc:'Horchata made from scratch w/ 2 shots of espresso', gallonDesc:'Horchata made from scratch with espresso. Pour your own iced coffee every morning!', cat:'horchata', color:'var(--tan)', emoji:'☕', price:7},
     {id:'horchata', name:"My Mom's Horchata", desc:'Traditional horchata, homemade style', cat:'horchata', color:'var(--tan)', emoji:'🌾', price:7},
@@ -998,10 +1014,11 @@
   // size is 'bottle' (16oz), 'half' or 'gallon'. d is a delivery option.
   function sizeAllowedOnDelivery(d, id, size){
     if(!(d.dow === 0 || d.dow === 6)) return true;
+    if(size === 'bottle' && id === 'watermelon') return true; // Watermelon Water (and detox cleanses) stay orderable as the 16oz bottle
     return WEEKEND_ALL_SIZE_IDS.includes(id) || d.bigSizesOk;
   }
   function lineAllowedOnDelivery(d, id, size){
-    if((DELIVERY_SHIFT_ITEMS[d.iso] || []).includes(id)) return false;
+    if(!d.isPickup && (DELIVERY_SHIFT_ITEMS[d.iso] || []).includes(id)) return false;
     if(d.dow === 3 && id === 'pepino') return false;
     return sizeAllowedOnDelivery(d, id, size);
   }
@@ -1028,43 +1045,174 @@
     return out;
   }
   function weekendRuleText(d){
-    const big = WEEKEND_ALL_SIZE_IDS.map(itemNameById).join(', ');
-    return `For ${d.dayName} delivery, only our six main juices (${big}) can be ordered after Thursday night. All other flavors are due by Thursday night.`;
+    const big = ['green','vampiro','sonsfav','mimosa','watermelon','sunrise','grapefruit']
+      .map(id => id === 'watermelon' ? 'Watermelon' : itemNameById(id)).join(', ');
+    return `For ${d.dayName} ${d.isPickup ? 'pickup' : 'delivery'}, only our 7 main juices (${big}) bottles can be ordered after Thursday night. All other flavors are due by Thursday night.`;
   }
 
   // If the selected delivery day can't take what's in the cart, move the
   // order to the next day that can and tell the customer. Returns true if it
   // moved the date.
-  function moveToOtherDayIfNeeded(){
-    if(mode === 'popup' || mode === 'popup16th') return removeLateRestrictedItems();
-    if(mode !== 'delivery') return false;
-    const old = getSelectedDelivery();
-    const hit = cartConflictsFor(old);
-    if(!hit.length) return false;
-    const opts = getDeliveryOptions();
-    const idx = opts.findIndex(o => o.iso !== old.iso && !cartConflictsFor(o).length);
-    if(idx < 0) return false;
-    autoMoved = { choice: deliveryChoice, iso: old.iso };
-    deliveryChoice = idx;
+  // ---- Day conflicts ---------------------------------------------------
+  // When the chosen delivery/pickup day can't take something in the cart,
+  // the customer picks: remove those items and KEEP the day, or change the
+  // day (to the next one that works) and keep the items.
+  function dayWord(d){ return d.isPickup ? 'pickup' : 'delivery'; }
+  function getCurrentDay(){
+    if(mode === 'delivery') return getSelectedDelivery();
+    if(isPickupMode(mode)) return getSelectedPickup(mode);
+    return null;
+  }
+  function getDayOptions(){
+    return mode === 'delivery' ? getDeliveryOptions() : getPickupOptions(mode);
+  }
+  function conflictReasonText(d, hit){
+    const parts = [];
+    if(!d.isPickup && d.dow === 3 && hit.some(h => h.indexOf('Pepino') !== -1)) parts.push(PEPINO_MSG);
+    if((d.dow === 0 || d.dow === 6) && !d.bigSizesOk) parts.push(weekendRuleText(d));
+    const shifted = d.isPickup ? [] : (DELIVERY_SHIFT_ITEMS[d.iso] || []);
+    if(shifted.length){
+      const stillOk = items.filter(it => !shifted.includes(it.id) && !(d.dow === 3 && it.id === 'pepino')).map(it => it.name).join(', ');
+      parts.push(`Still available for ${d.dayName} delivery: ${stillOk}.`);
+    }
+    return parts.join('\n\n');
+  }
+  function removeItemsBlockedFor(d){
+    Object.keys(cart).forEach(id=>{
+      if(cart[id] > 0 && !lineAllowedOnDelivery(d, id, 'bottle')) delete cart[id];
+    });
+    sixPacks = sixPacks.filter(sp => Object.keys(sp || {}).every(id => !(sp[id] > 0) || lineAllowedOnDelivery(d, id, 'bottle')));
+    if(detoxes.length && !lineAllowedOnDelivery(d, 'watermelon', 'bottle')) detoxes.length = 0;
+    Object.keys(gallonCart).forEach(k=>{
+      if(!(gallonCart[k] > 0)) return;
+      const size = k.endsWith('_gallon') ? 'gallon' : 'half';
+      if(!lineAllowedOnDelivery(d, gallonBaseId(k), size)) delete gallonCart[k];
+    });
+  }
+  function refreshAfterDayChange(){
     applyModeUI();
     renderMenu();
     renderBuilder();
     renderGallons();
     updateCartUI();
-    const nw = opts[idx];
-    let msg = `Heads up: ${hit.join(', ')} ${hit.length > 1 ? 'aren\'t' : 'isn\'t'} available for ${old.dayName} delivery. Your delivery date has been changed from ${old.dayName}, ${old.dateStr} to ${nw.dayName}, ${nw.dateStr}.`;
-    const shifted = DELIVERY_SHIFT_ITEMS[old.iso] || [];
-    if(shifted.length){
-      const stillOk = items.filter(it => !shifted.includes(it.id) && !(old.dow === 3 && it.id === 'pepino')).map(it => it.name).join(', ');
-      msg += `\n\nStill available for ${old.dayName} delivery: ${stillOk}.`;
-    }
-    if(old.dow === 0 || old.dow === 6) msg += `\n\n${weekendRuleText(old)}`;
-    if(old.dow === 3 && hit.some(h => h.indexOf('Pepino') !== -1)){
-      showPepinoPopup({ moved:true, from:old, to:nw, origIndex:autoMoved.choice });
-      return true;
-    }
-    alert(msg);
+  }
+  // Shared pop-up (same look as the other overlays).
+  let dayConflictState = null;
+  function showDayConflict(o){
+    const ov = document.getElementById('dayConflictOverlay');
+    if(!ov) return;
+    dayConflictState = o;
+    document.getElementById('dayConflictTitle').textContent = o.title;
+    document.getElementById('dayConflictText').textContent = o.text || '';
+    document.getElementById('dayConflictText').style.display = o.text ? '' : 'none';
+    document.getElementById('dayConflictPrimary').textContent = o.primaryLabel;
+    const sec = document.getElementById('dayConflictSecondary');
+    sec.textContent = o.secondaryLabel || '';
+    sec.style.display = o.secondaryLabel ? '' : 'none';
+    const ter = document.getElementById('dayConflictTertiary');
+    ter.textContent = o.tertiaryLabel || '';
+    ter.style.display = o.tertiaryLabel ? '' : 'none';
+    ov.classList.add('show');
+    document.getElementById('dayConflictPrimary').focus();
+  }
+  (function wireDayConflict(){
+    const close = ()=>{ const ov = document.getElementById('dayConflictOverlay'); if(ov) ov.classList.remove('show'); };
+    document.addEventListener('click', e=>{
+      const ov = document.getElementById('dayConflictOverlay');
+      if(!ov || !ov.classList.contains('show')) return;
+      const st = dayConflictState || {};
+      if(e.target.closest('#dayConflictPrimary')){
+        close();
+        if(st.onPrimary) st.onPrimary();
+      } else if(e.target.closest('#dayConflictSecondary')){
+        close();
+        if(st.onSecondary) st.onSecondary();
+      } else if(e.target.closest('#dayConflictTertiary')){
+        close();
+        if(st.onTertiary) st.onTertiary();
+      }
+    });
+    document.addEventListener('keydown', e=>{ if(e.key === 'Escape') close(); });
+  })();
+
+  // For pickup orders: the first delivery day that can take everything in
+  // the cart, offered as a third choice (switches the whole order to delivery).
+  function deliveryAlternative(){
+    if(!isPickupMode(mode)) return null;
+    const dopts = getDeliveryOptions();
+    const di = dopts.findIndex(o => !cartConflictsFor(o).length);
+    if(di < 0) return null;
+    const o = dopts[di];
+    return {
+      label: `Get everything delivered on ${o.dayName}, ${o.dateStr} instead (delivery fee & $${DELIVERY_MINIMUM} minimum apply)`,
+      go: ()=>{ mode = 'delivery'; deliveryChoice = di; autoMoved = null; refreshAfterDayChange(); },
+    };
+  }
+
+  // True when the date (YYYY-MM-DD) falls in the calendar week after this
+  // one (weeks run Monday–Sunday, Arizona time).
+  function isNextWeek(iso){
+    const [y, m, d] = iso.split('-').map(Number);
+    const startOfWeek = x => {
+      const c = new Date(x.getFullYear(), x.getMonth(), x.getDate());
+      c.setDate(c.getDate() - ((c.getDay() + 6) % 7));
+      return c;
+    };
+    return Math.round((startOfWeek(new Date(y, m - 1, d)) - startOfWeek(azNowDate())) / 604800000) === 1;
+  }
+
+  // If the chosen day can't take what's in the cart, ask what to do.
+  // Returns true if the pop-up was shown.
+  function moveToOtherDayIfNeeded(){
+    const old = getCurrentDay();
+    if(!old) return false;
+    const hit = cartConflictsFor(old);
+    if(!hit.length) return false;
+    const opts = getDayOptions();
+    const idx = opts.findIndex(o => o.iso !== old.iso && !cartConflictsFor(o).length);
+    const nw = idx >= 0 ? opts[idx] : null;
+    const names = hit.join(', ');
+    const dAlt = deliveryAlternative();
+    showDayConflict({
+      title: `${names} ${hit.length > 1 ? 'aren\'t' : 'isn\'t'} available for ${old.dayName}, ${old.dateStr} ${dayWord(old)}`,
+      text: conflictReasonText(old, hit),
+      primaryLabel: `Remove ${names} and keep ${old.dayName}, ${old.dateStr}`,
+      onPrimary: ()=>{
+        removeItemsBlockedFor(old);
+        refreshAfterDayChange();
+        showAddedToast(`Removed ${names} — still ${dayWord(old)} ${old.dayName}, ${old.dateStr}`, 4000);
+      },
+      secondaryLabel: nw ? `Change ${dayWord(old)} to ${nw.dayName}, ${nw.dateStr}${isNextWeek(nw.iso) ? ' (next week)' : ''} and keep everything` : '',
+      onSecondary: ()=>{
+        if(mode === 'delivery') deliveryChoice = idx; else pickupChosenIso[mode] = nw.iso;
+        autoMoved = null;
+        refreshAfterDayChange();
+      },
+      tertiaryLabel: dAlt ? dAlt.label : '',
+      onTertiary: dAlt ? dAlt.go : null,
+    });
     return true;
+  }
+  // Customer tapped a different day that can't take something in the cart.
+  function confirmSwitchDay(target, hit, setDay){
+    const cur = getCurrentDay();
+    const names = hit.join(', ');
+    const dAlt = deliveryAlternative();
+    showDayConflict({
+      title: `${names} ${hit.length > 1 ? 'aren\'t' : 'isn\'t'} available for ${target.dayName}, ${target.dateStr} ${dayWord(target)}`,
+      text: conflictReasonText(target, hit),
+      primaryLabel: `Remove ${names} and switch to ${target.dayName}, ${target.dateStr}`,
+      onPrimary: ()=>{
+        removeItemsBlockedFor(target);
+        autoMoved = null;
+        setDay();
+        refreshAfterDayChange();
+        showAddedToast(`Removed ${names} — ${dayWord(target)} ${target.dayName}, ${target.dateStr}`, 4000);
+      },
+      secondaryLabel: cur ? `Keep ${cur.dayName}, ${cur.dateStr} and my order` : 'Cancel',
+      tertiaryLabel: dAlt ? dAlt.label : '',
+      onTertiary: dAlt ? dAlt.go : null,
+    });
   }
   // Remembers an automatic move so it can be undone if the customer removes
   // the unavailable items. Cleared whenever they pick a day themselves.
@@ -1088,7 +1236,6 @@
   }
   // Covers carts restored from an earlier visit and switching back to delivery.
   function ensureDeliveryOkForCart(){
-    if(mode === 'popup' || mode === 'popup16th') return removeLateRestrictedItems();
     return moveToOtherDayIfNeeded();
   }
 
@@ -1162,11 +1309,29 @@
     return true;
   }
 
+  function isUnavailableForDay(id){
+    const day = getCurrentDay();
+    return !!day && !lineAllowedOnDelivery(day, id, 'bottle');
+  }
+  function unavailableNote(){
+    const day = getCurrentDay();
+    return day ? `Not available for ${day.dayName} ${dayWord(day)}` : '';
+  }
+  // Fades the detox cleanses when Watermelon (which they include) can't be had that day.
+  function fadeDetoxCards(){
+    const na = isUnavailableForDay('watermelon');
+    document.querySelectorAll('[data-detox]').forEach(b => {
+      const c = b.closest('.detox-card');
+      if(c) c.classList.toggle('unavailable', na);
+    });
+  }
   function renderMenu(){
     menuItems.innerHTML = '';
+    fadeDetoxCards();
     items.forEach(it => {
       const card = document.createElement('div');
-      card.className = 'item-card';
+      const na = isUnavailableForDay(it.id);
+      card.className = 'item-card' + (na ? ' unavailable' : '');
       card.style.setProperty('--dot', it.color);
       card.id = 'item-' + it.id;
       card.innerHTML = `
@@ -1178,7 +1343,7 @@
         </div>
         <p class="item-desc">${it.desc}</p>
         <p class="item-desc" style="-webkit-line-clamp:1;">16oz bottle</p>
-        ${it.id==='pepino' ? PEPINO_NOTE : ''}
+        ${it.id==='pepino' && !na ? PEPINO_NOTE : ''}
         <div class="stepper">
           <div class="qty-controls">
             <button class="qbtn" data-action="minus" data-id="${it.id}" aria-label="Remove one ${it.name}">–</button>
@@ -1201,9 +1366,10 @@
     });
     builderItems.forEach(it=>{
       const row = document.createElement('div');
-      row.className = 'flavor-check';
+      const na = isUnavailableForDay(it.id);
+      row.className = 'flavor-check' + (na ? ' unavailable' : '');
       row.innerHTML = `
-        <span class="fc-info"><strong>${it.name}</strong> — ${it.desc}${it.id==='pepino' ? PEPINO_NOTE : ''}</span>
+        <span class="fc-info"><strong>${it.name}</strong> — ${it.desc}${it.id==='pepino' && !na ? PEPINO_NOTE : ''}</span>
         <span class="qty-controls" style="display:flex; align-items:center; gap:8px;">
           <button class="qbtn" data-action="minus" data-flavor="${it.id}">–</button>
           <span class="qty mono" id="bqty-${it.id}">0</span>
@@ -1224,14 +1390,14 @@
         if(b.id === 'pepino') return -1;
         return 0;
       });
-    const sel = (mode === 'delivery') ? getSelectedDelivery() : popupLateSel();
-    const sizeOk = (id, size) => !sel || sizeAllowedOnDelivery(sel, id, size);
+    const sel = (mode === 'delivery') ? getSelectedDelivery() : (isPickupMode(mode) ? getSelectedPickup(mode) : null);
+    const sizeOk = (id, size) => !sel || lineAllowedOnDelivery(sel, id, size);
     const note = document.getElementById('gallonSundayNote');
     if(note){
       if(sel && (sel.dow === 0 || sel.dow === 6) && !sel.bigSizesOk){
-        note.textContent = sel.isPopup
-          ? popupLateRuleText()
-          : `${sel.dayName} delivery selected: ${weekendRuleText(sel).replace(`For ${sel.dayName} delivery, `, '')} Choose Wednesday or Friday delivery for all other flavors.`;
+        note.textContent = sel.isPickup
+          ? weekendRuleText(sel)
+          : `${weekendRuleText(sel)} Choose Wednesday or Friday delivery for all other flavors.`;
         note.style.display = 'block';
       } else {
         note.style.display = 'none';
@@ -1243,27 +1409,26 @@
       const locked = gLocked && hLocked;
       const sundayOnly = locked;
       const card = document.createElement('div');
-      card.className = 'detox-card gallon-card' + (locked ? ' disabled' : '');
+      card.className = 'detox-card gallon-card' + (locked ? ' unavailable' : '');
       card.innerHTML = `
         <h3 class="display" style="font-size:20px;">${it.name}</h3>
         <p class="item-desc">${it.gallonDesc || it.desc}</p>
-        ${it.id==='pepino' ? PEPINO_NOTE : ''}
-        ${sundayOnly ? `<p class="item-desc" style="font-weight:700;">${sel.isPopup ? 'Pop-up pickup' : sel.dayName + ' delivery'}: order by Thursday night</p>` : ''}
+        ${it.id==='pepino' && !sundayOnly ? PEPINO_NOTE : ''}
         <div style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <div class="${gLocked && !locked ? 'unavailable' : ''}" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
             <span><strong>Gallon (128oz)</strong> <span class="mono">$${GALLON_PRICE}</span></span>
             <span class="qty-controls">
-              <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="gallon" ${gLocked?'disabled':''}>–</button>
+              <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="gallon">–</button>
               <span class="qty mono" id="gqty-${it.id}_gallon">${gallonCart[it.id+'_gallon']||0}</span>
-              <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="gallon" ${gLocked?'disabled':''}>+</button>
+              <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="gallon">+</button>
             </span>
           </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <div class="${hLocked && !locked ? 'unavailable' : ''}" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
             <span><strong>Half Gallon (64oz)</strong> <span class="mono">$${HALF_GALLON_PRICE}</span></span>
             <span class="qty-controls">
-              <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="half" ${hLocked?'disabled':''}>–</button>
+              <button class="qbtn" data-action="minus" data-flavor="${it.id}" data-size="half">–</button>
               <span class="qty mono" id="gqty-${it.id}_half">${gallonCart[it.id+'_half']||0}</span>
-              <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="half" ${hLocked?'disabled':''}>+</button>
+              <button class="qbtn" data-action="plus" data-flavor="${it.id}" data-size="half">+</button>
             </span>
           </div>
         </div>
@@ -1787,6 +1952,12 @@
   overlay.addEventListener('click', closeCartFn);
 
   let mode = 'delivery';
+  const PICKUP_DAYS = { pickup:[5,6,0], popup:[6,0], popup16th:[6] };
+  const PICKUP_OPTION_COUNT = 4;
+  const pickupChosenIso = { pickup:null, popup:null, popup16th:null }; // the pickup date each location has selected
+  const PICKUP_TOGGLE_IDS = { pickup:['homePickupToggle','pickupToggle'], popup:['homePopupToggle','popupToggle'], popup16th:['homePopup16Toggle','popup16Toggle'] };
+  const PICKUP_BOX_IDS = { pickup:['pickupEstimate','homePickupEstimate'], popup:['popupEstimate','homePopupEstimate'], popup16th:['popup16Estimate','homePopup16Estimate'] };
+  function isPickupMode(m){ return m === 'pickup' || m === 'popup' || m === 'popup16th'; }
   let deliveryChoice = 0; // 0 = next delivery day (default), 1 = push to the following one
   let shownDeliveryIso = null; // the delivery date currently displayed, sent with the order
   const DELIVERY_FEE = 6; // standard/default delivery fee — matches DELIVERY_FEE in server.js
@@ -1920,9 +2091,10 @@
     // The pay button repeats the chosen day, so it's confirmed at the last step.
     const payBtn = document.getElementById('payOnline');
     if (payBtn && !payBtn.disabled){
+      const pk = isPickupMode(mode) ? getSelectedPickup(mode) : null;
       payBtn.textContent = (mode === 'delivery')
         ? `Pay online · Delivery ${sel.dayName}, ${sel.shortDate}`
-        : 'Pay online with card (Stripe)';
+        : (pk ? `Pay online · Pickup ${pk.dayName}, ${pk.shortDate}` : 'Pay online with card (Stripe)');
     }
     ['deliveryToggle', 'homeDeliveryToggle'].forEach(id => {
       const box = document.getElementById(id);
@@ -1945,13 +2117,8 @@
     const target = getDeliveryOptions()[index];
     if (!target) return;
     const hit = cartConflictsFor(target);
-    if (hit.length && target.dow === 3 && cartHasPepino()){
-      showPepinoPopup({ switchIndex: index });
-      return;
-    }
-    if (hit.length){
-      alert(`${hit.join(', ')} ${hit.length > 1 ? 'aren\'t' : 'isn\'t'} available for ${target.dayName} delivery. Remove ${hit.length > 1 ? 'them' : 'it'} from your order to switch to ${target.dayName} delivery.`
-        + ((target.dow === 0 || target.dow === 6) ? `\n\n${weekendRuleText(target)}` : ''));
+    if(hit.length){
+      confirmSwitchDay(target, hit, ()=>{ deliveryChoice = index; });
       return;
     }
     autoMoved = null;
@@ -1963,181 +2130,97 @@
     updateCartUI();
   }
 
-  // Mesa pickup runs Friday–Sunday. Order by Thursday 11:59pm (Arizona time)
-  // to catch that weekend; ordering Fri/Sat/Sun itself has already missed
-  // the cutoff, so it rolls to the following weekend.
-  function getNextPickupDates(){
-    const azNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
-    const dow = azNow.getDay(); // 0=Sun ... 6=Sat
-    let daysAhead = (5 - dow + 7) % 7; // days until the next Friday
-    if (daysAhead === 0) daysAhead = 7; // it's already Friday — cutoff passed, use next week's
-    const friday = new Date(azNow);
-    friday.setDate(azNow.getDate() + daysAhead);
-    const saturday = new Date(friday);
-    saturday.setDate(friday.getDate() + 1);
-    const sunday = new Date(friday);
-    sunday.setDate(friday.getDate() + 2);
-    const friMonth = friday.toLocaleDateString('en-US', { month: 'long' });
-    const satMonth = saturday.toLocaleDateString('en-US', { month: 'long' });
-    const sunMonth = sunday.toLocaleDateString('en-US', { month: 'long' });
-    const friStr = `${friMonth} ${friday.getDate()}`;
-    const satStr = (satMonth === friMonth) ? `${saturday.getDate()}` : `${satMonth} ${saturday.getDate()}`;
-    const sunStr = (sunMonth === friMonth) ? `${sunday.getDate()}` : `${sunMonth} ${sunday.getDate()}`;
-    return { friStr, satStr, sunStr };
+  // Pickup days (Mesa, 83rd Ave pop-up, 16th St pop-up). The customer picks
+  // one of the next four open days, like delivery. Cutoffs (Arizona time):
+  //   Mesa:     Thursday 11:59pm before that weekend.
+  //   Pop-ups:  Saturday — Friday 8pm;
+  //             Sunday — Saturday 8pm.
+  // Matches pickupCutoff / pickupOptions in server.js — keep both in sync.
+  function pickupCutoff(kind, d){
+    if(kind === 'pickup'){
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 3) % 7), 23, 59, 59); // Thursday
+    }
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 20, 0, 0); // night before at 8pm
   }
-  function getNextPickupLabel(){
-    const { friStr, sunStr } = getNextPickupDates();
-    return `Friday, Saturday, or Sunday — ${friStr}–${sunStr}`;
-  }
-
-  // Pop-up pickup (83rd Ave & McDowell: Fri/Sat/Sun, 16th St & McDowell: Sat).
-  // Order cutoffs, Arizona time: Friday pickup — Thursday 11:59pm; Saturday
-  // pickup — Friday 8pm; Sunday pickup — Saturday 8pm. Matches popupCutoff /
-  // popupInfo in server.js — keep both in sync.
-  const POPUP_DAYS = { popup: [5, 6, 0], popup16th: [6] };
-  function popupCutoff(d){
-    if(d.getDay() === 5) return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 23, 59, 59);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 20, 0, 0); // Sat/Sun pickup
-  }
-  // The pickup days still open for the soonest weekend. bigSizesOk is true
-  // until Thursday 11:59pm; after that only the six main juices come in half
-  // gallons and gallons (everything else is the 16oz bottle only).
-  function getPopupInfo(kind){
+  // bigSizesOk is false for a Saturday/Sunday once Thursday 11:59pm has
+  // passed: then only the six main juices (plus Watermelon Water bottles).
+  function getPickupOptions(kind){
     const now = azNowDate();
-    const allowed = POPUP_DAYS[kind] || POPUP_DAYS.popup;
-    const open = [];
-    for(let i = 0; i <= 14; i++){
+    const allowed = PICKUP_DAYS[kind] || PICKUP_DAYS.popup;
+    const days = [];
+    for(let i = 0; i <= 28 && days.length < PICKUP_OPTION_COUNT; i++){
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
       if(!allowed.includes(d.getDay())) continue;
-      if(now > popupCutoff(d)) continue;
-      if(open.length && Math.round((d - open[0]) / 86400000) > 2) break;
-      open.push(d);
+      if(now > pickupCutoff(kind, d)) continue;
+      days.push(d);
     }
-    const first = open[0];
-    const thu = new Date(first.getFullYear(), first.getMonth(), first.getDate() - ((first.getDay() + 3) % 7), 23, 59, 59);
-    const md = d => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-    const days = open.map(d => ({ name: d.toLocaleDateString('en-US', { weekday: 'long' }), md: md(d) }));
-    const names = days.map(x => x.name);
-    let label;
-    if(open.length === 1){
-      label = `${names[0]} — ${md(first)}`;
-    } else {
-      const last = open[open.length - 1];
-      const list = names.slice(0, -1).join(', ') + (names.length > 2 ? ',' : '') + ' or ' + names[names.length - 1];
-      const lastStr = last.getMonth() === first.getMonth() ? String(last.getDate()) : md(last);
-      label = `${list} — ${md(first)}–${lastStr}`;
-    }
-    return { days, label, bigSizesOk: now <= thu };
+    const pad = n => String(n).padStart(2, '0');
+    return days.map(d => ({
+      kind,
+      isPickup: true,
+      dow: d.getDay(),
+      iso: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+      bigSizesOk: d.getDay() === 5 || now <= new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 3) % 7), 23, 59, 59),
+      dayName: d.toLocaleDateString('en-US', { weekday: 'long' }),
+      dateStr: d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
+      shortDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    }));
   }
-  function getNextPopupLabel(){ return getPopupInfo('popup').label; }
-  function getNextPopup16Label(){ return getPopupInfo('popup16th').label; }
-  // For pop-up orders placed after Thursday night: a stand-in "day" that the
-  // weekend size rules can check the cart against. null = no restriction.
-  function popupLateSel(){
-    if(mode !== 'popup' && mode !== 'popup16th') return null;
-    if(getPopupInfo(mode).bigSizesOk) return null;
-    return { dow: 6, bigSizesOk: false, dayName: 'Pop-up', iso: 'popup-late', isPopup: true };
+  function getSelectedPickup(kind){
+    const opts = getPickupOptions(kind);
+    return opts.find(o => o.iso === pickupChosenIso[kind]) || opts[0];
   }
-  function popupLateRuleText(){
-    const big = WEEKEND_ALL_SIZE_IDS.map(itemNameById).join(', ');
-    return `After Thursday night, only our six main juices (${big}) can be ordered for pop-up pickup. All other flavors are due by Thursday night.`;
-  }
-  // Removes anything a late pop-up order can't include (flavors outside the
-  // six main juices, 6-packs containing them, detox cleanses, gallons).
-  function removeLateRestrictedItems(){
-    const sel = popupLateSel();
-    if(!sel) return false;
-    const hit = cartConflictsFor(sel);
-    if(!hit.length) return false;
-    const okId = id => sizeAllowedOnDelivery(sel, id, 'bottle');
-    Object.keys(cart).forEach(id=>{ if(cart[id] > 0 && !okId(id)) delete cart[id]; });
-    sixPacks = sixPacks.filter(sp => Object.keys(sp || {}).every(id => !(sp[id] > 0) || okId(id)));
-    if(detoxes.length && !okId('watermelon')) detoxes.length = 0;
-    Object.keys(gallonCart).forEach(k=>{
-      if(gallonCart[k] > 0 && !okId(gallonBaseId(k))) delete gallonCart[k];
+  function renderPickupToggles(kind){
+    const opts = getPickupOptions(kind);
+    const sel = getSelectedPickup(kind);
+    PICKUP_TOGGLE_IDS[kind].forEach(id => {
+      const box = document.getElementById(id);
+      if(!box) return;
+      if(box.querySelectorAll('.delivery-opt').length !== opts.length){
+        box.innerHTML = opts.map((o, i) => `<button type="button" class="delivery-opt" data-choice="${i}" role="radio"></button>`).join('');
+      }
+      box.querySelectorAll('.delivery-opt').forEach((btn, i) => {
+        const o = opts[i];
+        const on = (o.iso === sel.iso);
+        btn.innerHTML = `<span class="opt-radio"></span>${o.dayName}<span class="opt-date">${o.dateStr}</span>`
+                      + (i === 0 ? '<span class="opt-tag">Soonest</span>' : '');
+        btn.classList.toggle('selected', on);
+        btn.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
     });
+  }
+  function choosePickupDay(kind, index){
+    const opts = getPickupOptions(kind);
+    const target = opts[index];
+    if(!target || target.iso === getSelectedPickup(kind).iso) return;
+    const hit = cartConflictsFor(target);
+    if(hit.length){
+      confirmSwitchDay(target, hit, ()=>{ pickupChosenIso[kind] = target.iso; });
+      return;
+    }
+    pickupChosenIso[kind] = target.iso;
+    applyModeUI();
     renderMenu();
     renderBuilder();
     renderGallons();
     updateCartUI();
-    alert(`${hit.join(', ')} ${hit.length > 1 ? 'were' : 'was'} removed from your order.\n\n${popupLateRuleText()}`);
-    return true;
   }
-
   function updateAddressField(){
     addressFieldIds.forEach(id=>{
       document.getElementById(id).style.display = (mode==='delivery') ? 'flex' : 'none';
     });
     document.getElementById('deliveryTimesNote').style.display = (mode==='delivery') ? 'block' : 'none';
-    const deliveryEstimate = document.getElementById('deliveryEstimate');
-    if(mode === 'delivery'){
-      deliveryEstimate.style.display = 'block';
-    } else {
-      deliveryEstimate.style.display = 'none';
-    }
-    const pickupEstimate = document.getElementById('pickupEstimate');
-    if(mode === 'pickup'){
-      document.getElementById('pickupEstimateDate').textContent = getNextPickupLabel();
-      pickupEstimate.style.display = 'block';
-    } else {
-      pickupEstimate.style.display = 'none';
-    }
-    const popupEstimate = document.getElementById('popupEstimate');
-    if(mode === 'popup'){
-      document.getElementById('popupEstimateDate').textContent = getNextPopupLabel();
-      popupEstimate.style.display = 'block';
-    } else {
-      popupEstimate.style.display = 'none';
-    }
-    const popup16Estimate = document.getElementById('popup16Estimate');
-    if(mode === 'popup16th'){
-      document.getElementById('popup16EstimateDate').textContent = getNextPopup16Label();
-      popup16Estimate.style.display = 'block';
-    } else {
-      popup16Estimate.style.display = 'none';
-    }
+    document.getElementById('deliveryEstimate').style.display = (mode==='delivery') ? 'block' : 'none';
+    Object.keys(PICKUP_BOX_IDS).forEach(kind=>{
+      PICKUP_BOX_IDS[kind].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.style.display = (mode === kind) ? 'block' : 'none';
+      });
+      if(mode === kind) renderPickupToggles(kind);
+    });
     updateDeliverySwapUI();
-    const homeDeliveryEstimate = document.getElementById('homeDeliveryEstimate');
-    if(mode === 'delivery'){
-      homeDeliveryEstimate.style.display = 'block';
-    } else {
-      homeDeliveryEstimate.style.display = 'none';
-    }
-    const homePickupEstimate = document.getElementById('homePickupEstimate');
-    if(mode === 'pickup'){
-      document.getElementById('homePickupEstimateDate').textContent = getNextPickupLabel();
-      homePickupEstimate.style.display = 'block';
-    } else {
-      homePickupEstimate.style.display = 'none';
-    }
-    const homePopupEstimate = document.getElementById('homePopupEstimate');
-    if(mode === 'popup'){
-      document.getElementById('homePopupEstimateDate').textContent = getNextPopupLabel();
-      homePopupEstimate.style.display = 'block';
-    } else {
-      homePopupEstimate.style.display = 'none';
-    }
-    const homePopup16Estimate = document.getElementById('homePopup16Estimate');
-    if(mode === 'popup16th'){
-      document.getElementById('homePopup16EstimateDate').textContent = getNextPopup16Label();
-      homePopup16Estimate.style.display = 'block';
-    } else {
-      homePopup16Estimate.style.display = 'none';
-    }
-    const custNote = document.getElementById('custNote');
-    if(mode === 'popup16th'){
-      custNote.placeholder = 'Anything else we should know about your order?';
-    } else if(mode === 'popup'){
-      const pd = getPopupInfo('popup').days;
-      custNote.placeholder = pd.length > 1
-        ? `Which day will you be picking up, ${pd.slice(0, -1).map(x => `${x.name} (${x.md})`).join(', ')}${pd.length > 2 ? ',' : ''} or ${pd[pd.length - 1].name} (${pd[pd.length - 1].md})?`
-        : `Pickup ${pd[0].name} (${pd[0].md}) — anything else we should know about your order?`;
-    } else if(mode === 'pickup'){
-      const { friStr, satStr, sunStr } = getNextPickupDates();
-      custNote.placeholder = `Which day will you be picking up, Friday (${friStr}), Saturday (${satStr}), or Sunday (${sunStr})?`;
-    } else {
-      custNote.placeholder = 'Gate code, apartment number, anything else we should know';
-    }
+    document.getElementById('homeDeliveryEstimate').style.display = (mode==='delivery') ? 'block' : 'none';
+    document.getElementById('custNote').placeholder = 'Leave a note…';
   }
   function applyModeUI(){
     document.querySelectorAll('.mode-btn').forEach(x=>{
@@ -2148,7 +2231,7 @@
     popupCard.classList.remove('active');
     popup16Card.classList.remove('active');
     if(mode==='pickup'){
-      modeNote.textContent = "Pickup at The Kitchen's Market (order by Thursday) — Friday (8am-5pm), Saturday(8am-3pm) or Sunday(10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
+      modeNote.textContent = "Pickup at The Kitchen's Market (order by Thursday night) — Friday (8am-5pm), Saturday (8am-3pm) or Sunday (10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
       pickupCard.classList.add('active');
     } else if(mode==='delivery'){
       modeNote.textContent = 'Delivery Wednesdays, Fridays & Sundays — order by midnight the night before (Sunday: Saturday 8pm)';
@@ -2157,7 +2240,7 @@
       modeNote.textContent = 'Pick up Saturday (9am-1pm) (order by Friday 8pm) — 1710 N 16th St, Phoenix';
       popup16Card.classList.add('active');
     } else {
-      modeNote.textContent = 'Pick up Friday (10am-2pm), Saturday (9am-1pm) or Sunday (9am-2pm) (order by Thursday for Fri, Friday 8pm for Sat, Saturday 8pm for Sun) — 8367 W McDowell Rd, Tolleson';
+      modeNote.textContent = 'Pick up Saturday (9am-1pm) or Sunday (9am-2pm) — order by Friday 8pm for Saturday, Saturday 8pm for Sunday — 8367 W McDowell Rd, Tolleson';
       popupCard.classList.add('active');
     }
     updateAddressField();
@@ -2178,6 +2261,15 @@
     });
   });
 
+  Object.keys(PICKUP_TOGGLE_IDS).forEach(kind => {
+    PICKUP_TOGGLE_IDS[kind].forEach(id => {
+      const box = document.getElementById(id);
+      if (box) box.addEventListener('click', (e) => {
+        const btn = e.target.closest('.delivery-opt');
+        if (btn) choosePickupDay(kind, Number(btn.dataset.choice));
+      });
+    });
+  });
   ['deliveryToggle', 'homeDeliveryToggle'].forEach(id => {
     const box = document.getElementById(id);
     if (box) box.addEventListener('click', (e) => {
@@ -2210,6 +2302,17 @@
       renderGallons();
       updateCartUI();
       alert('That delivery day has passed its order cutoff, so we\'ve switched you to the next available day. Please review your order and check out again.');
+      return;
+    }
+    if(isPickupMode(mode) && pickupChosenIso[mode] && !getPickupOptions(mode).some(o => o.iso === pickupChosenIso[mode])){
+      // The pickup day on screen passed its order cutoff while the page was open.
+      pickupChosenIso[mode] = null;
+      applyModeUI();
+      renderMenu();
+      renderBuilder();
+      renderGallons();
+      updateCartUI();
+      alert('That pickup day has passed its order cutoff, so we\'ve switched you to the next available day. Please review your order and check out again.');
       return;
     }
     if(ensureDeliveryOkForCart()) return;
@@ -2270,6 +2373,7 @@
     const payload = {
       mode,
       deliveryDate: mode === 'delivery' ? shownDeliveryIso : undefined,
+      pickupDate: isPickupMode(mode) ? getSelectedPickup(mode).iso : undefined,
       customer: {
         firstName: document.getElementById('custFirstName').value.trim(),
         lastName: document.getElementById('custLastName').value.trim(),
@@ -2546,6 +2650,17 @@
   </div>
 </div>
 
+<div class="email-popup-overlay" id="dayConflictOverlay" style="z-index:10000;">
+  <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="dayConflictTitle">
+    <h3 id="dayConflictTitle"></h3>
+    <p id="dayConflictText" style="white-space:pre-line;"></p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button type="button" class="popup-ok" id="dayConflictPrimary"></button>
+      <button type="button" class="popup-alt" id="dayConflictSecondary"></button>
+      <button type="button" class="popup-alt" id="dayConflictTertiary"></button>
+    </div>
+  </div>
+</div>
 <div class="email-popup-overlay" id="emailPopupOverlay">
   <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="emailPopupTitle">
     <button class="email-popup-close" id="emailPopupClose" aria-label="Close">&times;</button>
