@@ -1719,15 +1719,18 @@ Thank you so much!`;
     // Exports whatever is currently filtered (search + last-visit range),
     // across all pages — not just the page on screen.
     // One row per email: a customer with several emails appears on several
-    // rows, with the same name/phone/address/etc. repeated on each.
+    // rows. Name/phone/address/last_visit repeat, but order_count and
+    // lifetime_spend appear only on the first row so totals aren't double-counted.
     const emailsOf = c => ((c.emails && c.emails.length ? c.emails : [c.email || '']).filter(e => e && e.trim()));
     const rows = [];
     filteredCustomers.forEach(c => {
       const em = emailsOf(c);
-      (em.length ? em : ['']).forEach(e => rows.push({
+      (em.length ? em : ['']).forEach((e, i) => rows.push({
         first_name: c.first_name, last_name: c.last_name, email: e,
-        phone: c.phone, address: c.address, order_count: c.order_count,
-        lifetime_spend: c.lifetime_spend, last_visit: c.last_visit,
+        phone: c.phone, address: c.address,
+        order_count: i === 0 ? c.order_count : '',
+        lifetime_spend: i === 0 ? c.lifetime_spend : '',
+        last_visit: c.last_visit,
       }));
     });
     const csv = Papa.unparse(rows);
