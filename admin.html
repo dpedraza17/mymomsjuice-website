@@ -1718,11 +1718,19 @@ Thank you so much!`;
   function exportCustomersCSV(){
     // Exports whatever is currently filtered (search + last-visit range),
     // across all pages — not just the page on screen.
-    const csv = Papa.unparse(filteredCustomers.map(c => ({
-      first_name: c.first_name, last_name: c.last_name, email: (c.emails && c.emails.length ? c.emails : [c.email || '']).join('; '),
-      phone: c.phone, address: c.address, order_count: c.order_count,
-      lifetime_spend: c.lifetime_spend, last_visit: c.last_visit,
-    })));
+    // One row per email: a customer with several emails appears on several
+    // rows, with the same name/phone/address/etc. repeated on each.
+    const emailsOf = c => ((c.emails && c.emails.length ? c.emails : [c.email || '']).filter(e => e && e.trim()));
+    const rows = [];
+    filteredCustomers.forEach(c => {
+      const em = emailsOf(c);
+      (em.length ? em : ['']).forEach(e => rows.push({
+        first_name: c.first_name, last_name: c.last_name, email: e,
+        phone: c.phone, address: c.address, order_count: c.order_count,
+        lifetime_spend: c.lifetime_spend, last_visit: c.last_visit,
+      }));
+    });
+    const csv = Papa.unparse(rows);
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
