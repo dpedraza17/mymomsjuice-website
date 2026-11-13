@@ -47,7 +47,7 @@
   header{background:var(--dark); color:#fff; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20;}
   header h1{font-size:19px; color:#fff;}
   header .sub{font-family:'Space Mono',monospace; font-size:11px; color:var(--tan); margin-top:2px;}
-  .tabs{display:flex; gap:6px; padding:14px 24px 0; max-width:1100px; margin:0 auto; justify-content:center;}
+  .tabs{display:flex; flex-wrap:wrap; gap:0 6px; padding:14px 24px 0; max-width:1100px; margin:0 auto; justify-content:center;}
   .tab-btn{background:none; border:none; padding:12px 18px; font-weight:700; font-size:15px; color:var(--muted); border-bottom:3px solid transparent; white-space:nowrap;}
   .tab-btn.active{color:var(--dark); border-bottom-color:var(--orange);}
   main{max-width:1100px; margin:0 auto; padding:20px 24px 60px;}
@@ -55,6 +55,10 @@
   .view.active{display:block;}
 
   @media (max-width:480px){
+    /* Phone browsers auto-zoom the page when a text field under 16px is
+       focused (the login box is auto-focused on load), and don't zoom back
+       out. 16px keeps the page at normal size. */
+    input, select, textarea{font-size:16px !important;}
     .tabs{gap:0; padding:10px 8px 0;}
     .tab-btn{padding:10px 8px; font-size:12.5px;}
     .order-actions{margin-top:28px; width:100%;}
@@ -99,7 +103,7 @@
   .badge{display:inline-block; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; padding:2px 8px; border-radius:6px; margin-right:6px;}
   .badge.pickup{background:#E9F1E9; color:var(--ok);}
   .badge.delivery{background:#FDECE2; color:var(--orange);}
-  .badge.popup{background:#FBF0DB; color:#8A6318;}
+  .badge.popup, .badge.popup16th{background:#FBF0DB; color:#8A6318;}
   .badge.overdue-flag{background:#FBE4DA; color:var(--warn);}
   .order-actions{margin-top:6px; margin-left:auto;}
   .order-actions button{border:none; border-radius:10px; padding:14px 10px; font-weight:700; font-size:16px; touch-action:manipulation;}
@@ -240,6 +244,7 @@
           <button type="button" class="filter-btn active" data-type="all" onclick="setFulfilledFilter('all')">All</button>
           <button type="button" class="filter-btn" data-type="pickup" onclick="setFulfilledFilter('pickup')">Pickup — Mesa</button>
           <button type="button" class="filter-btn" data-type="popup" onclick="setFulfilledFilter('popup')">Pop-up — 83rd Ave &amp; McDowell</button>
+          <button type="button" class="filter-btn" data-type="popup16th" onclick="setFulfilledFilter('popup16th')">Pop-up — 16th St &amp; McDowell</button>
           <button type="button" class="filter-btn" data-type="delivery" onclick="setFulfilledFilter('delivery')">Delivery</button>
         </div>
         <div class="toolbar" style="margin-bottom:10px;">
@@ -352,7 +357,11 @@
             <button type="button" class="mo-mode-btn active" data-mode="pickup" onclick="moSetMode('pickup')">Pickup &mdash; Mesa</button>
             <button type="button" class="mo-mode-btn" data-mode="delivery" onclick="moSetMode('delivery')">Delivery</button>
             <button type="button" class="mo-mode-btn" data-mode="popup" onclick="moSetMode('popup')">Pop-up &mdash; Tolleson</button>
+            <button type="button" class="mo-mode-btn" data-mode="popup16th" onclick="moSetMode('popup16th')">Pop-up &mdash; 16th St</button>
           </div>
+          <label for="moDate" id="moDateLabel">Pickup date</label>
+          <select id="moDate" onchange="moSetDate(this.value)"></select>
+          <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Only dates still open for orders are listed (same cutoffs as the website; delivery goes up to 30 days ahead).</p>
           <p style="font-size:12px; color:var(--muted); margin:8px 0 0;">The customer enters their own name, phone, email, and (for delivery) address directly on the Stripe payment page &mdash; nothing to fill in here.</p>
         </div>
 
@@ -648,24 +657,55 @@ Thank you so much!`;
   // Pre-filled text templates per order type — customer just has to hit
   // send. iOS and Android use different separators before the body param
   // (& vs ?), so we detect platform to pick the right one.
-  const SMS_TEMPLATES = {
-    delivery: "Hi{name}, this is My Mom's Juice! We wanted to confirm your delivery for today. Will you or someone else be available to receive the order today? 🍊",
-    pickup: "Hi{name}, this is My Mom's Juice! Your order is ready for pick up. Please pick up any day this weekend -- Friday 8am-5pm, Saturday 8am-3pm, Sunday 10am-3pm. Pick up at The Kitchen's Market -- 2655 W Guadalupe Rd Suite 13 Mesa, AZ. Thank you! 🍊",
-    popup: "Hi{name}, this is My Mom's Juice! Your order is ready for pick up. Please pick up any day this weekend -- Friday 10am-2pm, Saturday 8am-12pm, Sunday 8am-12pm. We are on 83rd Ave & McDowell. The address is 8367 W McDowell Rd, Tolleson, AZ. Thank you! 🍊",
+  // Pickup locations and the hours each one is open, by day of week
+  // (0 = Sunday). Keep in sync with the site's pickup/pop-up hours.
+  const PICKUP_INFO = {
+    pickup:    { place: "The Kitchen's Market -- 2655 W Guadalupe Rd Suite 13 Mesa, AZ",
+                 hours: { 5: '8am-5pm', 6: '8am-3pm', 0: '10am-3pm' } },
+    popup:     { place: "We are on 83rd Ave & McDowell. The address is 8367 W McDowell Rd, Tolleson, AZ",
+                 hours: { 6: '9am-1pm', 0: '9am-2pm' } },
+    popup16th: { place: "We are on 16th St & McDowell. The address is 1710 N 16th St, Phoenix, AZ",
+                 hours: { 6: '9am-1pm' } },
   };
+  const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  // The pre-filled confirmation text for an order. Pickup / pop-up texts use
+  // the pickup day the customer actually chose (order.due_date) and that
+  // day's hours, instead of a generic "any day this weekend".
+  function smsMessage(order, firstName){
+    const hi = `Hi${firstName ? ' ' + firstName : ''}, this is My Mom's Juice! `;
+    if (order.order_type === 'delivery'){
+      return hi + "We wanted to confirm your delivery for today. Will you or someone else be available to receive the order today? 🍊";
+    }
+    const info = PICKUP_INFO[order.order_type];
+    if (!info) return '';
+    const d = parseOrderDate(order);
+    let when;
+    if (d){
+      const dayLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      const hrs = info.hours[d.getDay()];
+      when = `on ${dayLabel}${hrs ? ' (' + hrs + ')' : ''}`;
+    } else {
+      // No usable date on the order — fall back to listing every open day.
+      when = 'any day this weekend -- ' + Object.keys(info.hours)
+        .map(Number).sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7))
+        .map(n => `${DAY_NAMES[n]} ${info.hours[n]}`).join(', ');
+    }
+    return hi + `Your order is ready for pick up ${when}. ${info.place}. Thank you! 🍊`;
+  }
 
   // Click-to-call on the number itself, plus a "Confirmation Text" button
   // next to it. When orderType is passed (order cards only — not the
   // customer table, which has no single order to reference), the text
   // link pre-fills the right message for that fulfillment type so it's
   // ready to just hit send.
-  function phoneLinks(phone, orderType, customerName){
+  function phoneLinks(phone, order){
     if (!phone) return '—';
     const digits = phone.replace(/[^\d+]/g, '');
     const smsDigits = smsNumber(phone);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const firstName = String(customerName || '').trim().split(/\s+/)[0];
-    const template = SMS_TEMPLATES[orderType] && SMS_TEMPLATES[orderType].replace('{name}', firstName ? ' ' + firstName : '');
+    const firstName = String((order && order.customer_name) || '').trim().split(/\s+/)[0];
+    const template = order ? smsMessage(order, firstName) : '';
     const smsHref = template
       ? `sms:${smsDigits}${isIOS ? '&' : '?'}body=${encodeURIComponent(template)}`
       : `sms:${smsDigits}`;
@@ -710,9 +750,9 @@ Thank you so much!`;
   }
 
   function orderCard(order, isFulfilled){
-    const locClass = order.order_type === 'pickup' ? 'loc-mesa' : (order.order_type === 'popup' ? 'loc-popup' : '');
+    const locClass = order.order_type === 'pickup' ? 'loc-mesa' : ((order.order_type === 'popup' || order.order_type === 'popup16th') ? 'loc-popup' : '');
     const cls = [isFulfilled ? 'done' : (order.overdue ? 'overdue' : ''), locClass].filter(Boolean).join(' ');
-    const modeLabels = { pickup: 'Pickup — Mesa', delivery: 'Delivery', popup: 'Pop-up — 83rd Ave & McDowell' };
+    const modeLabels = { pickup: 'Pickup — Mesa', delivery: 'Delivery', popup: 'Pop-up — 83rd Ave & McDowell', popup16th: 'Pop-up — 16th St & McDowell' };
     const typeBadge = `<span class="badge ${order.order_type || ''}" style="font-size:1.3em;">${modeLabels[order.order_type] || order.order_type || 'order'}</span>`;
     const overdueBadge = (!isFulfilled && order.overdue) ? `<span class="badge overdue-flag">past due — confirm?</span>` : '';
     const items = Array.isArray(order.items) ? order.items.map(i => {
@@ -743,7 +783,7 @@ Thank you so much!`;
             ${order.customer_note ? `<strong>Note:</strong> <span style="font-size:1.3em;">${order.customer_note}</span><br>` : ''}
           </div>
           <div class="order-meta" style="margin-top:8px;">
-            ${order.customer_phone ? phoneLinks(order.customer_phone, order.order_type, order.customer_name) : ''}
+            ${order.customer_phone ? phoneLinks(order.customer_phone, order) : ''}
             ${order.order_type === 'delivery' && order.customer_phone ? etaButtons(order.customer_phone, order.customer_name) : ''}
           </div>
         </div>
@@ -1074,6 +1114,7 @@ Thank you so much!`;
 
   let moState = {
     mode: 'pickup',
+    date: '',
     cart: {},
     sixPacks: [],
     detoxes: [],
@@ -1143,8 +1184,56 @@ Thank you so much!`;
     moCalcEstimate();
   }
 
+  // ---- Fulfillment dates -------------------------------------------------
+  // Mirrors deliveryOptions() / pickupOptions() in server.js (the server
+  // rejects any date that isn't in its own list), all in Arizona time.
+  const MO_DELIVERY_DOWS = [0, 3, 5];        // Sun, Wed, Fri
+  const MO_DELIVERY_WINDOW_DAYS = 30;
+  const MO_PICKUP_DAYS = { pickup: [5, 6, 0], popup: [6, 0], popup16th: [6] };
+  const MO_PICKUP_OPTION_COUNT = 4;
+  function moAzNow(){ return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' })); }
+  function moDeliveryCutoff(d){
+    if (d.getDay() === 0) return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 20, 0, 0); // Sat 8pm
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 23, 59, 59);
+  }
+  function moPickupCutoff(kind, d){
+    if (kind === 'pickup') return new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 3) % 7), 23, 59, 59); // Thursday
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 20, 0, 0);
+  }
+  function moDateOptions(mode){
+    const now = moAzNow();
+    const isDelivery = mode === 'delivery';
+    const allowed = isDelivery ? MO_DELIVERY_DOWS : (MO_PICKUP_DAYS[mode] || MO_PICKUP_DAYS.popup);
+    const maxDays = isDelivery ? MO_DELIVERY_WINDOW_DAYS : 28;
+    const out = [];
+    for (let i = 0; i <= maxDays; i++){
+      if (!isDelivery && out.length >= MO_PICKUP_OPTION_COUNT) break;
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      if (!allowed.includes(d.getDay())) continue;
+      if (now > (isDelivery ? moDeliveryCutoff(d) : moPickupCutoff(mode, d))) continue;
+      out.push({
+        iso: dateKey(d),
+        label: d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+      });
+    }
+    return out;
+  }
+  function moRenderDates(){
+    const sel = document.getElementById('moDate');
+    if (!sel) return;
+    const opts = moDateOptions(moState.mode);
+    if (!opts.some(o => o.iso === moState.date)) moState.date = opts.length ? opts[0].iso : '';
+    sel.innerHTML = opts.length
+      ? opts.map((o, i) => `<option value="${o.iso}" ${o.iso === moState.date ? 'selected' : ''}>${o.label}${i === 0 ? ' (soonest)' : ''}</option>`).join('')
+      : '<option value="">No dates open right now</option>';
+    document.getElementById('moDateLabel').textContent = moState.mode === 'delivery' ? 'Delivery date' : 'Pickup date';
+  }
+  function moSetDate(iso){ moState.date = iso; }
+
   function moSetMode(mode){
     moState.mode = mode;
+    moState.date = '';
+    moRenderDates();
     document.querySelectorAll('.mo-mode-btn[data-mode]').forEach(b => {
       b.classList.toggle('active', b.dataset.mode === mode);
     });
@@ -1299,6 +1388,12 @@ Thank you so much!`;
       Object.values(moState.gallons).some(qty => qty > 0);
     if (!hasAnyItems){ errEl.textContent = 'Add at least one item before generating a link.'; return; }
 
+    if (!moDateOptions(moState.mode).some(o => o.iso === moState.date)){
+      moRenderDates();
+      errEl.textContent = 'The available dates just changed — please check the date and try again.';
+      return;
+    }
+
     const subtotal = moSubtotalCents();
     const tipAmount = moTipCents(subtotal) / 100;
 
@@ -1310,6 +1405,7 @@ Thank you so much!`;
     const payload = {
       mode: moState.mode,
       source: 'admin', // manual orders placed here skip the customer-facing $35 delivery minimum
+      ...(moState.date ? (moState.mode === 'delivery' ? { deliveryDate: moState.date } : { pickupDate: moState.date }) : {}),
       cart: {
         items: { ...moState.cart },
         sixPacks: moState.sixPacks,
@@ -1380,7 +1476,7 @@ Thank you so much!`;
   }
 
   function moReset(){
-    moState = { mode:'pickup', cart:{}, sixPacks:[], detoxes:[], shotQty:0, gallons:{}, tipMode:'percent', tipPercent:0, customTip:0 };
+    moState = { mode:'pickup', date:'', cart:{}, sixPacks:[], detoxes:[], shotQty:0, gallons:{}, tipMode:'percent', tipPercent:0, customTip:0 };
     document.getElementById('moCustomTip').value = 0;
     document.getElementById('moResult').style.display = 'none';
     document.getElementById('moError').textContent = '';
@@ -1401,6 +1497,7 @@ Thank you so much!`;
   }
 
   function moInit(){
+    moRenderDates();
     moRenderItemGrid();
     moRenderSixPacks();
     moRenderDetoxes();
