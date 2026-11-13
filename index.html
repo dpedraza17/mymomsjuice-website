@@ -416,6 +416,8 @@
   @media (prefers-reduced-motion:reduce){.delivery-opt.selected{animation:none;}}
   .delivery-opt.selected .opt-tag{opacity:1;}
   .delivery-opt{min-width:0;}
+  .delivery-more{flex:1 1 100%; margin-top:2px; padding:10px 12px; border-radius:12px; border:2px dashed var(--dark); background:transparent; color:var(--dark); font:inherit; font-weight:800; font-size:14px; cursor:pointer;}
+  .delivery-more:active{transform:translateY(1px);}
   @media (max-width:480px){
     .delivery-toggle{gap:8px;}
     .delivery-opt{flex-basis:calc(50% - 8px);}
@@ -466,7 +468,7 @@
       <div id="homeDeliveryEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
         Choose your delivery day:
         <div class="delivery-toggle" id="homeDeliveryToggle" role="radiogroup" aria-label="Delivery day"></div>
-        <div class="delivery-hint">Tap a day to choose</div>
+        <div class="delivery-hint">Tap a day to choose — schedule up to 30 days ahead</div>
       </div>
       <div id="homePickupEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
         Choose your pickup day:
@@ -769,7 +771,7 @@
     <div id="deliveryEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
       Choose your delivery day:
       <div class="delivery-toggle" id="deliveryToggle" role="radiogroup" aria-label="Delivery day"></div>
-      <div class="delivery-hint">Tap a day to choose</div>
+      <div class="delivery-hint">Tap a day to choose — schedule up to 30 days ahead</div>
     </div>
     <div id="pickupEstimate" style="display:none; margin-bottom:18px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4;">
       Choose your pickup day:
@@ -1959,7 +1961,7 @@
   const PICKUP_TOGGLE_IDS = { pickup:['homePickupToggle','pickupToggle'], popup:['homePopupToggle','popupToggle'], popup16th:['homePopup16Toggle','popup16Toggle'] };
   const PICKUP_BOX_IDS = { pickup:['pickupEstimate','homePickupEstimate'], popup:['popupEstimate','homePopupEstimate'], popup16th:['popup16Estimate','homePopup16Estimate'] };
   function isPickupMode(m){ return m === 'pickup' || m === 'popup' || m === 'popup16th'; }
-  let deliveryChoice = 0; // 0 = next delivery day (default), 1 = push to the following one
+  let deliveryChoice = 0; // index into getDeliveryOptions(); 0 = next delivery day (default), up to ~30 days out
   let shownDeliveryIso = null; // the delivery date currently displayed, sent with the order
   const DELIVERY_FEE = 6; // standard/default delivery fee — matches DELIVERY_FEE in server.js
   const DELIVERY_MINIMUM = 35; // matches DELIVERY_MINIMUM in server.js — keep in sync
@@ -2035,7 +2037,9 @@
   // Past the cutoff, that day rolls off the list. Uses Arizona time
   // (America/Phoenix, no DST) regardless of the customer's own clock.
   const DELIVERY_DOWS = [0, 3, 5]; // Sun, Wed, Fri
-  const DELIVERY_OPTION_COUNT = 4;
+  const DELIVERY_VISIBLE_COUNT = 4;   // delivery days shown before "See more dates"
+  const DELIVERY_WINDOW_DAYS = 30;    // customers can schedule delivery up to 30 days ahead
+  let deliveryShowAll = false;        // "See more dates" expanded?
   function azNowDate(){
     return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
   }
@@ -2051,11 +2055,11 @@
     return new Date(d.getFullYear(), d.getMonth(), d.getDate() - (d.getDay() === 0 ? 3 : 2), 23, 59, 59); // Thu 11:59pm
   }
 
-  // The next four delivery days still open for orders, soonest first.
+  // Every delivery day still open for orders within the next 30 days, soonest first.
   function getDeliveryOptions(){
     const azNow = azNowDate();
     const days = [];
-    for(let i = 0; i <= 21 && days.length < DELIVERY_OPTION_COUNT; i++){
+    for(let i = 0; i <= DELIVERY_WINDOW_DAYS; i++){
       const d = new Date(azNow.getFullYear(), azNow.getMonth(), azNow.getDate() + i);
       if(!DELIVERY_DOWS.includes(d.getDay())) continue;
       if(azNow > deliveryCutoff(d)) continue;
@@ -2097,20 +2101,23 @@
         ? `Pay online · Delivery ${sel.dayName}, ${sel.shortDate}`
         : (pk ? `Pay online · Pickup ${pk.dayName}, ${pk.shortDate}` : 'Pay online with card (Stripe)');
     }
+    const expanded = deliveryShowAll || deliveryChoice >= DELIVERY_VISIBLE_COUNT;
+    const shown = expanded ? opts : opts.slice(0, DELIVERY_VISIBLE_COUNT);
+    const canExpand = opts.length > DELIVERY_VISIBLE_COUNT && (!expanded || deliveryChoice < DELIVERY_VISIBLE_COUNT);
     ['deliveryToggle', 'homeDeliveryToggle'].forEach(id => {
       const box = document.getElementById(id);
       if (!box) return;
-      if (box.querySelectorAll('.delivery-opt').length !== opts.length){
-        box.innerHTML = opts.map((o, i) => `<button type="button" class="delivery-opt" data-choice="${i}" role="radio"></button>`).join('');
-      }
-      box.querySelectorAll('.delivery-opt').forEach((btn, i) => {
-        const o = opts[i];
+      box.innerHTML = shown.map((o, i) => {
         const on = (i === deliveryChoice);
-        btn.innerHTML = `<span class="opt-radio"></span>${o.dayName}<span class="opt-date">${o.dateStr}</span>`
-                      + (i === 0 ? '<span class="opt-tag">Soonest</span>' : '');
-        btn.classList.toggle('selected', on);
-        btn.setAttribute('aria-checked', on ? 'true' : 'false');
-      });
+        return `<button type="button" class="delivery-opt${on ? ' selected' : ''}" data-choice="${i}" role="radio" aria-checked="${on ? 'true' : 'false'}">`
+             + `<span class="opt-radio"></span>${o.dayName}<span class="opt-date">${o.dateStr}</span>`
+             + (i === 0 ? '<span class="opt-tag">Soonest</span>' : '')
+             + `</button>`;
+      }).join('') + (canExpand
+        ? `<button type="button" class="delivery-more" data-more="1" aria-expanded="${expanded ? 'true' : 'false'}">`
+          + (expanded ? 'Show fewer dates ▴' : `See more dates — up to ${DELIVERY_WINDOW_DAYS} days ahead ▾`)
+          + `</button>`
+        : '');
     });
   }
   function chooseDeliveryDay(index){
@@ -2119,11 +2126,12 @@
     if (!target) return;
     const hit = cartConflictsFor(target);
     if(hit.length){
-      confirmSwitchDay(target, hit, ()=>{ deliveryChoice = index; });
+      confirmSwitchDay(target, hit, ()=>{ deliveryChoice = index; if (index >= DELIVERY_VISIBLE_COUNT) deliveryShowAll = true; });
       return;
     }
     autoMoved = null;
     deliveryChoice = index;
+    if (index >= DELIVERY_VISIBLE_COUNT) deliveryShowAll = true;
     applyModeUI();
     renderMenu();
     renderBuilder();
@@ -2274,6 +2282,11 @@
   ['deliveryToggle', 'homeDeliveryToggle'].forEach(id => {
     const box = document.getElementById(id);
     if (box) box.addEventListener('click', (e) => {
+      if (e.target.closest('.delivery-more')){
+        deliveryShowAll = !(deliveryShowAll || deliveryChoice >= DELIVERY_VISIBLE_COUNT);
+        updateDeliverySwapUI();
+        return;
+      }
       const btn = e.target.closest('.delivery-opt');
       if (btn) chooseDeliveryDay(Number(btn.dataset.choice));
     });
