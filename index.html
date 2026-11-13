@@ -416,6 +416,9 @@
   @media (prefers-reduced-motion:reduce){.delivery-opt.selected{animation:none;}}
   .delivery-opt.selected .opt-tag{opacity:1;}
   .delivery-opt{min-width:0;}
+  /* Closed (holiday) days: shown but faded and not tappable. */
+  .delivery-opt.closed{opacity:.42; background:#EFEBDD; border-style:dashed; border-color:rgba(13,34,19,.45); color:rgba(13,34,19,.7); box-shadow:none; cursor:not-allowed; animation:none; transform:none;}
+  .delivery-opt.closed .opt-radio{opacity:.4;}
   .delivery-more{flex:1 1 100%; margin-top:2px; padding:10px 12px; border-radius:12px; border:2px dashed var(--dark); background:transparent; color:var(--dark); font:inherit; font-weight:800; font-size:14px; cursor:pointer;}
   .delivery-more:active{transform:translateY(1px);}
   @media (max-width:480px){
@@ -2040,6 +2043,52 @@
   const DELIVERY_VISIBLE_COUNT = 4;   // delivery days shown before "See more dates"
   const DELIVERY_WINDOW_DAYS = 30;    // customers can schedule delivery up to 30 days ahead
   let deliveryShowAll = false;        // "See more dates" expanded?
+
+  // Days we're closed (holidays). Closed days can't be ordered: they stay out
+  // of the real date lists below and are drawn faded in the day pickers.
+  // Delivery: the Fri & Sun after Thanksgiving, Christmas Day & the Sunday after.
+  // Pop-ups (both locations): those same two weekends. Mesa pickup: closed too.
+  // Matches the CLOSED_* lists in server.js and
+  // admin.html — keep all three in sync.
+  const CLOSED_DELIVERY_DATES = ['2026-11-27', '2026-11-29', '2026-12-25', '2026-12-27'];
+  const CLOSED_POPUP_DATES = ['2026-11-28', '2026-11-29', '2026-12-26', '2026-12-27'];
+  // Mesa pickup: the whole Fri–Sun of both weekends.
+  const CLOSED_MESA_PICKUP_DATES = ['2026-11-27', '2026-11-28', '2026-11-29', '2026-12-25', '2026-12-26', '2026-12-27'];
+  function localIso(d){
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  // Open options plus any closed days that fall between today and the last
+  // shown open option, in date order. `limit` = how many open options to show.
+  // Closed entries have closed:true; open ones keep their index (openIndex)
+  // into the real options list, which is what the click handlers use.
+  function withClosedDays(kind, opts, limit){
+    const shown = opts.slice(0, limit);
+    if(!shown.length) return [];
+    const lastIso = shown[shown.length - 1].iso;
+    const now = azNowDate();
+    const todayIso = localIso(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+    const closedList = kind === 'delivery' ? CLOSED_DELIVERY_DATES : (kind === 'pickup' ? CLOSED_MESA_PICKUP_DATES : CLOSED_POPUP_DATES);
+    const allowed = kind === 'delivery' ? DELIVERY_DOWS : (PICKUP_DAYS[kind] || []);
+    const items = shown.map((o, i) => Object.assign({}, o, { openIndex: i }));
+    closedList.filter(iso => iso >= todayIso && iso <= lastIso).forEach(iso => {
+      const [y, m, d] = iso.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      if(!allowed.includes(dt.getDay())) return;
+      items.push({
+        closed: true, iso,
+        dayName: dt.toLocaleDateString('en-US', { weekday: 'long' }),
+        dateStr: dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
+      });
+    });
+    items.sort((a, b) => a.iso < b.iso ? -1 : (a.iso > b.iso ? 1 : 0));
+    return items;
+  }
+  function closedDayButton(o){
+    return `<button type="button" class="delivery-opt closed" disabled aria-disabled="true" tabindex="-1">`
+         + `<span class="opt-radio"></span>${o.dayName}<span class="opt-date">${o.dateStr}</span>`
+         + `<span class="opt-tag">Closed</span></button>`;
+  }
   function azNowDate(){
     return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
   }
@@ -2062,6 +2111,7 @@
     for(let i = 0; i <= DELIVERY_WINDOW_DAYS; i++){
       const d = new Date(azNow.getFullYear(), azNow.getMonth(), azNow.getDate() + i);
       if(!DELIVERY_DOWS.includes(d.getDay())) continue;
+      if(CLOSED_DELIVERY_DATES.includes(localIso(d))) continue;
       if(azNow > deliveryCutoff(d)) continue;
       days.push(d);
     }
@@ -2102,12 +2152,14 @@
         : (pk ? `Pay online · Pickup ${pk.dayName}, ${pk.shortDate}` : 'Pay online with card (Stripe)');
     }
     const expanded = deliveryShowAll || deliveryChoice >= DELIVERY_VISIBLE_COUNT;
-    const shown = expanded ? opts : opts.slice(0, DELIVERY_VISIBLE_COUNT);
+    const items = withClosedDays('delivery', opts, expanded ? opts.length : DELIVERY_VISIBLE_COUNT);
     const canExpand = opts.length > DELIVERY_VISIBLE_COUNT && (!expanded || deliveryChoice < DELIVERY_VISIBLE_COUNT);
     ['deliveryToggle', 'homeDeliveryToggle'].forEach(id => {
       const box = document.getElementById(id);
       if (!box) return;
-      box.innerHTML = shown.map((o, i) => {
+      box.innerHTML = items.map(o => {
+        if (o.closed) return closedDayButton(o);
+        const i = o.openIndex;
         const on = (i === deliveryChoice);
         return `<button type="button" class="delivery-opt${on ? ' selected' : ''}" data-choice="${i}" role="radio" aria-checked="${on ? 'true' : 'false'}">`
              + `<span class="opt-radio"></span>${o.dayName}<span class="opt-date">${o.dateStr}</span>`
@@ -2160,6 +2212,7 @@
     for(let i = 0; i <= 28 && days.length < PICKUP_OPTION_COUNT; i++){
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
       if(!allowed.includes(d.getDay())) continue;
+      if((kind === 'pickup' ? CLOSED_MESA_PICKUP_DATES : CLOSED_POPUP_DATES).includes(localIso(d))) continue;
       if(now > pickupCutoff(kind, d)) continue;
       days.push(d);
     }
@@ -2182,20 +2235,19 @@
   function renderPickupToggles(kind){
     const opts = getPickupOptions(kind);
     const sel = getSelectedPickup(kind);
+    const items = withClosedDays(kind, opts, opts.length);
     PICKUP_TOGGLE_IDS[kind].forEach(id => {
       const box = document.getElementById(id);
       if(!box) return;
-      if(box.querySelectorAll('.delivery-opt').length !== opts.length){
-        box.innerHTML = opts.map((o, i) => `<button type="button" class="delivery-opt" data-choice="${i}" role="radio"></button>`).join('');
-      }
-      box.querySelectorAll('.delivery-opt').forEach((btn, i) => {
-        const o = opts[i];
-        const on = (o.iso === sel.iso);
-        btn.innerHTML = `<span class="opt-radio"></span>${o.dayName}<span class="opt-date">${o.dateStr}</span>`
-                      + (i === 0 ? '<span class="opt-tag">Soonest</span>' : '');
-        btn.classList.toggle('selected', on);
-        btn.setAttribute('aria-checked', on ? 'true' : 'false');
-      });
+      box.innerHTML = items.map(o => {
+        if(o.closed) return closedDayButton(o);
+        const i = o.openIndex;
+        const on = (sel && o.iso === sel.iso);
+        return `<button type="button" class="delivery-opt${on ? ' selected' : ''}" data-choice="${i}" role="radio" aria-checked="${on ? 'true' : 'false'}">`
+             + `<span class="opt-radio"></span>${o.dayName}<span class="opt-date">${o.dateStr}</span>`
+             + (i === 0 ? '<span class="opt-tag">Soonest</span>' : '')
+             + `</button>`;
+      }).join('');
     });
   }
   function choosePickupDay(kind, index){
@@ -2274,7 +2326,7 @@
     PICKUP_TOGGLE_IDS[kind].forEach(id => {
       const box = document.getElementById(id);
       if (box) box.addEventListener('click', (e) => {
-        const btn = e.target.closest('.delivery-opt');
+        const btn = e.target.closest('.delivery-opt:not(.closed)');
         if (btn) choosePickupDay(kind, Number(btn.dataset.choice));
       });
     });
@@ -2287,7 +2339,7 @@
         updateDeliverySwapUI();
         return;
       }
-      const btn = e.target.closest('.delivery-opt');
+      const btn = e.target.closest('.delivery-opt:not(.closed)');
       if (btn) chooseDeliveryDay(Number(btn.dataset.choice));
     });
   });
@@ -2675,6 +2727,15 @@
     </div>
   </div>
 </div>
+<div class="email-popup-overlay" id="holidayNoticeOverlay" style="z-index:10001;">
+  <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="holidayNoticeTitle">
+    <button class="email-popup-close" id="holidayNoticeClose" aria-label="Close">&times;</button>
+    <h3 id="holidayNoticeTitle">Holiday Schedule 🎄🦃</h3>
+    <p style="margin:0 0 14px;"><strong>Thanksgiving weekend (Nov 27&ndash;29)</strong><br>No pop-ups Saturday, Nov 28 or Sunday, Nov 29.<br>No pickups in Mesa that weekend.<br>No deliveries Friday, Nov 27 or Sunday, Nov 29.</p>
+    <p style="margin:0 0 20px;"><strong>Christmas weekend (Dec 25&ndash;27)</strong><br>No pop-ups Saturday, Dec 26 or Sunday, Dec 27.<br>No pickups in Mesa that weekend.<br>No deliveries Friday, Dec 25 or Sunday, Dec 27.</p>
+    <button type="button" class="popup-ok" id="holidayNoticeOk">Got it</button>
+  </div>
+</div>
 <div class="email-popup-overlay" id="emailPopupOverlay">
   <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="emailPopupTitle">
     <button class="email-popup-close" id="emailPopupClose" aria-label="Close">&times;</button>
@@ -2696,6 +2757,33 @@
     </div>
   </div>
 </div>
+
+<script>
+  // Holiday announcement pop-up: shown once per visit until the last closed
+  // day (Dec 27, 2026) has passed, then it never appears again.
+  (function(){
+    const overlay = document.getElementById('holidayNoticeOverlay');
+    if (!overlay) return;
+    const SEEN_KEY = 'mmj_holiday_notice_2026';
+    const LAST_DAY = '2026-12-27';
+    const az = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
+    const todayIso = az.getFullYear() + '-' + String(az.getMonth() + 1).padStart(2, '0') + '-' + String(az.getDate()).padStart(2, '0');
+    if (todayIso > LAST_DAY) return;
+    try { if (sessionStorage.getItem(SEEN_KEY)) return; } catch (e) {}
+
+    function close(){
+      overlay.classList.remove('show');
+      window.__holidayNoticeOpen = false;
+      try { sessionStorage.setItem(SEEN_KEY, '1'); } catch (e) {}
+    }
+    window.__holidayNoticeOpen = true; // keeps the email pop-up from opening on top of it
+    setTimeout(() => overlay.classList.add('show'), 800);
+    document.getElementById('holidayNoticeOk').addEventListener('click', close);
+    document.getElementById('holidayNoticeClose').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('show')) close(); });
+  })();
+</script>
 
 <script>
   (function(){
@@ -2720,7 +2808,12 @@
       localStorage.setItem(STORAGE_KEY, '1');
     }
 
-    setTimeout(() => overlay.classList.add('show'), 4000);
+    // Wait for the holiday announcement (if it's open) before showing this.
+    function showWhenFree(){
+      if (window.__holidayNoticeOpen) { setTimeout(showWhenFree, 1000); return; }
+      overlay.classList.add('show');
+    }
+    setTimeout(showWhenFree, 4000);
 
     closeBtn.addEventListener('click', dismiss);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) dismiss(); });

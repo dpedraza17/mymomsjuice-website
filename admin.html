@@ -1191,6 +1191,11 @@ Thank you so much!`;
   const MO_DELIVERY_WINDOW_DAYS = 30;
   const MO_PICKUP_DAYS = { pickup: [5, 6, 0], popup: [6, 0], popup16th: [6] };
   const MO_PICKUP_OPTION_COUNT = 4;
+  // Holiday closures — matches CLOSED_DELIVERY_DATES / CLOSED_POPUP_DATES in
+  // server.js and index.html (keep all three in sync).
+  const MO_CLOSED_DELIVERY_DATES = ['2026-11-27', '2026-11-29', '2026-12-25', '2026-12-27'];
+  const MO_CLOSED_POPUP_DATES = ['2026-11-28', '2026-11-29', '2026-12-26', '2026-12-27'];
+  const MO_CLOSED_MESA_PICKUP_DATES = ['2026-11-27', '2026-11-28', '2026-11-29', '2026-12-25', '2026-12-26', '2026-12-27'];
   function moAzNow(){ return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' })); }
   function moDeliveryCutoff(d){
     if (d.getDay() === 0) return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 20, 0, 0); // Sat 8pm
@@ -1210,6 +1215,7 @@ Thank you so much!`;
       if (!isDelivery && out.length >= MO_PICKUP_OPTION_COUNT) break;
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
       if (!allowed.includes(d.getDay())) continue;
+      if ((isDelivery ? MO_CLOSED_DELIVERY_DATES : (mode === 'pickup' ? MO_CLOSED_MESA_PICKUP_DATES : MO_CLOSED_POPUP_DATES)).includes(dateKey(d))) continue;
       if (now > (isDelivery ? moDeliveryCutoff(d) : moPickupCutoff(mode, d))) continue;
       out.push({
         iso: dateKey(d),
