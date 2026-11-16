@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Affiliate Program — My Mom's Juice</title>
+<meta name="description" content="Share My Mom's Juice with your followers and earn 20% commission on your referrals' first three orders.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --dark:#0D2213; --green:#1E3F27; --orange:#E85A2B; --tan:#E4B978; --paper:#FAF7EF;
+    --card:#FFFFFF; --ink:#1B2A1E; --muted:#66766A; --line:#E4DFD0; --ok:#2E7D46; --warn:#B4571F;
+    --radius:14px; --shadow:0 4px 14px rgba(13,34,19,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{overflow-x:hidden; max-width:100%;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Karla',sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Baloo 2',sans-serif; color:var(--dark); margin:0; line-height:1.15;}
+  a{color:var(--orange);}
+  header{background:var(--dark); padding:14px 20px; display:flex; justify-content:space-between; align-items:center;}
+  header a.brand{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:20px; color:#fff; text-decoration:none;}
+  header .back{color:var(--tan); font-size:14px; font-weight:700; text-decoration:none;}
+  main{max-width:720px; margin:0 auto; padding:28px 20px 70px;}
+  .hero h1{font-size:clamp(30px,7vw,44px); font-weight:800;}
+  .hero p{font-size:18px; color:var(--ink); margin:12px 0 0;}
+  .steps{display:grid; gap:12px; margin:26px 0;}
+  .step{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px 18px; display:flex; gap:14px; align-items:flex-start;}
+  .step .n{flex:none; width:34px; height:34px; border-radius:50%; background:var(--orange); color:#fff; font-family:'Baloo 2',sans-serif; font-weight:800; display:flex; align-items:center; justify-content:center;}
+  .step b{display:block; font-size:16px; color:var(--dark);}
+  .step span{font-size:14.5px; color:var(--muted);}
+  .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px 20px; margin-bottom:18px;}
+  .tabs{display:flex; gap:8px; margin-bottom:16px;}
+  .tab{flex:1; padding:12px; border-radius:10px; border:1px solid var(--line); background:#fff; font-family:inherit; font-weight:700; font-size:15px; color:var(--ink); cursor:pointer;}
+  .tab.active{background:var(--dark); color:#fff; border-color:var(--dark);}
+  label{display:block; font-size:13px; font-weight:700; color:var(--muted); margin:14px 0 5px;}
+  input,select{width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); font-family:inherit; font-size:16px; background:#fff; color:var(--ink);}
+  input[type=checkbox]{width:auto; margin-right:8px;}
+  .check{display:flex; align-items:flex-start; font-size:14px; color:var(--ink); margin-top:16px; font-weight:400;}
+  .check input{margin-top:4px; flex:none;}
+  .hint{font-size:12.5px; color:var(--muted); margin:5px 0 0;}
+  .btn{width:100%; margin-top:18px; padding:14px; border:none; border-radius:10px; background:var(--orange); color:#fff; font-family:inherit; font-weight:700; font-size:16px; cursor:pointer;}
+  .btn:disabled{opacity:.55; cursor:not-allowed;}
+  .btn.ghost{background:none; border:1px solid var(--line); color:var(--ink); margin-top:10px;}
+  .msg{margin-top:14px; font-size:14.5px; font-weight:700; display:none;}
+  .msg.err{color:var(--warn);} .msg.ok{color:var(--ok);}
+  .hidden{display:none !important;}
+
+  /* dashboard */
+  .dash-top{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;}
+  .dash-top h1{font-size:28px;}
+  .linkbox{display:flex; gap:8px; margin-top:8px;}
+  .linkbox input{font-family:'Space Mono',monospace; font-size:13.5px; background:var(--paper);}
+  .linkbox button{flex:none; padding:0 16px; border:none; border-radius:10px; background:var(--dark); color:#fff; font-family:inherit; font-weight:700; cursor:pointer;}
+  .tiles{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:6px 0 18px;}
+  @media (min-width:560px){ .tiles{grid-template-columns:repeat(3,1fr);} }
+  .tile{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 16px;}
+  .tile b{display:block; font-family:'Space Mono',monospace; font-size:21px; color:var(--dark);}
+  .tile span{font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+  .tile.go b{color:var(--ok);}
+  .table-scroll{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  th,td{text-align:left; padding:10px 6px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  @media (max-width:480px){ table{font-size:13px;} .col-sale{display:none;} }
+  th{font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; color:var(--muted);}
+  .pill{display:inline-block; font-size:12px; font-weight:700; padding:2px 9px; border-radius:999px;}
+  .pill.pending{background:#FBF0DB; color:#8A6318;} .pill.payable{background:#E1F3E4; color:var(--ok);}
+  .pill.paid{background:var(--dark); color:#fff;} .pill.void{background:#eee; color:#777;}
+  .faq h3{font-size:17px; margin:16px 0 4px;}
+  .faq p{margin:0; font-size:14.5px; color:var(--ink);}
+  .empty{color:var(--muted); text-align:center; padding:18px 0; font-size:14.5px;}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">My Mom's Juice</a>
+  <a class="back" href="/">← Back to the shop</a>
+</header>
+
+<main>
+  <!-- ======================= LOGGED OUT ======================= -->
+  <div id="publicView">
+    <div class="hero">
+      <h1>Share the juice.<br>Get paid.</h1>
+      <p>Love My Mom's Juice? Create content, share your personal link, and earn <strong>20% commission</strong> on every first-time customer you send our way.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><b>Apply and pick your code</b><span>It takes two minutes. We'll email you once you're approved.</span></div></div>
+      <div class="step"><div class="n">2</div><div><b>Share your link and code</b><span>Your followers get 10% off the items in their first order with your code.</span></div></div>
+      <div class="step"><div class="n">3</div><div><b>Earn on their first 3 orders</b><span>You earn 20% of the item total on each customer's first three orders (within 90 days). Track every sale from your dashboard.</span></div></div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" id="tabApply" type="button">Apply</button>
+        <button class="tab" id="tabLogin" type="button">Log in</button>
+      </div>
+
+      <form id="applyForm" novalidate>
+        <label for="aName">Your name</label>
+        <input id="aName" autocomplete="name" maxlength="100">
+        <label for="aEmail">Email</label>
+        <input id="aEmail" type="email" autocomplete="email">
+        <label for="aPhone">Phone</label>
+        <input id="aPhone" type="tel" autocomplete="tel" placeholder="(480) 555-0100">
+        <label for="aPassword">Create a password</label>
+        <input id="aPassword" type="password" autocomplete="new-password" minlength="8">
+        <p class="hint">At least 8 characters. You'll use it to log in and see your sales.</p>
+        <label for="aCode">Your code</label>
+        <input id="aCode" maxlength="20" autocapitalize="characters" autocomplete="off" placeholder="SARAH" style="text-transform:uppercase;">
+        <p class="hint">3–20 letters or numbers. This becomes your link (mymomsjuice.com/?ref=SARAH) and your customers' discount code.</p>
+        <label for="aPayout">How should we pay you?</label>
+        <select id="aPayout">
+          <option value="Zelle">Zelle</option>
+          <option value="Venmo">Venmo</option>
+          <option value="PayPal">PayPal</option>
+          <option value="Cash App">Cash App</option>
+        </select>
+        <label for="aPayoutDetails">Your Zelle / Venmo / PayPal / Cash App info</label>
+        <input id="aPayoutDetails" maxlength="200" placeholder="Email, phone, or @handle">
+        <label class="check"><input type="checkbox" id="aAgree"><span>I agree to the <a href="/affiliate-terms.html" target="_blank" rel="noopener">affiliate terms</a>, including disclosing that I earn commissions when I share My Mom's Juice.</span></label>
+        <button class="btn" id="applyBtn" type="submit">Submit application</button>
+        <div class="msg" id="applyMsg"></div>
+      </form>
+
+      <form id="loginForm" class="hidden" novalidate>
+        <label for="lEmail">Email</label>
+        <input id="lEmail" type="email" autocomplete="email">
+        <label for="lPassword">Password</label>
+        <input id="lPassword" type="password" autocomplete="current-password">
+        <button class="btn" id="loginBtn" type="submit">Log in</button>
+        <div class="msg" id="loginMsg"></div>
+        <p class="hint" style="margin-top:14px;">Forgot your password? Text us at <a href="sms:+14808750690">480-875-0690</a> and we'll send you a temporary one.</p>
+      </form>
+    </div>
+
+    <div class="faq card">
+      <h2 style="font-size:22px;">Good to know</h2>
+      <h3>When do I get paid?</h3>
+      <p>Commissions are ready to pay 7 days after the order is fulfilled. We send payouts through the method you chose. Before your first payout we'll ask for a W-9 tax form.</p>
+      <h3>What counts as a sale?</h3>
+      <p>Commission is 20% of the item total after the customer's discount, including Mama Bear Hydration. Delivery fees and tips don't earn commission.</p>
+      <h3>Can I use my own code?</h3>
+      <p>No. Orders placed by affiliates or their household don't earn commission.</p>
+      <h3>Do I have to say I'm an affiliate?</h3>
+      <p>Yes. Whenever you share your link or code, disclose that you earn a commission (for example, "#ad" or "I earn a commission if you order").</p>
+    </div>
+  </div>
+
+  <!-- ======================= DASHBOARD ======================= -->
+  <div id="dashView" class="hidden">
+    <div class="dash-top">
+      <h1 id="dName">Your dashboard</h1>
+      <button class="tab" id="logoutBtn" type="button" style="flex:none; padding:10px 16px;">Log out</button>
+    </div>
+
+    <div class="card">
+      <label style="margin-top:0;">Your link</label>
+      <div class="linkbox"><input id="dLink" readonly><button type="button" data-copy="dLink">Copy</button></div>
+      <label>Your discount code</label>
+      <div class="linkbox"><input id="dCode" readonly><button type="button" data-copy="dCode">Copy</button></div>
+      <p class="hint" id="dHint"></p>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><b id="tClicks">0</b><span>Link clicks (30 days)</span></div>
+      <div class="tile"><b id="tOrders">0</b><span>Orders</span></div>
+      <div class="tile"><b id="tPending">$0.00</b><span>On hold (7 days)</span></div>
+      <div class="tile go"><b id="tPayable">$0.00</b><span>Ready to pay</span></div>
+      <div class="tile"><b id="tPaid">$0.00</b><span>Paid so far</span></div>
+      <div class="tile"><b id="tEarned">$0.00</b><span>Total earned</span></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:20px; margin-bottom:8px;">Your sales</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Date</th><th>Order</th><th class="col-sale">Sale</th><th>You earn</th><th>Status</th></tr></thead>
+          <tbody id="dRows"></tbody>
+        </table>
+      </div>
+      <p class="hint" style="margin-top:12px;">On hold = the 7-day wait after the order is fulfilled. Ready to pay = included in your next payout. "Order" shows whether it was the customer's 1st, 2nd, or 3rd order.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+  var API = 'https://mymomsjuice-checkout-backend.onrender.com';
+  var TOKEN_KEY = 'mmjAffToken';
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function money(cents){ return '$' + (Number(cents || 0) / 100).toFixed(2); }
+  function getToken(){ try { return localStorage.getItem(TOKEN_KEY) || ''; } catch(e){ return ''; } }
+  function setToken(t){ try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch(e){} }
+
+  function showMsg(el, text, ok){
+    el.textContent = text;
+    el.className = 'msg ' + (ok ? 'ok' : 'err');
+    el.style.display = text ? 'block' : 'none';
+  }
+
+  async function api(path, opts){
+    var res = await fetch(API + path, opts);
+    var data = await res.json().catch(function(){ return {}; });
+    return { ok: res.ok, status: res.status, data: data };
+  }
+
+  // ---- tabs ----
+  function showTab(which){
+    var apply = which === 'apply';
+    $('tabApply').classList.toggle('active', apply);
+    $('tabLogin').classList.toggle('active', !apply);
+    $('applyForm').classList.toggle('hidden', !apply);
+    $('loginForm').classList.toggle('hidden', apply);
+  }
+  $('tabApply').addEventListener('click', function(){ showTab('apply'); });
+  $('tabLogin').addEventListener('click', function(){ showTab('login'); });
+
+  // ---- apply ----
+  $('aCode').addEventListener('input', function(){ this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+  $('applyForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var msg = $('applyMsg'); showMsg(msg, '', true);
+    var btn = $('applyBtn'); btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      var r = await api('/api/affiliate/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: $('aName').value, email: $('aEmail').value, phone: $('aPhone').value,
+          password: $('aPassword').value, code: $('aCode').value,
+          payoutMethod: $('aPayout').value, payoutDetails: $('aPayoutDetails').value,
+          agree: $('aAgree').checked,
+        }),
+      });
+      if (r.ok) {
+        $('applyForm').reset();
+        showMsg(msg, "Application received! We'll email you as soon as you're approved. 🍊", true);
+      } else {
+        showMsg(msg, r.data.error || 'Something went wrong. Please try again.', false);
+      }
+    } catch(err) {
+      showMsg(msg, 'Could not reach the server. Please try again.', false);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Submit application';
+    }
+  });
+
+  // ---- login ----
+  $('loginForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var msg = $('loginMsg'); showMsg(msg, '', true);
+    var btn = $('loginBtn'); btn.disabled = true; btn.textContent = 'Logging in…';
+    try {
+      var r = await api('/api/affiliate/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: $('lEmail').value, password: $('lPassword').value }),
+      });
+      if (r.ok && r.data.token) {
+        setToken(r.data.token);
+        $('loginForm').reset();
+        await loadDashboard();
+      } else {
+        showMsg(msg, r.data.error || 'Could not log in.', false);
+      }
+    } catch(err) {
+      showMsg(msg, 'Could not reach the server. Please try again.', false);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Log in';
+    }
+  });
+
+  // ---- dashboard ----
+  function showPublic(){ $('dashView').classList.add('hidden'); $('publicView').classList.remove('hidden'); }
+  function ordinal(n){ return n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : n + 'th'; }
+  var STATUS_LABEL = { pending: 'On hold', payable: 'Ready to pay', paid: 'Paid', void: 'Canceled' };
+
+  async function loadDashboard(){
+    var token = getToken();
+    if (!token) { showPublic(); return; }
+    try {
+      var r = await api('/api/affiliate/me', { headers: { Authorization: 'Bearer ' + token } });
+      if (!r.ok) { setToken(''); showPublic(); return; }
+      var d = r.data, t = d.totals || {};
+      $('dName').textContent = 'Hi, ' + String(d.name || '').split(' ')[0] + '!';
+      $('dLink').value = d.link;
+      $('dCode').value = d.code;
+      $('dHint').textContent = 'You earn ' + (Math.round(d.rate * 1000) / 10) + '% of the item total on each customer\'s first 3 orders. Your code gives new customers ' + d.discountPercent + '% off their first order. Always say you earn a commission when you share.';
+      $('tClicks').textContent = (d.clicks && d.clicks.last30) || 0;
+      $('tOrders').textContent = t.orders || 0;
+      $('tPending').textContent = money(t.pending);
+      $('tPayable').textContent = money(t.payable);
+      $('tPaid').textContent = money(t.paid);
+      $('tEarned').textContent = money((t.pending || 0) + (t.payable || 0) + (t.paid || 0));
+      var rows = d.commissions || [];
+      $('dRows').innerHTML = rows.length ? rows.map(function(c){
+        var date = new Date(c.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Phoenix' });
+        return '<tr><td>' + esc(date) + '</td><td>' + ordinal(c.orderNumber) + '</td><td class="col-sale">' + money(c.saleCents) +
+          '</td><td><strong>' + money(c.commissionCents) + '</strong></td><td><span class="pill ' + esc(c.status) + '">' + esc(STATUS_LABEL[c.status] || c.status) + '</span></td></tr>';
+      }).join('') : '<tr><td colspan="5"><div class="empty">No sales yet — share your link and code to get started!</div></td></tr>';
+      $('publicView').classList.add('hidden');
+      $('dashView').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    } catch(err) {
+      showPublic();
+    }
+  }
+
+  $('logoutBtn').addEventListener('click', function(){ setToken(''); showPublic(); });
+  document.querySelectorAll('[data-copy]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var input = $(btn.getAttribute('data-copy'));
+      input.select();
+      var done = function(){ var old = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function(){ btn.textContent = old; }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(input.value).then(done).catch(function(){});
+      else { try { document.execCommand('copy'); done(); } catch(e){} }
+    });
+  });
+
+  loadDashboard();
+</script>
+</body>
+</html>

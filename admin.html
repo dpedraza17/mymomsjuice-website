@@ -191,6 +191,24 @@
   .mo-flavor-total.bad{color:var(--warn);}
   .import-status{font-size:13px; color:var(--muted); margin-top:12px; white-space:pre-wrap;}
   .import-drop{border:2px dashed var(--line); border-radius:10px; padding:22px; text-align:center; color:var(--muted); font-size:13.5px; margin-top:10px;}
+
+  /* Affiliates */
+  .aff-card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px 18px; margin-bottom:12px; border-left:5px solid var(--line);}
+  .aff-card.pending{border-left-color:var(--tan);}
+  .aff-card.flag{border-left-color:var(--warn);}
+  .aff-card.ready{border-left-color:var(--ok);}
+  .aff-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;}
+  .aff-name{font-family:'Baloo 2',sans-serif; font-weight:700; font-size:18px; color:var(--dark);}
+  .aff-sub{color:var(--muted); font-size:13px; line-height:1.55; margin-top:2px; overflow-wrap:anywhere;}
+  .aff-stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px; margin:12px 0;}
+  .aff-stat{background:var(--paper); border-radius:10px; padding:9px 11px;}
+  .aff-stat b{display:block; font-family:'Space Mono',monospace; font-size:15px; color:var(--dark);}
+  .aff-stat span{font-size:11.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.03em;}
+  .aff-stat.go b{color:var(--ok);}
+  .aff-actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .aff-actions label{font-size:13px; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:6px;}
+  .aff-actions .btn{padding:10px 14px;}
+  .aff-hint{font-size:12.5px; color:var(--muted); margin:-4px 0 14px;}
 </style>
 </head>
 <body>
@@ -221,6 +239,7 @@
       <button class="tab-btn" data-tab="fulfilled-orders" onclick="showTab('fulfilled-orders')">Fulfilled Orders</button>
       <button class="tab-btn" data-tab="customers" onclick="showTab('customers')">Customers</button>
       <button class="tab-btn" data-tab="subscribers" onclick="showTab('subscribers')">Subscribers</button>
+      <button class="tab-btn" data-tab="affiliates" onclick="showTab('affiliates')">Affiliates</button>
       <button class="tab-btn" data-tab="manual-order" onclick="showTab('manual-order')">Manual Order</button>
     </div>
 
@@ -342,6 +361,19 @@
           <tbody id="subscriberRows"></tbody>
         </table>
         </div>
+      </div>
+
+      <!-- AFFILIATES VIEW -->
+      <div class="view" id="view-affiliates">
+        <div class="section-head">
+          <h2>Affiliates <span class="count-pill" id="affiliateCount">0</span></h2>
+          <button class="btn ghost" onclick="loadAffiliates()">Refresh</button>
+        </div>
+        <p class="aff-hint">20% commission on the food subtotal for a customer's first 3 orders (within 90 days). Commissions become payable 7 days after the order's fulfillment date.</p>
+        <div id="affPending"></div>
+        <div id="affFlagged"></div>
+        <div id="affActive"></div>
+        <div id="affDisabled"></div>
       </div>
 
       <!-- MANUAL ORDER VIEW -->
@@ -555,6 +587,7 @@
       loadOrders();
       loadCustomers();
       loadSubscribers();
+      loadAffiliates();
       moInit();
     } catch(e){
       showLogin(true);
@@ -576,6 +609,7 @@
       loadOrders();
       loadCustomers();
       loadSubscribers();
+      loadAffiliates();
       moInit();
     } catch(e){
       clearSession();
@@ -1070,6 +1104,172 @@ Thank you so much!`;
             <td>${formatOrderedAt(s.created_at) || '—'}</td>
           </tr>`).join('')
       : `<tr><td colspan="2"><div class="empty">No signups yet.</div></td></tr>`;
+  }
+
+  // ==========================================================================
+  // AFFILIATES — talks to the affiliate endpoints on the checkout backend
+  // (same Render server the Manual Order tab uses), authenticated with the
+  // same admin password.
+  // ==========================================================================
+  const AFF_API = 'https://mymomsjuice-checkout-backend.onrender.com/api/admin/';
+
+  function affEsc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  const affMoney = cents => money(Number(cents || 0) / 100);
+
+  async function affFetch(path, opts = {}){
+    const res = await fetch(AFF_API + path, Object.assign({}, opts, {
+      headers: { 'x-admin-password': getPassword(), 'Content-Type': 'application/json' },
+    }));
+    if (res.status === 401){ clearSession(); showLogin(false); throw new Error('Unauthorized'); }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+    touchActivity();
+    return data;
+  }
+
+  async function loadAffiliates(){
+    try {
+      const data = await affFetch('affiliates');
+      renderAffiliates(data.affiliates || [], data.flagged || []);
+    } catch(e){
+      if (e.message !== 'Unauthorized'){
+        document.getElementById('affActive').innerHTML = `<div class="empty">Couldn't load affiliates: ${affEsc(e.message)}</div>`;
+      }
+    }
+  }
+
+  function affStat(label, value, cls){
+    return `<div class="aff-stat ${cls || ''}"><b>${value}</b><span>${label}</span></div>`;
+  }
+
+  let affCache = [];
+  function renderAffiliates(list, flagged){
+    affCache = list;
+    const pending = list.filter(a => a.status === 'pending');
+    const active = list.filter(a => a.status === 'approved');
+    const disabled = list.filter(a => a.status === 'disabled');
+    document.getElementById('affiliateCount').textContent = active.length;
+
+    document.getElementById('affPending').innerHTML = pending.length ? `
+      <div class="section-head"><h2>Needs your approval <span class="count-pill">${pending.length}</span></h2></div>
+      ${pending.map(a => `
+        <div class="aff-card pending">
+          <div class="aff-head">
+            <div>
+              <div class="aff-name">${affEsc(a.name)}</div>
+              <div class="aff-sub">${emailLink(affEsc(a.email))} · ${affEsc(a.phone || 'no phone')}<br>
+                Wants code: <strong>${affEsc(a.code)}</strong> · Payout: ${affEsc(a.payout_method || '—')} ${affEsc(a.payout_details || '')}</div>
+            </div>
+            <div class="aff-actions">
+              <button class="btn" onclick="affSetStatus('${a.id}','approved')">Approve</button>
+              <button class="btn ghost" onclick="affSetStatus('${a.id}','disabled', 'Decline this application?')">Decline</button>
+            </div>
+          </div>
+        </div>`).join('')}` : '';
+
+    document.getElementById('affFlagged').innerHTML = flagged.length ? `
+      <div class="section-head"><h2>Needs review <span class="count-pill">${flagged.length}</span></h2></div>
+      ${flagged.map(f => `
+        <div class="aff-card flag">
+          <div class="aff-head">
+            <div>
+              <div class="aff-name">${affEsc(f.affiliate)} — ${affMoney(f.commissionCents)}</div>
+              <div class="aff-sub">Customer: ${affEsc(f.customer || '—')} · ${f.status === 'paid' ? 'already paid' : 'on hold'}<br>
+                <strong style="color:var(--warn);">${affEsc(f.reason || 'Flagged for review')}</strong></div>
+            </div>
+            <div class="aff-actions">
+              <button class="btn" onclick="affResolve('${f.id}','clear')">Looks fine — keep</button>
+              <button class="btn danger" onclick="affResolve('${f.id}','void')">Void it</button>
+            </div>
+          </div>
+        </div>`).join('')}` : '';
+
+    document.getElementById('affActive').innerHTML = `
+      <div class="section-head"><h2>Active affiliates <span class="count-pill">${active.length}</span></h2></div>
+      ${active.length ? active.map(a => {
+        const t = a.totals || {};
+        const ready = Number(t.payable || 0);
+        return `
+        <div class="aff-card ${ready > 0 ? 'ready' : ''}">
+          <div class="aff-head">
+            <div>
+              <div class="aff-name">${affEsc(a.name)} <span class="badge pickup">${affEsc(a.code)}</span></div>
+              <div class="aff-sub">${emailLink(affEsc(a.email))} · ${affEsc(a.phone || 'no phone')}<br>
+                Payout: ${affEsc(a.payout_method || '—')} ${affEsc(a.payout_details || '')}<br>
+                Link: mymomsjuice.com/?ref=${affEsc(a.code)} · Rate: <strong>${Math.round(Number(a.commission_rate) * 1000) / 10}%</strong></div>
+            </div>
+          </div>
+          <div class="aff-stats">
+            ${affStat('Clicks (30d)', (a.clicks && a.clicks.last30) || 0)}
+            ${affStat('Orders', t.orders || 0)}
+            ${affStat('On hold', affMoney(t.pending))}
+            ${affStat('Ready to pay', affMoney(ready), ready > 0 ? 'go' : '')}
+            ${affStat('Paid so far', affMoney(t.paid))}
+          </div>
+          <div class="aff-actions">
+            <button class="btn" ${ready > 0 ? '' : 'disabled'} onclick="affMarkPaid('${a.id}')">Mark ${affMoney(ready)} paid</button>
+            <label><input type="checkbox" ${a.w9_on_file ? 'checked' : ''} onchange="affSetW9('${a.id}', this.checked)"> W-9 on file</label>
+            <button class="btn ghost" onclick="affSetRate('${a.id}', ${Number(a.commission_rate)})">Change rate</button>
+            <button class="btn ghost" onclick="affResetPassword('${a.id}')">Reset password</button>
+            <button class="btn ghost" onclick="affSetStatus('${a.id}','disabled','Turn this affiliate off? Their link and code stop working.')">Disable</button>
+          </div>
+        </div>`;
+      }).join('') : '<div class="empty">No approved affiliates yet. Share mymomsjuice.com/affiliates.html with creators to get applications.</div>'}`;
+
+    document.getElementById('affDisabled').innerHTML = disabled.length ? `
+      <div class="section-head"><h2>Disabled <span class="count-pill">${disabled.length}</span></h2></div>
+      ${disabled.map(a => `
+        <div class="aff-card">
+          <div class="aff-head">
+            <div><div class="aff-name">${affEsc(a.name)}</div><div class="aff-sub">${affEsc(a.email)} · ${affEsc(a.code)}</div></div>
+            <div class="aff-actions"><button class="btn ghost" onclick="affSetStatus('${a.id}','approved')">Re-enable</button></div>
+          </div>
+        </div>`).join('')}` : '';
+  }
+
+  async function affAct(fn){
+    try { await fn(); await loadAffiliates(); }
+    catch(e){ if (e.message !== 'Unauthorized') alert(e.message); }
+  }
+  function affPost(path, body){ return affFetch(path, { method: 'POST', body: JSON.stringify(body || {}) }); }
+
+  function affSetStatus(id, status, confirmText){
+    if (confirmText && !confirm(confirmText)) return;
+    affAct(() => affPost('affiliates/' + id, { status }));
+  }
+  function affSetW9(id, checked){
+    affAct(() => affPost('affiliates/' + id, { w9_on_file: checked }));
+  }
+  function affSetRate(id, current){
+    const input = prompt('Commission rate (%)', String(Math.round(current * 1000) / 10));
+    if (input === null) return;
+    const pct = Number(input);
+    if (!Number.isFinite(pct) || pct < 0 || pct > 50){ alert('Enter a number between 0 and 50.'); return; }
+    affAct(() => affPost('affiliates/' + id, { commission_rate: pct / 100 }));
+  }
+  function affMarkPaid(id){
+    const a = affCache.find(x => x.id === id);
+    if (!a) return;
+    const cents = Number((a.totals || {}).payable || 0);
+    const name = a.name;
+    if (!confirm(`Mark ${affMoney(cents)} as paid to ${name}?\n\nSend the money first (Zelle, Venmo, etc.) — this just records it.`)) return;
+    affAct(async () => {
+      const r = await affPost('affiliates/' + id + '/mark-paid');
+      alert(r.count ? `Recorded ${r.count} commission(s), ${affMoney(r.totalCents)} paid.` : 'Nothing was ready to pay.');
+    });
+  }
+  function affResetPassword(id){
+    if (!confirm('Create a temporary password for this affiliate? Their old password stops working.')) return;
+    affAct(async () => {
+      const r = await affPost('affiliates/' + id + '/reset-password');
+      prompt('Temporary password — send it to them (copy it now):', r.tempPassword);
+    });
+  }
+  function affResolve(id, action){
+    if (action === 'void' && !confirm('Void this commission? The affiliate will not be paid for it.')) return;
+    affAct(() => affPost('commissions/' + id + '/resolve', { action }));
   }
 
   // ==========================================================================

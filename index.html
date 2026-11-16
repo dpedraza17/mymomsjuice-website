@@ -831,6 +831,14 @@
       <label for="custNote" id="custNoteLabel" style="font-size:17.5px; font-weight:700;">Add a note (optional)</label>
       <textarea id="custNote" rows="3" placeholder="Leave a note…" style="width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); resize:vertical;"></textarea>
     </div>
+    <div class="field" style="margin-bottom:16px;">
+      <label for="affCode" style="font-size:17.5px; font-weight:700;">Creator code (optional)</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="affCode" placeholder="Have a creator's code?" autocapitalize="characters" autocomplete="off" maxlength="20" style="flex:1; min-width:0; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); text-transform:uppercase;">
+        <button type="button" id="affCodeApply" style="font-family:inherit; font-size:15px; font-weight:700; padding:12px 18px; border-radius:10px; border:none; background:var(--orange); color:#fff; cursor:pointer;">Apply</button>
+      </div>
+      <p id="affCodeMsg" style="display:none; margin:8px 0 0; font-size:14.5px; font-weight:700; line-height:1.4;"></p>
+    </div>
     <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before (Sunday delivery orders are due Saturday at 8pm).</p>
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Free delivery on orders of $100 or more (before tip).</p>
@@ -2454,6 +2462,8 @@
         ].filter(Boolean).join(', ') : '',
         zip: mode==='delivery' ? document.getElementById('custZip').value.trim() : '',
       },
+      affiliateCode: (document.getElementById('affCode').value || '').trim() || undefined,
+      affiliateRef: (window.mmjGetRef && window.mmjGetRef()) || undefined,
       cart: {
         items: { ...cart },
         sixPacks: sixPacks,
@@ -2686,6 +2696,89 @@
   })();
 </script>
 
+<script>
+  // Affiliate program: remember who sent this visitor (last link clicked wins,
+  // kept for 30 days), count the click, and check creator codes in the cart.
+  (function(){
+    var API = 'https://mymomsjuice-checkout-backend.onrender.com';
+    var KEY = 'mmjAffRef';
+    var DAYS = 30;
+
+    function readRef(){
+      try {
+        var o = JSON.parse(localStorage.getItem(KEY) || 'null');
+        if (o && o.code && o.exp > Date.now()) return o.code;
+      } catch(e) {}
+      return '';
+    }
+    window.mmjGetRef = readRef;
+
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var ref = (params.get('ref') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (/^[A-Z0-9]{3,20}$/.test(ref)) {
+        localStorage.setItem(KEY, JSON.stringify({ code: ref, exp: Date.now() + DAYS * 86400000 }));
+        var seenKey = 'mmjAffClick:' + ref;
+        if (!sessionStorage.getItem(seenKey)) {
+          sessionStorage.setItem(seenKey, '1');
+          fetch(API + '/api/affiliate/click', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: ref }),
+            keepalive: true,
+          }).catch(function(){});
+        }
+        params.delete('ref');
+        var qs = params.toString();
+        window.history.replaceState({}, document.title, window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+      }
+    } catch(e) {}
+
+    var codeEl = document.getElementById('affCode');
+    var btn = document.getElementById('affCodeApply');
+    var msg = document.getElementById('affCodeMsg');
+    if (!codeEl || !btn || !msg) return;
+
+    function show(text, ok){
+      msg.textContent = text;
+      msg.style.color = ok ? '#A8E6B0' : '#FFB08F';
+      msg.style.display = text ? 'block' : 'none';
+    }
+    codeEl.addEventListener('input', function(){ show('', true); });
+
+    btn.addEventListener('click', async function(){
+      var code = codeEl.value.trim();
+      if (!code) { show('', true); return; }
+      var label = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+      try {
+        var resp = await fetch(API + '/api/affiliate/validate-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: code,
+            email: (document.getElementById('custEmail').value || '').trim(),
+            phone: (document.getElementById('custPhone').value || '').trim(),
+            name: ((document.getElementById('custFirstName').value || '') + ' ' + (document.getElementById('custLastName').value || '')).trim(),
+          }),
+        });
+        var data = await resp.json();
+        if (resp.ok && data.ok) {
+          show('✓ Code ' + data.code + ' applied — ' + data.percent + '% off the items in your first order. You\'ll see the discount on the payment page. (Creator codes can\'t be combined with other promo codes.)', true);
+        } else {
+          show(data.error || "That code isn't valid.", false);
+        }
+      } catch(e) {
+        show("Couldn't check that code right now. You can still place your order and we'll check it at checkout.", false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    });
+  })();
+</script>
+
 <footer>
   <div class="wrap" style="display:flex; flex-wrap:wrap; gap:32px; justify-content:space-between; max-width:1100px; margin:0 auto; padding:0 20px;">
     <div>
@@ -2699,6 +2792,7 @@
         <a href="/privacy-policy.html">Privacy Policy</a>
         <a href="/terms.html">Terms of Service</a>
         <a href="/refund-policy.html">Refund Policy</a>
+        <a href="/affiliates.html">Become an Affiliate</a>
       </div>
     </div>
   </div>
