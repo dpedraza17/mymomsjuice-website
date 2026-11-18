@@ -1931,6 +1931,14 @@
     tot.className = 'cart-total';
     tot.innerHTML = `<span>Estimated total</span><span id="cartTotalDisplay">$${totalPrice().toFixed(2)}</span>`;
     body.appendChild(tot);
+    const earnPts = Math.floor(subtotalPrice() + 1e-9);
+    if(earnPts > 0){
+      const earn = document.createElement('p');
+      earn.id = 'cartEarnLine';
+      earn.style.cssText = 'margin:8px 0 0; font-size:15px; font-weight:700; color:#A8E6B0; text-align:right;';
+      earn.textContent = `⭐ You\'ll earn about ${earnPts} reward point${earnPts === 1 ? '' : 's'} on this order`;
+      body.appendChild(earn);
+    }
     maybeRestoreOriginalDay();
   }
 
@@ -2705,8 +2713,30 @@
 
       banner.style.background = 'var(--green)';
       banner.style.color = 'var(--dark)';
-      text.textContent = "🎉 Thanks! Your order is confirmed — please text us at 480-875-0690 with any questions.";
+      const baseMsg = "🎉 Thanks! Your order is confirmed — please text us at 480-875-0690 with any questions.";
+      text.textContent = baseMsg;
       overlay.style.display = 'flex';
+
+      // Show how many reward points this order earned. They're saved by the
+      // payment webhook a moment after checkout, so check a few times.
+      const sid = params.get('session_id');
+      if(sid && /^cs_(test|live)_[A-Za-z0-9]+$/.test(sid)){
+        let tries = 0;
+        (function checkPoints(){
+          fetch('https://mymomsjuice-checkout-backend.onrender.com/api/loyalty/order-points?session_id=' + encodeURIComponent(sid))
+            .then(r => r.json())
+            .then(d => {
+              if(d && d.earned > 0){
+                let m = `🎉 Thanks! Your order is confirmed. ⭐ You earned ${d.earned} reward point${d.earned === 1 ? '' : 's'} — you now have ${d.balance}.`;
+                m += d.next ? ` ${d.next.pointsToGo} more for a ${d.next.label.toLowerCase()}!` : ' You can redeem a reward on your next order!';
+                text.textContent = m + ' Questions? Text us at 480-875-0690.';
+              } else if(d && d.pending && ++tries < 8){
+                setTimeout(checkPoints, 2000);
+              }
+            })
+            .catch(() => {});
+        })();
+      }
     } else if(status === 'canceled'){
       banner.style.background = 'var(--tan)';
       banner.style.color = 'var(--dark)';
