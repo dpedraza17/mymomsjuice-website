@@ -839,6 +839,37 @@
       </div>
       <p id="affCodeMsg" style="display:none; margin:8px 0 0; font-size:14.5px; font-weight:700; line-height:1.4;"></p>
     </div>
+    <div class="field" id="rwBox" style="margin-bottom:16px;">
+      <label for="rwCode" style="font-size:17.5px; font-weight:700;">Rewards (optional)</label>
+      <div id="rwApplied" style="display:none; background:rgba(168,230,176,0.15); border:1px solid #A8E6B0; border-radius:10px; padding:12px 14px;">
+        <p id="rwAppliedText" style="margin:0 0 8px; font-size:15px; font-weight:700; line-height:1.4; color:#A8E6B0;"></p>
+        <button type="button" id="rwRemove" style="font-family:inherit; font-size:14px; font-weight:700; padding:6px 12px; border-radius:8px; border:1px solid currentColor; background:transparent; color:inherit; cursor:pointer;">Remove reward</button>
+      </div>
+      <div id="rwEntry">
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="rwCode" placeholder="Have a reward code?" autocapitalize="characters" autocomplete="off" maxlength="14" style="flex:1; min-width:0; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); text-transform:uppercase;">
+          <button type="button" id="rwApply" style="font-family:inherit; font-size:15px; font-weight:700; padding:12px 18px; border-radius:10px; border:none; background:var(--orange); color:#fff; cursor:pointer;">Apply</button>
+        </div>
+        <button type="button" id="rwToggle" style="font-family:inherit; font-size:15px; font-weight:700; margin-top:10px; padding:0; border:none; background:none; color:inherit; text-decoration:underline; cursor:pointer;">Check my points &amp; redeem</button>
+        <a href="/rewards.html" target="_blank" rel="noopener" style="margin-left:12px; font-size:14px; color:inherit; opacity:.85;">How it works</a>
+        <div id="rwPanel" style="display:none; margin-top:12px; border:1px solid var(--line); border-radius:10px; padding:14px;">
+          <p style="margin:0 0 8px; font-size:15px; line-height:1.4;">Earn 1 point for every $1 you spend on items. Enter the phone number you order with.</p>
+          <div style="display:flex; gap:8px;">
+            <input type="tel" id="rwPhone" placeholder="(480) 555-0100" style="flex:1; min-width:0; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark);">
+            <button type="button" id="rwCheck" style="font-family:inherit; font-size:15px; font-weight:700; padding:12px 18px; border-radius:10px; border:none; background:var(--orange); color:#fff; cursor:pointer;">Check</button>
+          </div>
+          <div id="rwTiers" style="display:none; margin-top:12px;"></div>
+          <div id="rwVerify" style="display:none; margin-top:12px;">
+            <p style="margin:0 0 8px; font-size:15px; line-height:1.4;">Enter the 6-digit code we just emailed you.</p>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="rwVerifyCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="flex:1; min-width:0; font-family:inherit; font-size:18px; letter-spacing:3px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark);">
+              <button type="button" id="rwRedeem" style="font-family:inherit; font-size:15px; font-weight:700; padding:12px 18px; border-radius:10px; border:none; background:var(--orange); color:#fff; cursor:pointer;">Redeem</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p id="rwMsg" style="display:none; margin:8px 0 0; font-size:14.5px; font-weight:700; line-height:1.4;"></p>
+    </div>
     <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before (Sunday delivery orders are due Saturday at 8pm).</p>
       <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Free delivery on orders of $100 or more (before tip).</p>
@@ -2464,6 +2495,7 @@
       },
       affiliateCode: (document.getElementById('affCode').value || '').trim() || undefined,
       affiliateRef: (window.mmjGetRef && window.mmjGetRef()) || undefined,
+      rewardCode: (window.mmjGetReward && window.mmjGetReward()) || undefined,
       cart: {
         items: { ...cart },
         sixPacks: sixPacks,
@@ -2779,6 +2811,131 @@
   })();
 </script>
 
+<script>
+  // Rewards points: check a balance by phone, redeem points (with an emailed
+  // 6-digit code) for a one-time reward code, and apply that code to the cart.
+  (function(){
+    var API = 'https://mymomsjuice-checkout-backend.onrender.com';
+    var KEY = 'mmjReward';
+    var $ = function(id){ return document.getElementById(id); };
+    var codeEl = $('rwCode'), applyBtn = $('rwApply'), msg = $('rwMsg');
+    if (!codeEl || !applyBtn || !msg) return;
+    var applied = '';       // reward code currently applied to this order
+    var pickedTier = 0;     // tier (points) chosen for redemption
+    var phoneKey = '';
+
+    function money(c){ return '$' + (c/100).toFixed(2); }
+    function show(text, ok){
+      msg.textContent = text;
+      msg.style.color = ok ? '#A8E6B0' : '#FFB08F';
+      msg.style.display = text ? 'block' : 'none';
+    }
+    function post(path, body){
+      return fetch(API + path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+        .then(function(r){ return r.json().then(function(d){ return { ok:r.ok, data:d }; }); });
+    }
+    function setApplied(code, label, valueCents){
+      applied = code || '';
+      try { if (code) sessionStorage.setItem(KEY, JSON.stringify({ code: code, label: label, v: valueCents })); else sessionStorage.removeItem(KEY); } catch(e) {}
+      $('rwApplied').style.display = code ? 'block' : 'none';
+      $('rwEntry').style.display = code ? 'none' : 'block';
+      if (code) $('rwAppliedText').textContent = '✓ Reward ' + code + ' — ' + label + ' (up to ' + money(valueCents) + ' off your items). You\'ll see it on the payment page.';
+    }
+    window.mmjGetReward = function(){ return applied; };
+
+    try {
+      var saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+      if (saved && saved.code) {
+        setApplied(saved.code, saved.label, saved.v);
+        // Drop it again if it was used (e.g. the order went through) or expired.
+        post('/api/loyalty/validate-reward', { code: saved.code }).then(function(r){
+          if (r.ok && r.data && r.data.valid === false) setApplied('', '', 0);
+        }).catch(function(){});
+      }
+    } catch(e) {}
+
+    $('rwRemove').addEventListener('click', function(){ setApplied('', '', 0); codeEl.value = ''; show('', true); });
+    codeEl.addEventListener('input', function(){ show('', true); });
+
+    applyBtn.addEventListener('click', async function(){
+      var code = codeEl.value.trim();
+      if (!code) { show('', true); return; }
+      var label = applyBtn.textContent;
+      applyBtn.disabled = true; applyBtn.textContent = 'Checking…';
+      try {
+        var r = await post('/api/loyalty/validate-reward', { code: code });
+        if (r.ok && r.data.valid) { setApplied(r.data.code, r.data.label, r.data.valueCents); show('', true); }
+        else show(r.data.message || r.data.error || "That reward code isn't valid.", false);
+      } catch(e) { show("Couldn't check that code right now. Please try again.", false); }
+      finally { applyBtn.disabled = false; applyBtn.textContent = label; }
+    });
+
+    $('rwToggle').addEventListener('click', function(){
+      var panel = $('rwPanel');
+      var open = panel.style.display === 'none';
+      panel.style.display = open ? 'block' : 'none';
+      if (open && !$('rwPhone').value) $('rwPhone').value = ($('custPhone').value || '').trim();
+    });
+
+    function renderTiers(d){
+      var box = $('rwTiers');
+      box.innerHTML = '';
+      var p = document.createElement('p');
+      p.style.cssText = 'margin:0 0 8px; font-size:16px; font-weight:700;';
+      p.textContent = 'You have ' + d.points + ' point' + (d.points === 1 ? '' : 's') + '.';
+      box.appendChild(p);
+      d.tiers.forEach(function(t){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.disabled = !t.canRedeem;
+        b.style.cssText = 'display:block; width:100%; text-align:left; margin:0 0 8px; font-family:inherit; font-size:15px; font-weight:700; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:' + (t.canRedeem ? '#fff' : 'rgba(255,255,255,0.4)') + '; color:var(--dark); cursor:' + (t.canRedeem ? 'pointer' : 'default') + '; opacity:' + (t.canRedeem ? '1' : '0.7') + ';';
+        b.textContent = t.points + ' pts — ' + t.label + ' (' + money(t.valueCents) + ' off)' + (t.canRedeem ? '' : ' · ' + (t.points - d.points) + ' to go');
+        if (t.canRedeem) b.addEventListener('click', function(){ pickTier(t); });
+        box.appendChild(b);
+      });
+      box.style.display = 'block';
+    }
+
+    $('rwCheck').addEventListener('click', async function(){
+      var btn = $('rwCheck'), label = btn.textContent;
+      $('rwVerify').style.display = 'none'; pickedTier = 0;
+      btn.disabled = true; btn.textContent = 'Checking…';
+      try {
+        phoneKey = $('rwPhone').value.trim();
+        var r = await post('/api/loyalty/balance', { phone: phoneKey });
+        if (r.ok) { renderTiers(r.data); show('', true); }
+        else { $('rwTiers').style.display = 'none'; show(r.data.error || "Couldn't check that number.", false); }
+      } catch(e) { show("Couldn't check points right now. Please try again.", false); }
+      finally { btn.disabled = false; btn.textContent = label; }
+    });
+
+    async function pickTier(t){
+      pickedTier = t.points;
+      show('Sending a code to your email…', true);
+      try {
+        var r = await post('/api/loyalty/request-code', { phone: phoneKey });
+        if (r.ok) { show(r.data.message || 'Check your email for a 6-digit code.', true); $('rwVerify').style.display = 'block'; $('rwVerifyCode').focus(); }
+        else show(r.data.error || "Couldn't send a code. Please try again.", false);
+      } catch(e) { show("Couldn't send a code right now. Please try again.", false); }
+    }
+
+    $('rwRedeem').addEventListener('click', async function(){
+      var btn = $('rwRedeem'), label = btn.textContent;
+      if (!pickedTier) { show('Choose a reward first.', false); return; }
+      btn.disabled = true; btn.textContent = 'Redeeming…';
+      try {
+        var r = await post('/api/loyalty/redeem', { phone: phoneKey, code: $('rwVerifyCode').value, tierPoints: pickedTier });
+        if (r.ok) {
+          setApplied(r.data.rewardCode, r.data.label, r.data.valueCents);
+          $('rwPanel').style.display = 'none'; $('rwVerifyCode').value = '';
+          show('Reward ready! We also emailed you the code. You have ' + r.data.balance + ' points left.', true);
+        } else show(r.data.error || "Couldn't redeem that. Please try again.", false);
+      } catch(e) { show("Couldn't redeem right now. Please try again.", false); }
+      finally { btn.disabled = false; btn.textContent = label; }
+    });
+  })();
+</script>
+
 <footer>
   <div class="wrap" style="display:flex; flex-wrap:wrap; gap:32px; justify-content:space-between; max-width:1100px; margin:0 auto; padding:0 20px;">
     <div>
@@ -2792,6 +2949,7 @@
         <a href="/privacy-policy.html">Privacy Policy</a>
         <a href="/terms.html">Terms of Service</a>
         <a href="/refund-policy.html">Refund Policy</a>
+        <a href="/rewards.html">Rewards Program</a>
         <a href="/affiliates.html">Become an Affiliate</a>
       </div>
     </div>

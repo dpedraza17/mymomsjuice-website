@@ -240,6 +240,7 @@
       <button class="tab-btn" data-tab="customers" onclick="showTab('customers')">Customers</button>
       <button class="tab-btn" data-tab="subscribers" onclick="showTab('subscribers')">Subscribers</button>
       <button class="tab-btn" data-tab="affiliates" onclick="showTab('affiliates')">Affiliates</button>
+      <button class="tab-btn" data-tab="loyalty" onclick="showTab('loyalty')">Rewards</button>
       <button class="tab-btn" data-tab="manual-order" onclick="showTab('manual-order')">Manual Order</button>
     </div>
 
@@ -374,6 +375,30 @@
         <div id="affFlagged"></div>
         <div id="affActive"></div>
         <div id="affDisabled"></div>
+      </div>
+
+      <!-- REWARDS VIEW -->
+      <div class="view" id="view-loyalty">
+        <div class="section-head">
+          <h2>Rewards Points</h2>
+          <button class="btn ghost" onclick="loadLoyalty()">Refresh</button>
+        </div>
+        <p class="aff-hint">1 point per $1 spent on items. Rewards: <span id="loyTiersText">…</span>. Customers redeem by phone number + an emailed code.</p>
+        <div id="loySummary" class="aff-stats"></div>
+
+        <div class="aff-card">
+          <div class="aff-name">Look up a customer</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+            <input type="text" id="loyQuery" placeholder="Phone number or email" style="flex:1; min-width:180px; padding:10px 12px; border-radius:10px; border:1px solid var(--line); font-size:14px;" onkeydown="if(event.key==='Enter')loyLookup()">
+            <button class="btn" onclick="loyLookup()">Look up</button>
+          </div>
+          <div id="loyResult" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="aff-card">
+          <div class="aff-name">Top customers</div>
+          <div id="loyTop" class="aff-sub" style="margin-top:8px;"></div>
+        </div>
       </div>
 
       <!-- MANUAL ORDER VIEW -->
@@ -588,6 +613,7 @@
       loadCustomers();
       loadSubscribers();
       loadAffiliates();
+      loadLoyalty();
       moInit();
     } catch(e){
       showLogin(true);
@@ -610,6 +636,7 @@
       loadCustomers();
       loadSubscribers();
       loadAffiliates();
+      loadLoyalty();
       moInit();
     } catch(e){
       clearSession();
@@ -1111,6 +1138,76 @@ Thank you so much!`;
   // (same Render server the Manual Order tab uses), authenticated with the
   // same admin password.
   // ==========================================================================
+
+  // ---- Rewards points (uses affFetch / affEsc defined just below) ----
+  async function loadLoyalty(){
+    try {
+      const d = await affFetch('loyalty/summary');
+      document.getElementById('loyTiersText').textContent = (d.tiers || []).map(t => t.points + ' pts = ' + t.label + ' (' + affMoney(t.valueCents) + ')').join(', ');
+      document.getElementById('loySummary').innerHTML =
+        affStat('Members', d.accounts) +
+        affStat('Points outstanding', d.outstandingPoints) +
+        affStat('Points ever earned', d.lifetimePoints) +
+        affStat('Unused reward codes', d.openRewards + ' (' + affMoney(d.openRewardsValueCents) + ')');
+      document.getElementById('loyTop').innerHTML = (d.top || []).filter(a => a.points > 0).map(a =>
+        '<div>' + affEsc(a.name || a.email || a.customer_key) + ' &mdash; <b>' + a.points + '</b> pts <span style="color:var(--muted);">(' + affEsc(a.customer_key.startsWith('e:') ? a.customer_key.slice(2) : a.customer_key) + ')</span></div>'
+      ).join('') || 'No points yet — they start building with the next order.';
+    } catch(e){
+      if (e.message !== 'Unauthorized') document.getElementById('loySummary').innerHTML = '<div class="empty">Couldn\'t load rewards: ' + affEsc(e.message) + '</div>';
+    }
+  }
+
+  let loyCurrentKey = '';
+  async function loyLookup(){
+    const q = document.getElementById('loyQuery').value.trim();
+    const box = document.getElementById('loyResult');
+    if (!q) return;
+    box.innerHTML = 'Looking…';
+    try {
+      const d = await affFetch('loyalty/lookup?q=' + encodeURIComponent(q));
+      if (!d.found){
+        loyCurrentKey = d.key || '';
+        box.innerHTML = '<div class="aff-sub">No points account for that yet.' + (loyCurrentKey ? ' You can still give them starting points below.' : '') + '</div>' + (loyCurrentKey ? loyAdjustForm() : '');
+        return;
+      }
+      const a = d.account;
+      loyCurrentKey = a.customer_key;
+      const kindName = {earn:'Earned', redeem:'Redeemed', adjust:'Adjusted', reversal:'Reversed'};
+      const ledger = (d.ledger || []).map(l =>
+        '<div>' + new Date(l.created_at).toLocaleDateString() + ' &middot; ' + (kindName[l.kind] || l.kind) + ' <b>' + (l.points > 0 ? '+' : '') + l.points + '</b>' + (l.note ? ' &middot; ' + affEsc(l.note) : '') + '</div>').join('');
+      const rewards = (d.rewards || []).map(r =>
+        '<div>' + affEsc(r.code) + ' &middot; ' + affEsc(r.label) + ' (' + affMoney(r.value_cents) + ') &middot; <b>' + (r.status === 'issued' && new Date(r.expires_at) < new Date() ? 'expired' : r.status) + '</b></div>').join('');
+      box.innerHTML =
+        '<div class="aff-name">' + affEsc(a.name || 'Customer') + '</div>' +
+        '<div class="aff-sub">' + affEsc(a.email || '') + ' &middot; ' + affEsc(a.customer_key.startsWith('e:') ? '' : a.customer_key) + '</div>' +
+        '<div class="aff-stats">' + affStat('Balance', a.points, 'go') + affStat('Ever earned', a.lifetime_points) + '</div>' +
+        loyAdjustForm() +
+        (rewards ? '<div class="aff-sub" style="margin-top:12px;"><b>Reward codes</b>' + rewards + '</div>' : '') +
+        '<div class="aff-sub" style="margin-top:12px;"><b>History</b>' + (ledger || '<div>Nothing yet.</div>') + '</div>';
+    } catch(e){
+      if (e.message !== 'Unauthorized') box.innerHTML = '<div class="empty">' + affEsc(e.message) + '</div>';
+    }
+  }
+  function loyAdjustForm(){
+    return '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">' +
+      '<input type="number" id="loyPts" placeholder="+/- points" style="width:110px; padding:10px 12px; border-radius:10px; border:1px solid var(--line); font-size:14px;">' +
+      '<input type="text" id="loyNote" placeholder="Why? (required)" style="flex:1; min-width:150px; padding:10px 12px; border-radius:10px; border:1px solid var(--line); font-size:14px;">' +
+      '<button class="btn" onclick="loyAdjust()">Add / remove points</button></div>';
+  }
+  async function loyAdjust(){
+    const points = Number(document.getElementById('loyPts').value);
+    const note = document.getElementById('loyNote').value.trim();
+    if (!points || !note){ alert('Enter a number of points and a short reason.'); return; }
+    if (!confirm((points > 0 ? 'Give ' : 'Take away ') + Math.abs(points) + ' points?')) return;
+    try {
+      await affFetch('loyalty/adjust', { method:'POST', body: JSON.stringify({ key: loyCurrentKey, points, note }) });
+      await loyLookup();
+      loadLoyalty();
+    } catch(e){
+      if (e.message !== 'Unauthorized') alert(e.message);
+    }
+  }
+
   const AFF_API = 'https://mymomsjuice-checkout-backend.onrender.com/api/admin/';
 
   function affEsc(s){
