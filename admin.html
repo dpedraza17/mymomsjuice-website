@@ -106,6 +106,17 @@
     .date-group-header{font-size:21px;}
   }
 
+  /* "To make" totals box shown under each date header. */
+  .prep-box{background:#FFF6DC; border:2px solid var(--tan); border-radius:var(--radius); padding:12px 16px; margin:0 0 16px;}
+  .prep-box summary{cursor:pointer; font-weight:800; font-size:16px; color:var(--dark); list-style-position:inside;}
+  .prep-box .prep-sub{font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--muted); margin-left:6px;}
+  .prep-section{margin-top:12px;}
+  .prep-section h4{margin:0 0 6px; font-family:'Space Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted);}
+  .prep-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:6px 18px;}
+  .prep-line{display:flex; align-items:baseline; gap:10px; font-size:16px; padding:3px 0; border-bottom:1px dashed var(--line);}
+  .prep-line b{font-family:'Space Mono',monospace; font-size:18px; min-width:34px; text-align:right; color:var(--orange);}
+  .prep-note{margin:12px 0 0; font-size:12.5px; color:var(--muted); line-height:1.45;}
+
   /* Fulfillment-type filter pills, used above the Fulfilled Orders list. */
   .filter-btn{background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 14px; font-weight:700; font-size:13px; color:var(--ink); margin:0 8px 8px 0;}
   .filter-btn.active{background:var(--dark); color:#fff; border-color:var(--dark);}
@@ -910,6 +921,112 @@ Thank you so much!`;
     return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
+  // ---- "To make" totals for a day ----
+  // Adds up every item across a day's orders so you know how many of each
+  // thing to make. Detox cleanses are broken down into their bottles (each
+  // cleanse day = Mimosa, Green Juice, Watermelon, The Son's Favorite and
+  // El Vampiro + 1 immunity shot), and 6-packs into their flavors.
+  const PREP_MENU_ORDER = ['Green Juice','El Vampiro','Mimosa Juice','Citrus Sunrise','Fresh Grapefruit',"The Son's Favorite",'Watermelon','Agua de Pepino con Limón','Horchata Latte',"My Mom's Horchata",'Chata Matcha','Strawberry Horchata','Strawberry Lemonade'];
+  const PREP_DETOX_DAILY = ['Mimosa Juice','Green Juice','Watermelon',"The Son's Favorite",'El Vampiro'];
+
+  function prepClean(str){
+    return String(str || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/[‘’]/g, "'").replace(/\s+/g, ' ').trim();
+  }
+  function prepCanon(name){
+    const s = prepClean(name);
+    const k = s.toLowerCase();
+    if (/^watermelon( water)?$/.test(k)) return 'Watermelon';
+    if (/^the son'?s fav(orite|e)?$/.test(k)) return "The Son's Favorite";
+    return PREP_MENU_ORDER.find(n => n.toLowerCase() === k) || s;
+  }
+
+  function prepTotals(orders){
+    const bottles = new Map(), gallons = new Map(), other = new Map(), cleanses = new Map();
+    const add = (m, k, n) => m.set(k, (m.get(k) || 0) + n);
+    let shots = 0, sixPacksNoFlavors = 0;
+
+    orders.forEach(o => {
+      (Array.isArray(o.items) ? o.items : []).forEach(it => {
+        const qty = Number(it.qty) || 1;
+        const name = prepClean(it.name);
+        if (!name) return;
+        if (typeof it.price === 'number' && it.price < 0) return;            // discounts
+        if (/^(delivery fee|tip|tax|gratuity)\b|discount|reward|promo/i.test(name)) return;
+
+        const days = (/detox|cleanse/i.test(name) && name.match(/(\d+)\s*-?\s*day/i)) || null;
+        if (days){
+          const n = Number(days[1]);
+          add(cleanses, n, qty);
+          PREP_DETOX_DAILY.forEach(b => add(bottles, b, qty * n));
+          shots += qty * n;
+          return;
+        }
+        if (/6[\s-]*pack/i.test(name)){
+          const colon = name.indexOf(':');
+          let found = 0;
+          if (colon >= 0){
+            name.slice(colon + 1).split(',').forEach(part => {
+              const t = part.trim();
+              if (!t) return;
+              let m = t.match(/^(\d+)\s*[x×]\s*(.+)$/i), q = 1, label = t;
+              if (m){ q = Number(m[1]); label = m[2]; }
+              else if ((m = t.match(/^(.+?)\s*[x×]\s*(\d+)$/i))){ q = Number(m[2]); label = m[1]; }
+              add(bottles, prepCanon(label), q * qty);
+              found += q;
+            });
+          }
+          if (!found) sixPacksNoFlavors += qty;
+          return;
+        }
+        if (/immunity shot/i.test(name)){ shots += qty; return; }
+        if (/gallon/i.test(name)){
+          const flavor = prepCanon(name.split(/\s+[—–-]\s+/)[0]);
+          add(gallons, flavor + ' — ' + (/half/i.test(name) ? 'Half Gallon' : 'Gallon'), qty);
+          return;
+        }
+        const canon = prepCanon(name);
+        if (PREP_MENU_ORDER.includes(canon)) add(bottles, canon, qty);
+        else add(other, name, qty);
+      });
+    });
+    return { bottles, gallons, other, cleanses, shots, sixPacksNoFlavors };
+  }
+
+  function prepSum(m){ let t = 0; m.forEach(v => { t += v; }); return t; }
+
+  function prepBox(allOrders, pendingCount){
+    const t = prepTotals(allOrders);
+    const menuIdx = n => { const i = PREP_MENU_ORDER.findIndex(x => n.startsWith(x)); return i < 0 ? 999 : i; };
+    const sorted = (m, byMenu) => Array.from(m.entries()).sort((a, b) => byMenu ? (menuIdx(a[0]) - menuIdx(b[0])) || a[0].localeCompare(b[0]) : a[0].localeCompare(b[0]));
+    const lines = arr => `<div class="prep-grid">${arr.map(([n, q]) => `<div class="prep-line"><b>${q}</b><span>${affEsc(n)}</span></div>`).join('')}</div>`;
+
+    const bottleCount = prepSum(t.bottles), gallonCount = prepSum(t.gallons);
+    const summary = [];
+    if (bottleCount) summary.push(`${bottleCount} bottle${bottleCount === 1 ? '' : 's'}`);
+    if (gallonCount) summary.push(`${gallonCount} gallon${gallonCount === 1 ? '' : 's'}`);
+    if (t.shots) summary.push(`${t.shots} shot${t.shots === 1 ? '' : 's'}`);
+
+    let body = '';
+    if (t.bottles.size) body += `<div class="prep-section"><h4>Bottles (16oz)</h4>${lines(sorted(t.bottles, true))}</div>`;
+    if (t.gallons.size) body += `<div class="prep-section"><h4>Gallons &amp; half gallons</h4>${lines(sorted(t.gallons, true))}</div>`;
+    if (t.shots) body += `<div class="prep-section"><h4>Immunity shots (4oz)</h4>${lines([['Ginger & orange shots', t.shots]])}</div>`;
+    if (t.other.size) body += `<div class="prep-section"><h4>Other items</h4>${lines(sorted(t.other, false))}</div>`;
+    if (!body) body = `<div class="prep-note">No items to total yet.</div>`;
+
+    const notes = [];
+    if (t.cleanses.size){
+      const list = Array.from(t.cleanses.entries()).sort((a, b) => a[0] - b[0]).map(([d, q]) => `${q}× ${d}-day`).join(', ');
+      notes.push(`Includes the bottles and shots from detox cleanses (${list}).`);
+    }
+    if (t.sixPacksNoFlavors) notes.push(`${t.sixPacksNoFlavors} six-pack${t.sixPacksNoFlavors === 1 ? '' : 's'} had no flavors listed, so ${t.sixPacksNoFlavors === 1 ? "it isn't" : "they aren't"} counted. Check the order cards.`);
+    if (allOrders.length > pendingCount) notes.push(`Counts all ${allOrders.length} orders for this day, including ${allOrders.length - pendingCount} already fulfilled.`);
+
+    return `<details class="prep-box" open>
+      <summary>To make for this day<span class="prep-sub">${summary.join(' · ') || 'nothing yet'}</span></summary>
+      ${body}${notes.length ? `<p class="prep-note">${notes.join(' ')}</p>` : ''}
+    </details>`;
+  }
+
   // Active ("Needs Fulfillment") orders: grouped into a big date header
   // per fulfillment day, soonest date first, newest-placed order first
   // within each date.
@@ -927,7 +1044,7 @@ Thank you so much!`;
       const d = parseOrderDate(o);
       if (!d){ noDateOrders.push(o); return; }
       const key = dateGroupKey(d);
-      if (!groups.has(key)) groups.set(key, { date: d, orders: [] });
+      if (!groups.has(key)) groups.set(key, { key, date: d, orders: [] });
       groups.get(key).orders.push(o);
     });
 
@@ -935,8 +1052,21 @@ Thank you so much!`;
     sortedGroups.forEach(g => g.orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
     noDateOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+    // Orders for the same day that are already fulfilled still count toward
+    // what had to be made, so the day's totals don't shrink as you hand
+    // orders out.
+    const fulfilledByDate = new Map();
+    fulfilledAll.forEach(o => {
+      const d = parseOrderDate(o);
+      if (!d) return;
+      const k = dateGroupKey(d);
+      if (!fulfilledByDate.has(k)) fulfilledByDate.set(k, []);
+      fulfilledByDate.get(k).push(o);
+    });
+
     let html = sortedGroups.map(g => `
       <div class="date-group-header">${dateGroupLabel(g.date)}<span class="date-group-count">${g.orders.length} order${g.orders.length === 1 ? '' : 's'}</span></div>
+      ${prepBox(g.orders.concat(fulfilledByDate.get(g.key) || []), g.orders.length)}
       ${g.orders.map(o => orderCard(o, false)).join('')}
     `).join('');
 
@@ -1038,9 +1168,9 @@ Thank you so much!`;
     document.getElementById('unfulfilledCount').textContent = unfulfilled.length;
     document.getElementById('fulfilledCount').textContent = fulfilled.length;
 
+    fulfilledAll = fulfilled;
     renderUnfulfilled(unfulfilled);
 
-    fulfilledAll = fulfilled;
     fulfilledPage = 1;
     renderFulfilledList();
   }
