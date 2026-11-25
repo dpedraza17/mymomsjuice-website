@@ -1224,8 +1224,9 @@
     </div>
     <div class="field" style="margin-bottom:16px;">
       <label for="affCode" style="font-size:17.5px; font-weight:700;">Creator code (optional)</label>
+      <p class="muted" style="margin:2px 0 8px; font-size:14px; line-height:1.4;">Only for codes from a creator or influencer. <strong>Promo or discount codes from us go on the payment page</strong> after you tap Pay, not here.</p>
       <div style="display:flex; gap:8px;">
-        <input type="text" id="affCode" placeholder="Have a creator's code?" autocapitalize="characters" autocomplete="off" maxlength="20" style="flex:1; min-width:0; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); text-transform:uppercase;">
+        <input type="text" id="affCode" placeholder="Creator's code (not a promo code)" autocapitalize="characters" autocomplete="off" maxlength="20" style="flex:1; min-width:0; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); text-transform:uppercase;">
         <button type="button" id="affCodeApply" style="font-family:inherit; font-size:15px; font-weight:700; padding:12px 18px; border-radius:10px; border:none; background:var(--orange); color:#fff; cursor:pointer;">Apply</button>
       </div>
       <p id="affCodeMsg" style="display:none; margin:8px 0 0; font-size:14.5px; font-weight:700; line-height:1.4;"></p>
@@ -3220,7 +3221,7 @@
         if (resp.ok && data.ok) {
           show('✓ Code ' + data.code + ' applied — ' + data.percent + '% off the items in your first order. You\'ll see the discount on the payment page. (Creator codes can\'t be combined with other promo codes.)', true);
         } else {
-          show(data.error || "That code isn't valid.", false);
+          show((data.error || "That code isn't valid.") + " This box is for creator codes only. If this is a promo code from us, enter it on the payment page instead.", false);
         }
       } catch(e) {
         show("Couldn't check that code right now. You can still place your order and we'll check it at checkout.", false);
