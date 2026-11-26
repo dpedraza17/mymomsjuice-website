@@ -1026,15 +1026,20 @@ Thank you so much!`;
     const sorted = (m, byMenu) => Array.from(m.entries()).sort((a, b) => byMenu ? (menuIdx(a[0]) - menuIdx(b[0])) || a[0].localeCompare(b[0]) : a[0].localeCompare(b[0]));
     const lines = arr => `<div class="prep-grid">${arr.map(([n, q]) => `<div class="prep-line"><b>${q}</b><span>${affEsc(n)}</span></div>`).join('')}</div>`;
 
-    const bottleCount = prepSum(t.bottles), gallonCount = prepSum(t.gallons);
+    const GAL = ' \u2014 Gallon', HALF = ' \u2014 Half Gallon';
+    const splitGallons = suffix => new Map(Array.from(t.gallons.entries()).filter(([k]) => k.endsWith(suffix)).map(([k, v]) => [k.slice(0, -suffix.length), v]));
+    const fullGallons = splitGallons(GAL), halfGallons = splitGallons(HALF);
+    const bottleCount = prepSum(t.bottles), gallonCount = prepSum(fullGallons), halfCount = prepSum(halfGallons);
     const summary = [];
     if (bottleCount) summary.push(`${bottleCount} bottle${bottleCount === 1 ? '' : 's'}`);
     if (gallonCount) summary.push(`${gallonCount} gallon${gallonCount === 1 ? '' : 's'}`);
+    if (halfCount) summary.push(`${halfCount} half gallon${halfCount === 1 ? '' : 's'}`);
     if (t.shots) summary.push(`${t.shots} shot${t.shots === 1 ? '' : 's'}`);
 
     let body = '';
     if (t.bottles.size) body += `<div class="prep-section"><h4>Bottles (16oz)</h4>${lines(sorted(t.bottles, true))}</div>`;
-    if (t.gallons.size) body += `<div class="prep-section"><h4>Gallons &amp; half gallons</h4>${lines(sorted(t.gallons, true))}</div>`;
+    if (fullGallons.size) body += `<div class="prep-section"><h4>Gallons (128oz) &middot; ${gallonCount} total</h4>${lines(sorted(fullGallons, true))}</div>`;
+    if (halfGallons.size) body += `<div class="prep-section"><h4>Half gallons (64oz) &middot; ${halfCount} total</h4>${lines(sorted(halfGallons, true))}</div>`;
     if (t.shots) body += `<div class="prep-section"><h4>Immunity shots (4oz)</h4>${lines([['Ginger & orange shots', t.shots]])}</div>`;
     if (t.other.size) body += `<div class="prep-section"><h4>Other items</h4>${lines(sorted(t.other, false))}</div>`;
     if (!body) body = `<div class="prep-note">No items to total yet.</div>`;
