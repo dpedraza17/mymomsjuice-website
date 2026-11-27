@@ -430,6 +430,32 @@
     .delivery-opt .opt-date{font-size:13px;}
   }
   .delivery-hint{margin-top:8px; font-size:13px; font-weight:600; opacity:.85;}
+  .preset-packs{margin-top:22px;}
+  .preset-head{margin:0 0 12px; font-weight:800; font-size:17px; text-align:center;}
+  .preset-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+  .preset-card{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:8px;}
+  .preset-card h3{font-size:21px;}
+  .preset-desc{margin:0; font-size:15px; line-height:1.4; color:var(--muted); flex:1;}
+  .preset-add{background:var(--yellow); color:var(--dark); font-size:15px; padding:12px 14px; width:100%;}
+  @media (max-width:820px){ .preset-grid{grid-template-columns:1fr;} }
+  /* Compact contact strip + jump nav */
+  .findus-strip{padding:14px 0 0;}
+  .findus-strip .wrap{display:flex; flex-wrap:wrap; justify-content:center; gap:8px;}
+  .findus-strip .findus-btn, .findus-strip .contactus-btn{display:inline-block; margin:0; font-size:14px; padding:9px 16px; letter-spacing:.02em;}
+  .jump-nav{padding:14px 0 4px; background:var(--paper);}
+  .jump-nav .wrap{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
+  .jump-nav .chip{margin:0; text-decoration:none; background:var(--dark); border-color:var(--dark); color:#fff; font-size:14px; padding:10px 16px;}
+  .jump-nav .chip:hover{background:var(--orange); border-color:var(--orange);}
+  section[id]{scroll-margin-top:130px;}
+  .build-card{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; gap:8px; margin-bottom:6px;}
+  .build-card h3{font-size:24px;}
+  .build-btn{background:var(--yellow); color:var(--dark); font-size:18px; padding:16px 22px; width:100%;}
+  #builderContent{margin-top:14px;}
+  .preset-packs{margin-top:26px;}
+  .preset-grid{grid-template-columns:repeat(2,1fr);}
+  .preset-packs{margin-top:0;}
+  .build-card{margin-top:12px;}
+  @media (max-width:820px){ .preset-grid{grid-template-columns:1fr;} }
 </style>
 <script type="application/ld+json">
 {
@@ -857,8 +883,8 @@
     <div class="mode-inner">
       <span class="mode-label">Step 1 — Choose delivery or pick up below: <span class="toggle-hint-icon" aria-hidden="true">⇄</span></span>
       <div class="seg" role="group" aria-label="Choose pickup or delivery">
-        <button type="button" class="mode-btn" data-mode="pickup">Pick up in Mesa</button>
         <button type="button" class="mode-btn active" data-mode="delivery">Get delivery</button>
+        <button type="button" class="mode-btn" data-mode="pickup">Pick up in Mesa</button>
         <button type="button" class="mode-btn" data-mode="popup">Pick up on 83rd Ave & McDowell</button>
         <button type="button" class="mode-btn" data-mode="popup16th">Pick up on 16th St & McDowell</button>
       </div>
@@ -887,18 +913,47 @@
   </div>
 </div>
 
+<nav class="jump-nav" aria-label="Jump to a section">
+  <div class="wrap">
+    <a class="chip" href="#sixpack">6-Packs</a>
+    <a class="chip" href="#shots">Immunity shots</a>
+    <a class="chip" href="#detox">Cleanses</a>
+    <a class="chip" href="#gallons">Gallons</a>
+    <a class="chip" href="#" id="jumpSingles">Single bottles</a>
+    <a class="chip" href="#hydration">Hydration</a>
+    <a class="chip" href="#find-us">Where to find us</a>
+  </div>
+</nav>
+
 <section class="section" id="sixpack" style="padding:40px 0;">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <h2 style="font-size:clamp(30px,5vw,44px);">Build your own 6-pack — $36</h2>
+        <p class="eyebrow">Step 2 — Pick your juice</p>
+        <h2 style="font-size:clamp(30px,5vw,44px);">6-packs — $36</h2>
       </div>
     </div>
     <div class="builder" style="margin-top:0;">
-      <div class="builder-head">
-        <p style="margin:0 0 16px;">Pick up to 6 bottles total — any mix of flavors</p>
+      <div class="preset-packs" id="presetPacks">
+        <p class="preset-head">Ready-made 6-packs — $36</p>
+        <div class="preset-grid">
+          <div class="preset-card">
+            <h3 class="display">Best Sellers 6-Pack</h3>
+            <p class="preset-desc">2 Green Juices, 2 El Vampiros, 2 The Son's Favorites</p>
+            <button type="button" class="add-btn preset-add" data-preset="best">Add to order — $36</button>
+          </div>
+          <div class="preset-card">
+            <h3 class="display">Green &amp; Red 6-Pack</h3>
+            <p class="preset-desc">3 Green Juices, 3 El Vampiros</p>
+            <button type="button" class="add-btn preset-add" data-preset="greenred">Add to order — $36</button>
+          </div>
+        </div>
       </div>
-      <button type="button" id="startBuilderBtn" class="add-btn" style="padding:18px 32px; font-size:19px; width:100%; background:var(--orange); color:#fff;">Start building your 6-pack</button>
+      <div class="build-card">
+        <h3 class="display">Build your own 6-pack</h3>
+        <p class="preset-desc">Pick up to 6 bottles total — any mix of flavors. $36</p>
+        <button type="button" id="startBuilderBtn" class="add-btn build-btn" aria-expanded="false" aria-controls="builderContent">Build your own 6-pack</button>
+      </div>
       <div id="builderContent" style="display:none;">
         <div class="flavor-check-grid" id="builderGrid"></div>
         <div class="builder-status">
@@ -924,21 +979,7 @@
   </div>
 </section>
 
-<section class="section" id="gallons" style="padding:40px 0 24px; background:var(--orange); color:#fff;">
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <h2 style="font-size:clamp(30px,5vw,44px); color:#fff;">Gallons &amp; Half Gallons</h2>
-      </div>
-    </div>
-    <p style="margin:0 0 16px; color:#fff;">Gallons (128oz) — $30 &middot; Half Gallons (64oz) — $19</p>
-    <button type="button" id="startGallonsBtn" class="add-btn" style="padding:18px 32px; font-size:19px; width:100%; margin-bottom:16px; background:#fff; color:var(--orange);">Order gallons or half gallons</button>
-    <p id="gallonSundayNote" style="display:none; margin:0 0 16px; color:#fff; font-weight:700;"></p>
-    <div class="detox-grid" id="gallonGrid" style="display:none; margin-top:24px;"></div>
-  </div>
-</section>
-
-<section class="section" id="shots" style="padding:34px 0; background:#E9D8B4; color:var(--dark);">
+<section class="section" id="shots" style="padding:34px 0; background:var(--yellow); color:var(--dark);">
   <div class="wrap">
     <div id="shotCard" style="display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;">
       <div style="min-width:0;">
@@ -954,25 +995,6 @@
     </div>
   </div>
 </section>
-
-<section class="hero">
-  <div class="wrap">
-    <p class="lede" style="margin-top:14px;">We deliver locally and pop up on 83rd Ave &amp; McDowell (<a href="https://maps.google.com/?q=8367+W+McDowell+Rd+Tolleson+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">8367 W McDowell Rd, Tolleson, AZ</a>) Saturdays 9am-1pm, Sundays 9am-2pm. Stop by our pop up! No pre-order necessary.</p>
-    <p class="lede" style="margin-top:14px;">We also pop up every Saturday 9am-1pm on 16th St &amp; McDowell (<a href="https://maps.google.com/?q=1710+N+16th+St+Phoenix+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">1710 N 16th St, Phoenix, AZ</a>). Stop by! No pre-order necessary.</p>
-    <p class="lede" style="margin-top:14px;">You can also find our juices for sale at The Kitchen's Market (<a href="https://maps.google.com/?q=2655+W+Guadalupe+Rd+Suite+13+Mesa+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">2655 W Guadalupe Rd Suite 13 Mesa, AZ</a>), 5 days a week. Stop by during business hours! No pre-order necessary. Wednesday-Friday 8am-5pm, Saturdays 8am-3pm, Sundays 10am-3pm</p>
-    <p class="lede" style="margin-top:14px;">
-      <a href="mailto:mymomsjuicellc@gmail.com" style="color:inherit; text-decoration:underline;">mymomsjuicellc@gmail.com</a><br>
-      TEXT <a href="sms:+14808750690" style="color:inherit; text-decoration:underline;">480-875-0690</a> &middot; CALL <a href="tel:+14808750690" style="color:inherit; text-decoration:underline;">480-875-0690</a>
-    </p>
-    <div class="hero-photo">
-      <img src="/images/my-moms-juice-fresh-pressed-juice-bottles.webp" width="1400" height="1361" alt="Full lineup of My Mom's Juice bottles, freshly made and labeled, on a colorful serape table runner">
-    </div>
-  </div>
-</section>
-
-
-
-
 
 <section class="section" id="detox" style="background:#E9D8B4; border-top:1px solid var(--line); border-bottom:1px solid var(--line); color:var(--dark); padding-top:20px;">
   <div class="wrap">
@@ -1020,6 +1042,20 @@
   </div>
 </section>
 
+<section class="section" id="gallons" style="padding:40px 0 24px; color:var(--ink);">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2 style="font-size:clamp(30px,5vw,44px); color:#fff;">Gallons &amp; Half Gallons</h2>
+      </div>
+    </div>
+    <p style="margin:0 0 16px; color:#fff;">Gallons (128oz) — $30 &middot; Half Gallons (64oz) — $19</p>
+    <button type="button" id="startGallonsBtn" class="add-btn" style="padding:18px 32px; font-size:19px; width:100%; margin-bottom:16px; background:#fff; color:var(--orange);">Order gallons or half gallons</button>
+    <p id="gallonSundayNote" style="display:none; margin:0 0 16px; color:#fff; font-weight:700;"></p>
+    <div class="detox-grid" id="gallonGrid" style="display:none; margin-top:24px;"></div>
+  </div>
+</section>
+
 <section class="mbh-promo" id="hydration" aria-labelledby="mbhPromoTitle">
   <div class="wrap mbh-promo-grid">
     <div class="mbh-promo-photo">
@@ -1055,6 +1091,25 @@
     </div>
   </div>
 </section>
+
+<section class="hero">
+  <div class="wrap">
+    <p class="lede" style="margin-top:14px;">We deliver locally and pop up on 83rd Ave &amp; McDowell (<a href="https://maps.google.com/?q=8367+W+McDowell+Rd+Tolleson+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">8367 W McDowell Rd, Tolleson, AZ</a>) Saturdays 9am-1pm, Sundays 9am-2pm. Stop by our pop up! No pre-order necessary.</p>
+    <p class="lede" style="margin-top:14px;">We also pop up every Saturday 9am-1pm on 16th St &amp; McDowell (<a href="https://maps.google.com/?q=1710+N+16th+St+Phoenix+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">1710 N 16th St, Phoenix, AZ</a>). Stop by! No pre-order necessary.</p>
+    <p class="lede" style="margin-top:14px;">You can also find our juices for sale at The Kitchen's Market (<a href="https://maps.google.com/?q=2655+W+Guadalupe+Rd+Suite+13+Mesa+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">2655 W Guadalupe Rd Suite 13 Mesa, AZ</a>), 5 days a week. Stop by during business hours! No pre-order necessary. Wednesday-Friday 8am-5pm, Saturdays 8am-3pm, Sundays 10am-3pm</p>
+    <p class="lede" style="margin-top:14px;">
+      <a href="mailto:mymomsjuicellc@gmail.com" style="color:inherit; text-decoration:underline;">mymomsjuicellc@gmail.com</a><br>
+      TEXT <a href="sms:+14808750690" style="color:inherit; text-decoration:underline;">480-875-0690</a> &middot; CALL <a href="tel:+14808750690" style="color:inherit; text-decoration:underline;">480-875-0690</a>
+    </p>
+    <div class="hero-photo">
+      <img src="/images/my-moms-juice-fresh-pressed-juice-bottles.webp" width="1400" height="1361" alt="Full lineup of My Mom's Juice bottles, freshly made and labeled, on a colorful serape table runner">
+    </div>
+  </div>
+</section>
+
+
+
+
 
 <section class="section" id="find-us">
   <div class="wrap">
@@ -1122,7 +1177,7 @@
 <div class="cart-overlay" id="cartOverlay"></div>
 <aside class="cart-drawer" id="cartDrawer" role="dialog" aria-label="Your order">
   <div class="cart-head">
-    <strong style="font-family:'Baloo 2',sans-serif; font-size:18px;">Your order</strong>
+    <strong style="font-family:'Baloo 2',sans-serif; font-size:18px;">Step 3 — Check out: your order</strong>
     <button class="cart-close" id="closeCart" aria-label="Close cart">&times;</button>
   </div>
   <div class="cart-body-wrap">
@@ -1155,8 +1210,8 @@
       <div class="mode-inner" style="padding:14px 10px; flex-direction:column; gap:10px; justify-content:flex-start;">
         <span class="mode-label" style="font-size:18px;">You selected:</span>
         <div class="seg" role="group" aria-label="Choose pickup or delivery">
-          <button type="button" class="mode-btn" data-mode="pickup">Pick up in Mesa</button>
           <button type="button" class="mode-btn active" data-mode="delivery">Get delivery</button>
+          <button type="button" class="mode-btn" data-mode="pickup">Pick up in Mesa</button>
           <button type="button" class="mode-btn" data-mode="popup">Pick up on 83rd Ave &amp; McDowell</button>
           <button type="button" class="mode-btn" data-mode="popup16th">Pick up on 16th St &amp; McDowell</button>
         </div>
@@ -2734,7 +2789,7 @@
       modeNote.textContent = "Pickup at The Kitchen's Market (order by Thursday night) — Friday (8am-5pm), Saturday (8am-3pm) or Sunday (10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
       pickupCard.classList.add('active');
     } else if(mode==='delivery'){
-      modeNote.textContent = 'Delivery Wednesdays, Fridays & Sundays — order by midnight the night before (Sunday: Saturday 8pm)';
+      modeNote.textContent = ''; // delivery timing is explained in the day picker and cart
       deliveryCard.classList.add('active');
     } else if(mode==='popup16th'){
       modeNote.textContent = 'Pick up Saturday (9am-1pm) (order by Friday 8pm) — 1710 N 16th St, Phoenix';
@@ -2743,6 +2798,7 @@
       modeNote.textContent = 'Pick up Saturday (9am-1pm) or Sunday (9am-2pm) — order by Friday 8pm for Saturday, Saturday 8pm for Sunday — 8367 W McDowell Rd, Tolleson';
       popupCard.classList.add('active');
     }
+    modeNote.style.display = modeNote.textContent ? '' : 'none';
     updateAddressField();
   }
   // Reflects whatever `mode` currently is — the hardcoded 'delivery'
@@ -2941,9 +2997,33 @@
     if(mode === 'delivery') updateCartUI();
   });
 
+  // Ready-made 6-packs: each is added as a normal 6-pack (same flavor map the
+  // builder produces), so the cart, checkout and backend need no changes.
+  const PRESET_PACKS = {
+    best:     { name:'Best Sellers 6-pack',  flavors:{ green:2, vampiro:2, sonsfav:2 } },
+    greenred: { name:'Green & Red 6-pack',   flavors:{ green:3, vampiro:3 } },
+  };
+  document.querySelectorAll('.preset-add').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p = PRESET_PACKS[btn.dataset.preset];
+      if(!p) return;
+      sixPacks.push({ ...p.flavors });
+      flashAdded(btn, 'Added to order!');
+      showAddedToast(`${p.name} added to order`, 4000);
+      updateCartUI();
+      moveToOtherDayIfNeeded();
+    });
+  });
+
+  function setBuilderOpen(open){
+    const bc = document.getElementById('builderContent');
+    const btn = document.getElementById('startBuilderBtn');
+    bc.style.display = open ? 'block' : 'none';
+    btn.textContent = open ? 'Close the 6-pack builder' : 'Build your own 6-pack';
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
   document.getElementById('startBuilderBtn').addEventListener('click', function(){
-    document.getElementById('builderContent').style.display = 'block';
-    this.style.display = 'none';
+    setBuilderOpen(document.getElementById('builderContent').style.display === 'none');
   });
 
   document.getElementById('jumpToExtraBottles').addEventListener('click', function(){
@@ -2954,6 +3034,15 @@
   document.getElementById('startGallonsBtn').addEventListener('click', function(){
     document.getElementById('gallonGrid').style.display = 'grid';
     this.style.display = 'none';
+  });
+
+  document.getElementById('jumpSingles').addEventListener('click', function(e){
+    e.preventDefault();
+    if(document.getElementById('builderContent').style.display === 'none') setBuilderOpen(true);
+    const jb = document.getElementById('jumpToExtraBottles');
+    if(jb && jb.style.display !== 'none') jb.click();
+    const g = document.getElementById('menuGrid');
+    if(g) g.scrollIntoView({behavior:'smooth', block:'start'});
   });
 
   (function backToTop(){
@@ -2984,7 +3073,7 @@
     document.getElementById('menuGrid').style.display = 'grid';
     document.getElementById('jumpToExtraBottles').style.display = 'none';
     document.getElementById('builderContent').style.display = 'block';
-    document.getElementById('startBuilderBtn').style.display = 'none';
+    setBuilderOpen(true);
   }
   if(Object.values(gallonCart).some(q => q > 0)){
     document.getElementById('gallonGrid').style.display = 'grid';
