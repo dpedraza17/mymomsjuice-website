@@ -360,7 +360,7 @@
   .free-del-bar span{display:block; height:100%; background:var(--orange); border-radius:99px;}
   .fee-strike{text-decoration:line-through; opacity:.6; font-weight:600; margin-right:6px;}
   .mbh-addon{display:flex; gap:14px; align-items:center;}
-  .mbh-addon img{width:70px; flex:none; border-radius:10px;}
+  .mbh-addon img{width:72px; height:auto; flex:none; border-radius:10px;}
   .cart-total{display:flex; justify-content:space-between; font-weight:700; font-size:20px; padding:18px 0 0;}
   /* Order summary: cream card with the site's dark green text. Re-pointing the
      theme variables here recolors every child (borders, steppers, tip buttons). */
@@ -420,7 +420,7 @@
   /* Closed (holiday) days: shown but faded and not tappable. */
   .delivery-opt.closed{opacity:.42; background:#EFEBDD; border-style:dashed; border-color:rgba(13,34,19,.45); color:rgba(13,34,19,.7); box-shadow:none; cursor:not-allowed; animation:none; transform:none;}
   .delivery-opt.closed .opt-radio{opacity:.4;}
-  .delivery-more{flex:1 1 100%; margin-top:2px; padding:10px 12px; border-radius:12px; border:2px dashed var(--dark); background:transparent; color:var(--dark); font:inherit; font-weight:800; font-size:14px; cursor:pointer;}
+  .delivery-more{flex:1 1 100%; margin-top:2px; padding:10px 12px; border-radius:12px; border:2px dashed var(--dark); background:#fff; color:var(--dark); font:inherit; font-weight:800; font-size:14px; cursor:pointer;}
   .delivery-more:active{transform:translateY(1px);}
   @media (max-width:480px){
     .delivery-toggle{gap:8px;}
@@ -464,6 +464,14 @@
   #modeBar .seg{display:grid; grid-template-columns:1fr 1fr; gap:6px; max-width:520px; border-radius:16px;}
   #modeBar .seg button{padding:11px 8px; font-size:14.5px;}
   .toggle-hint-icon{display:none;}
+  .shots-jump{display:block; text-align:center; background:var(--yellow); color:var(--dark); font-weight:800; font-size:17px; text-decoration:none; padding:14px 20px; border-radius:999px; margin:0 0 16px; box-shadow:0 3px 0 rgba(0,0,0,.35);}
+  .shots-jump:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.35);}
+  #shotBuilderCard{scroll-margin-top:130px;}
+  #sixpack .section-head{justify-content:center; text-align:center;}
+  .jump-nav{padding:10px 0 0;}
+  .jump-nav .wrap{gap:6px; flex-wrap:nowrap;}
+  .jump-nav .chip{font-size:13px; padding:9px 11px; white-space:nowrap;}
+  @media (max-width:380px){ .jump-nav .chip{font-size:12px; padding:9px 8px;} }
   .lineup-photo{padding:14px 0 0; background:var(--dark);}
   .lineup-photo img{width:100%; height:auto; border-radius:14px; box-shadow:var(--shadow);}
   .holiday-banner{background:#DCC495; color:var(--dark); font-size:14px; text-align:center; padding:7px 16px;}
@@ -964,11 +972,12 @@
   </div>
 </nav>
 
-<section class="section" id="sixpack" style="padding:40px 0;">
+<section class="section" id="sixpack" style="padding:12px 0 40px;">
   <div class="wrap">
+    <a href="#shotBuilderCard" class="shots-jump">🥤 Immunity shots — $5 each &darr;</a>
     <div class="section-head">
       <div>
-        <p class="eyebrow">Step 2 — Pick your juice</p>
+        <p class="mode-label" style="margin:0 0 8px;">Step 2 — Pick your juice</p>
         <h2 style="font-size:clamp(30px,5vw,44px);">6-packs — $36</h2>
       </div>
     </div>
@@ -1203,14 +1212,16 @@
     <div id="cartHydrationUpsell" style="margin-bottom:16px; background:#F7D3E0; border:1px solid var(--line); border-radius:10px; padding:16px; color:var(--dark);">
       <div class="mbh-addon">
         <img id="mbhCartImg" loading="lazy" decoding="async" width="456" height="600" alt="Mama Bear Hydration raspberry stick pack">
-        <p style="margin:0; font-size:18px; color:var(--dark);"><strong>Add Mama Bear Hydration?</strong> Raspberry electrolyte stick packs, 15 per pouch, delivered with your juice.</p>
+        <p style="margin:0; font-size:16px; line-height:1.4; color:var(--dark);"><strong>Add Mama Bear Hydration?</strong> Raspberry electrolyte stick packs, 15 per pouch, delivered with your juice.</p>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 0;"><span style="background:#D82F6B; color:#fff; font-weight:800; font-size:15px; padding:5px 12px; border-radius:99px; white-space:nowrap;">$27 per pouch</span></div>
-      <div style="margin-top:12px;"><span class="qty-controls">
-        <button class="qbtn" data-action="minus" data-id="hydration" style="border-color:var(--dark); background:#fff; color:var(--dark);">–</button>
-        <span class="qty mono" id="qty-hydration-cart" style="font-size:19px; color:var(--dark);">0</span>
-        <button class="qbtn" data-action="plus" data-id="hydration" style="border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
-      </span></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px;">
+        <span style="background:#D82F6B; color:#fff; font-weight:800; font-size:15px; padding:6px 14px; border-radius:99px; white-space:nowrap;">$27 per pouch</span>
+        <span class="qty-controls">
+          <button class="qbtn" data-action="minus" data-id="hydration" style="border-color:var(--dark); background:#fff; color:var(--dark);">–</button>
+          <span class="qty mono" id="qty-hydration-cart" style="font-size:19px; color:var(--dark);">0</span>
+          <button class="qbtn" data-action="plus" data-id="hydration" style="border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
+        </span>
+      </div>
     </div>
     <div id="cartShotUpsell" style="display:none; margin-bottom:16px; background:#E9D8B4; border:1px solid var(--line); border-radius:10px; padding:16px; color:var(--dark);">
       <p style="margin:0 0 12px; font-size:18px; color:var(--dark);"><strong>Add Immunity Shots?</strong> Ginger &amp; fresh-squeezed orange. <span id="shotCartPrice">$5 ea</span></p>
@@ -2444,7 +2455,7 @@
     if(earnPts > 0){
       const earn = document.createElement('p');
       earn.id = 'cartEarnLine';
-      earn.style.cssText = 'margin:8px 0 0; font-size:15px; font-weight:700; color:#A8E6B0; text-align:right;';
+      earn.style.cssText = 'margin:8px 0 0; font-size:15px; font-weight:700; color:#2F6F3E; text-align:right;';
       earn.textContent = `⭐ You\'ll earn about ${earnPts} reward point${earnPts === 1 ? '' : 's'} on this order`;
       body.appendChild(earn);
     }
