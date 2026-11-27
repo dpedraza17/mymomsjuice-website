@@ -456,6 +456,32 @@
   .preset-packs{margin-top:0;}
   .build-card{margin-top:12px;}
   @media (max-width:820px){ .preset-grid{grid-template-columns:1fr;} }
+
+  /* ---- Simpler layout ---- */
+  .hero{padding:14px 0 8px;}
+  .mode-bar{padding:8px 0;}
+  .mode-label{font-size:20px;}
+  #modeBar .seg{display:grid; grid-template-columns:1fr 1fr; gap:6px; max-width:520px; border-radius:16px;}
+  #modeBar .seg button{padding:11px 8px; font-size:14.5px;}
+  .toggle-hint-icon{display:none;}
+  .lineup-photo{padding:14px 0 0; background:var(--dark);}
+  .lineup-photo img{width:100%; height:auto; border-radius:14px; box-shadow:var(--shadow);}
+  .holiday-banner{background:#DCC495; color:var(--dark); font-size:14px; text-align:center; padding:7px 16px;}
+  .holiday-banner summary{cursor:pointer; font-weight:800;}
+  .holiday-banner div{max-width:620px; margin:8px auto 2px; text-align:left; line-height:1.5;}
+  .holiday-banner p{margin:0 0 8px;}
+  .reorder-bar{display:none; background:var(--dark); border-bottom:3px solid var(--orange); padding:12px 0; text-align:center;}
+  .reorder-btn{background:var(--yellow); color:var(--dark); border:none; border-radius:999px; padding:12px 22px; font-weight:800; font-size:16px; box-shadow:0 3px 0 rgba(0,0,0,.35);}
+  .reorder-bar p{margin:0 0 8px; font-weight:700; font-size:15px;}
+  .mm-details summary{cursor:pointer; font-weight:800; font-size:17px; margin:14px 0;}
+  /* Compact Mama Bear Hydration block */
+  .mbh-promo{padding:26px 0;}
+  .mbh-promo-grid{grid-template-columns:minmax(0,230px) 1fr; gap:24px;}
+  .mbh-promo-photo{padding:12px; border-radius:18px;}
+  .mbh-promo h2{font-size:clamp(26px,4.2vw,36px);}
+  .mbh-promo-lede{font-size:16px; margin-top:10px;}
+  .mbh-promo-add{margin:14px 0 8px; font-size:16px;}
+  @media (max-width:760px){ .mbh-promo-grid{grid-template-columns:1fr;} .mbh-promo-photo{max-width:200px;} }
 </style>
 <script type="application/ld+json">
 {
@@ -857,7 +883,7 @@
       <img class="logo-mark" src="/images/my-moms-juice-bear-mascot-logo.webp" width="200" height="166" alt="My Mom's Juice bear mascot logo">
       <div>
         <span class="logo-text display">My Mom's Juice</span>
-        <span class="logo-sub">MESA, AZ · MOTHER &amp; SON OWNED</span>
+        <span class="logo-sub">PHOENIX, AZ · MOTHER &amp; SON OWNED</span>
       </div>
     </div>
     <button class="cart-btn" id="openCart" aria-haspopup="dialog">
@@ -867,27 +893,37 @@
   <div class="free-del-banner">🚚 Free delivery on orders of $100 or more</div>
 </header>
 
+<details id="holidayBanner" class="holiday-banner">
+  <summary>🎄🦃 Holiday schedule — tap to see closed days</summary>
+  <div>
+    <p><strong>Thanksgiving weekend (Nov 27&ndash;29):</strong> no pop-ups Sat Nov 28 or Sun Nov 29, no Mesa pickup that weekend, no deliveries Fri Nov 27 or Sun Nov 29.</p>
+    <p><strong>Christmas weekend (Dec 25&ndash;27):</strong> no pop-ups Sat Dec 26 or Sun Dec 27, no Mesa pickup that weekend, no deliveries Fri Dec 25 or Sun Dec 27.</p>
+  </div>
+</details>
+
 <section class="hero" id="intro">
   <div class="wrap">
     <p class="eyebrow">Fresh &middot; Made to order &middot; Phoenix, Arizona</p>
     <h1>Fresh-squeezed, bottled by hand — <em>by a mother &amp; son.</em></h1>
-    <p class="lede">Mother &amp; son owned since 2021, every bottle is made by us — fresh juice, lemonade, matcha &amp; coffee.</p>
   </div>
 </section>
 
 
-<div class="findus-strip"><div class="wrap"><a href="#find-us" class="btn findus-btn">📍 Where to find us</a><a href="sms:+14808750690" class="btn findus-btn contactus-btn">💬 Text us</a><a href="tel:+14808750690" class="btn findus-btn contactus-btn">📞 Call us</a></div></div>
+<div class="lineup-photo"><div class="wrap"><img src="/images/my-moms-juice-bottle-lineup.webp" width=1600 height=558 alt="Our full lineup of fresh-pressed juices, horchata, matcha and lemonade in labeled bottles with orange caps"></div></div>
+
+<div class="findus-strip"><div class="wrap"><a href="#find-us" class="btn findus-btn">📍 Where to find us</a><a href="sms:+14808750690" class="btn findus-btn contactus-btn">💬 Text us</a></div></div>
 
 <div class="mode-bar" id="modeBar">
   <div class="wrap">
     <div class="mode-inner">
-      <span class="mode-label">Step 1 — Choose delivery or pick up below: <span class="toggle-hint-icon" aria-hidden="true">⇄</span></span>
+      <span class="mode-label">Step 1 — Delivery or pickup? <span class="toggle-hint-icon" aria-hidden="true">⇄</span></span>
       <div class="seg" role="group" aria-label="Choose pickup or delivery">
-        <button type="button" class="mode-btn active" data-mode="delivery">Get delivery</button>
-        <button type="button" class="mode-btn" data-mode="pickup">Pick up in Mesa</button>
-        <button type="button" class="mode-btn" data-mode="popup">Pick up on 83rd Ave & McDowell</button>
-        <button type="button" class="mode-btn" data-mode="popup16th">Pick up on 16th St & McDowell</button>
+        <button type="button" class="mode-btn active" data-mode="delivery">Delivery</button>
+        <button type="button" class="mode-btn" data-mode="pickup">Pickup — Mesa</button>
+        <button type="button" class="mode-btn" data-mode="popup">Pickup — 83rd Ave &amp; McDowell</button>
+        <button type="button" class="mode-btn" data-mode="popup16th">Pickup — 16th St &amp; McDowell</button>
       </div>
+      <span class="mode-note" id="modeNote">Please choose one to continue</span>
       <div id="homeDeliveryEstimate" style="display:none; margin-top:6px; background:var(--yellow); color:var(--dark); border-radius:10px; padding:14px 16px; text-align:center; font-weight:700; font-size:16px; line-height:1.4; max-width:420px;">
         Choose your delivery day:
         <div class="delivery-toggle" id="homeDeliveryToggle" role="radiogroup" aria-label="Delivery day"></div>
@@ -908,20 +944,23 @@
         <div class="delivery-toggle" id="homePopup16Toggle" role="radiogroup" aria-label="Pickup day"></div>
         <div class="delivery-hint">Tap a day to choose</div>
       </div>
-      <span class="mode-note" id="modeNote">Please choose one to continue</span>
     </div>
+  </div>
+</div>
+
+<div class="reorder-bar" id="reorderBar">
+  <div class="wrap">
+    <p id="reorderText">Welcome back!</p>
+    <button type="button" class="reorder-btn" id="reorderBtn">Reorder my last order</button>
   </div>
 </div>
 
 <nav class="jump-nav" aria-label="Jump to a section">
   <div class="wrap">
     <a class="chip" href="#sixpack">6-Packs</a>
-    <a class="chip" href="#shots">Immunity shots</a>
+    <a class="chip" href="#" id="jumpSingles">Single bottles</a>
     <a class="chip" href="#detox">Cleanses</a>
     <a class="chip" href="#gallons">Gallons</a>
-    <a class="chip" href="#" id="jumpSingles">Single bottles</a>
-    <a class="chip" href="#hydration">Hydration</a>
-    <a class="chip" href="#find-us">Where to find us</a>
   </div>
 </nav>
 
@@ -952,9 +991,9 @@
       <div class="build-card">
         <h3 class="display">Build your own 6-pack</h3>
         <p class="preset-desc">Pick up to 6 bottles total — any mix of flavors. $36</p>
-        <button type="button" id="startBuilderBtn" class="add-btn build-btn" aria-expanded="false" aria-controls="builderContent">Build your own 6-pack</button>
+        <button type="button" id="startBuilderBtn" class="add-btn build-btn" style="display:none;" aria-expanded="true" aria-controls="builderContent">Build your own 6-pack</button>
       </div>
-      <div id="builderContent" style="display:none;">
+      <div id="builderContent" style="display:block;">
         <div class="flavor-check-grid" id="builderGrid"></div>
         <div class="builder-status">
           <span><strong class="mono" id="builderCount">0</strong> / 6 flavors selected</span>
@@ -970,27 +1009,11 @@
           </span>
         </div>
         <p style="font-size:13px; margin:6px 0 0; color:#E9D8B4;">$5 each, or $4 each when ordering 5 or more.</p>
-        <button type="button" id="jumpToExtraBottles" class="add-btn" style="display:block; text-align:center; padding:18px 32px; font-size:19px; width:100%; margin-top:16px; background:var(--yellow); color:var(--dark); box-sizing:border-box;">Add extra bottles to your order?</button>
-        <div class="menu-grid" id="menuGrid" style="display:none; margin-top:16px;">
+        <button type="button" id="jumpToExtraBottles" class="add-btn" style="display:none; text-align:center; padding:18px 32px; font-size:19px; width:100%; margin-top:16px; background:var(--yellow); color:var(--dark); box-sizing:border-box;">Add extra bottles to your order?</button>
+        <h3 class="display" style="font-size:24px; margin:30px 0 4px;">Single 16oz bottles — $7 each</h3>
+        <div class="menu-grid" id="menuGrid" style="margin-top:12px;">
           <div id="menuItems" style="display:contents"></div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="shots" style="padding:34px 0; background:var(--yellow); color:var(--dark);">
-  <div class="wrap">
-    <div id="shotCard" style="display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;">
-      <div style="min-width:0;">
-        <h2 style="font-size:clamp(26px,4vw,34px); color:var(--dark); margin:0;">Immunity Shots</h2>
-        <p style="margin:6px 0 0; font-size:16px; color:var(--dark);">Ginger &amp; fresh-squeezed orange. 4oz shots. <strong>$5 each</strong>, or <strong>$4 each when you order 5 or more</strong>.</p>
-      </div>
-      <div class="qty-controls" style="display:flex; align-items:center; gap:12px;">
-        <button class="qbtn" data-action="minus" data-id="shot" aria-label="Remove an immunity shot" style="width:44px; height:44px; font-size:22px; border-color:var(--dark); background:#fff; color:var(--dark);">–</button>
-        <span class="qty mono" id="qty-shot" aria-live="polite" style="font-size:24px; min-width:24px; color:var(--dark);">0</span>
-        <button class="qbtn" data-action="plus" data-id="shot" aria-label="Add an immunity shot" style="width:44px; height:44px; font-size:22px; border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
-        <span class="mono" id="shotPrice" style="font-weight:700; font-size:18px; margin-left:4px;">$5 ea</span>
       </div>
     </div>
   </div>
@@ -1050,9 +1073,9 @@
       </div>
     </div>
     <p style="margin:0 0 16px; color:#fff;">Gallons (128oz) — $30 &middot; Half Gallons (64oz) — $19</p>
-    <button type="button" id="startGallonsBtn" class="add-btn" style="padding:18px 32px; font-size:19px; width:100%; margin-bottom:16px; background:#fff; color:var(--orange);">Order gallons or half gallons</button>
+    <button type="button" id="startGallonsBtn" class="add-btn" style="display:none; padding:18px 32px; font-size:19px; width:100%; margin-bottom:16px; background:#fff; color:var(--orange);">Order gallons or half gallons</button>
     <p id="gallonSundayNote" style="display:none; margin:0 0 16px; color:#fff; font-weight:700;"></p>
-    <div class="detox-grid" id="gallonGrid" style="display:none; margin-top:24px;"></div>
+    <div class="detox-grid" id="gallonGrid" style="margin-top:24px;"></div>
   </div>
 </section>
 
@@ -1094,13 +1117,6 @@
 
 <section class="hero">
   <div class="wrap">
-    <p class="lede" style="margin-top:14px;">We deliver locally and pop up on 83rd Ave &amp; McDowell (<a href="https://maps.google.com/?q=8367+W+McDowell+Rd+Tolleson+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">8367 W McDowell Rd, Tolleson, AZ</a>) Saturdays 9am-1pm, Sundays 9am-2pm. Stop by our pop up! No pre-order necessary.</p>
-    <p class="lede" style="margin-top:14px;">We also pop up every Saturday 9am-1pm on 16th St &amp; McDowell (<a href="https://maps.google.com/?q=1710+N+16th+St+Phoenix+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">1710 N 16th St, Phoenix, AZ</a>). Stop by! No pre-order necessary.</p>
-    <p class="lede" style="margin-top:14px;">You can also find our juices for sale at The Kitchen's Market (<a href="https://maps.google.com/?q=2655+W+Guadalupe+Rd+Suite+13+Mesa+AZ" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">2655 W Guadalupe Rd Suite 13 Mesa, AZ</a>), 5 days a week. Stop by during business hours! No pre-order necessary. Wednesday-Friday 8am-5pm, Saturdays 8am-3pm, Sundays 10am-3pm</p>
-    <p class="lede" style="margin-top:14px;">
-      <a href="mailto:mymomsjuicellc@gmail.com" style="color:inherit; text-decoration:underline;">mymomsjuicellc@gmail.com</a><br>
-      TEXT <a href="sms:+14808750690" style="color:inherit; text-decoration:underline;">480-875-0690</a> &middot; CALL <a href="tel:+14808750690" style="color:inherit; text-decoration:underline;">480-875-0690</a>
-    </p>
     <div class="hero-photo">
       <img src="/images/my-moms-juice-fresh-pressed-juice-bottles.webp" width="1400" height="1361" alt="Full lineup of My Mom's Juice bottles, freshly made and labeled, on a colorful serape table runner">
     </div>
@@ -1240,44 +1256,50 @@
         <div class="delivery-hint">Tap a day to choose</div>
       <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">1710 N 16th St, Phoenix, AZ<br>Saturdays 9am–1pm<br>Order by Friday 8pm for Saturday pickup (after Thu night: 7 main juices only)</div>
     </div>
-    <div class="field">
-      <label for="custFirstName">First name</label>
-      <input type="text" id="custFirstName" placeholder="First name">
-    </div>
-    <div class="field">
-      <label for="custLastName">Last name</label>
-      <input type="text" id="custLastName" placeholder="Last name">
+    <div style="display:flex; gap:10px;">
+      <div class="field" style="flex:1; min-width:0;">
+        <label for="custFirstName">First name</label>
+        <input type="text" id="custFirstName" placeholder="First name" autocomplete="given-name">
+      </div>
+      <div class="field" style="flex:1; min-width:0;">
+        <label for="custLastName">Last name</label>
+        <input type="text" id="custLastName" placeholder="Last name" autocomplete="family-name">
+      </div>
     </div>
     <div class="field">
       <label for="custPhone">Phone number</label>
-      <input type="tel" id="custPhone" placeholder="(480) 555-0100">
+      <input type="tel" id="custPhone" placeholder="(480) 555-0100" autocomplete="tel">
     </div>
     <div class="field">
       <label for="custEmail">Email</label>
-      <input type="email" id="custEmail" placeholder="you@email.com">
+      <input type="email" id="custEmail" placeholder="you@email.com" autocomplete="email">
     </div>
     <div class="field" id="addressField" style="display:none;">
       <label for="custStreet">Street address</label>
-      <input type="text" id="custStreet" placeholder="123 Main St, Apt 4">
+      <input type="text" id="custStreet" placeholder="123 Main St, Apt 4" autocomplete="street-address">
     </div>
-    <div class="field" id="addressCityField" style="display:none;">
-      <label for="custCity">City</label>
-      <input type="text" id="custCity" placeholder="City">
+    <div style="display:grid; grid-template-columns:2fr 1fr 1.2fr; gap:10px;">
+      <div class="field" id="addressCityField" style="display:none; min-width:0;">
+        <label for="custCity">City</label>
+        <input type="text" id="custCity" placeholder="City" autocomplete="address-level2">
+      </div>
+      <div class="field" id="addressStateField" style="display:none; min-width:0;">
+        <label for="custState">State</label>
+        <input type="text" id="custState" placeholder="AZ" autocomplete="address-level1">
+      </div>
+      <div class="field" id="addressZipField" style="display:none; min-width:0;">
+        <label for="custZip">ZIP</label>
+        <input type="text" id="custZip" placeholder="Zip" autocomplete="postal-code" inputmode="numeric">
+      </div>
     </div>
-    <div class="field" id="addressStateField" style="display:none;">
-      <label for="custState">State</label>
-      <input type="text" id="custState" placeholder="AZ">
-    </div>
-    <div class="field" id="addressZipField" style="display:none;">
-      <label for="custZip">ZIP code</label>
-      <input type="text" id="custZip" placeholder="Zip">
-      <p id="zipWarning" style="display:none; color:var(--orange); font-weight:700; font-size:14px; margin:6px 0 0;">Sorry, we don't currently deliver to this ZIP code. Check pickup or our weekend pop-up instead!</p>
-    </div>
+    <p id="zipWarning" style="display:none; color:var(--orange); font-weight:700; font-size:14px; margin:-4px 0 12px;">Sorry, we don't currently deliver to this ZIP code. Check pickup or our weekend pop-up instead!</p>
     <div class="field" style="margin-bottom:16px;">
       <label for="custNote" id="custNoteLabel" style="font-size:17.5px; font-weight:700;">Add a note (optional)</label>
       <textarea id="custNote" rows="3" placeholder="Leave a note…" style="width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); resize:vertical;"></textarea>
     </div>
-    <div class="field" style="margin-bottom:16px;">
+    <details id="codesBox" style="margin-bottom:16px;">
+      <summary style="cursor:pointer; font-weight:700; font-size:16px; padding:6px 0;">Have a creator code or a reward?</summary>
+    <div class="field" style="margin:12px 0 16px;">
       <label for="affCode" style="font-size:17.5px; font-weight:700;">Creator code (optional)</label>
       <p class="muted" style="margin:2px 0 8px; font-size:14px; line-height:1.4;">Only for codes from a creator or influencer. <strong>Promo or discount codes from us go on the payment page</strong> after you tap Pay, not here.</p>
       <div style="display:flex; gap:8px;">
@@ -1321,18 +1343,12 @@
       </div>
       <p id="rwMsg" style="display:none; margin:8px 0 0; font-size:14.5px; font-weight:700; line-height:1.4;"></p>
     </div>
-    <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:16px; color:var(--dark);">
-      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Delivery: Wednesdays, Fridays &amp; Sundays. Orders are due by midnight the night before (Sunday delivery orders are due Saturday at 8pm).</p>
-      <p style="margin:0 0 10px; font-size:18px; font-weight:700; line-height:1.5;">Free delivery on orders of $100 or more (before tip).</p>
-      <p style="margin:0 0 14px; font-size:18px; font-weight:700; line-height:1.5; background:#FFEB3B; color:var(--dark); display:inline-block; padding:4px 8px; border-radius:6px;">You must be present at time of delivery — we cannot leave your order outside.</p>
-      <p style="font-weight:800; font-size:18px; margin:0 0 6px;">Delivery times:</p>
-      <ul style="margin:0 0 10px; padding-left:20px; font-size:17px; font-weight:600; line-height:1.5;">
-        <li>East Valley: 9am–12pm</li>
-        <li>South/North/Central Phoenix: 11am–3pm</li>
-        <li>West Valley: 1pm–4pm</li>
-      </ul>
-      <p style="font-size:17px; font-weight:600; margin:0 0 8px; line-height:1.5;">These times are estimates — you may receive your order earlier or later. We'll text you when we're on the way!</p>
-      <p style="font-size:17px; font-weight:600; margin:0; line-height:1.5;">If these times don't work for you, please <a href="sms:+14808750690">text us</a> or <a href="tel:+14808750690">call us</a> at 480-875-0690.</p>
+    </details>
+    <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:14px 16px; color:var(--dark); font-size:15px; font-weight:600; line-height:1.5;">
+      <p style="margin:0 0 8px; font-weight:800;">You must be present at delivery — we can't leave orders outside.</p>
+      <p style="margin:0 0 8px;">Free delivery on orders of $100 or more (before tip). Delivery days: Wed, Fri &amp; Sun.</p>
+      <p style="margin:0 0 8px;">Estimated times: East Valley 9am–12pm &middot; South/North/Central Phoenix 11am–3pm &middot; West Valley 1pm–4pm. We'll text you when we're on the way.</p>
+      <p style="margin:0;">Times don't work? <a href="sms:+14808750690">Text</a> or <a href="tel:+14808750690">call</a> 480-875-0690.</p>
     </div>
     <button class="send-btn" id="payOnline">Pay online with card (Stripe)</button>
     <a href="tel:+14808750690" class="call-link">Questions? Call 480-875-0690</a>
@@ -1388,6 +1404,10 @@
   // cancels and lands back here, the page reloads from scratch with an
   // empty cart and they'd have to rebuild their whole order.
   const CART_STORAGE_KEY = 'mmj_cart_state';
+  // "Reorder my last order": a copy of the cart is set aside when the customer
+  // goes to pay, and only becomes their "last order" once the payment succeeds.
+  const PENDING_ORDER_KEY = 'mmj_pending_order';
+  const LAST_ORDER_KEY = 'mmj_last_order';
 
   // Text fields on the checkout form — persisted the same way as the cart,
   // so a customer who cancels out of Stripe and comes back doesn't have to
@@ -1467,6 +1487,55 @@
   function clearCartStorage(){
     try { localStorage.removeItem(CART_STORAGE_KEY); } catch(e) {}
   }
+
+  function snapshotOrder(){
+    return JSON.parse(JSON.stringify({ cart, sixPacks, detoxes, extras, gallonCart }));
+  }
+  function readLastOrder(){
+    try {
+      const o = JSON.parse(localStorage.getItem(LAST_ORDER_KEY) || 'null');
+      return (o && typeof o === 'object') ? o : null;
+    } catch(e) { return null; }
+  }
+  function lastOrderCount(o){
+    if (!o) return 0;
+    const sum = (m) => Object.values(m || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+    const ex = o.extras || {};
+    return sum(o.cart) + (Array.isArray(o.sixPacks) ? o.sixPacks.length : 0) + (Array.isArray(o.detoxes) ? o.detoxes.length : 0)
+      + (Number(ex.shot) || 0) + (Number(ex.hydration) || 0) + (Number(ex.sticks) || 0) + sum(o.gallonCart);
+  }
+  function updateReorderBar(){
+    const bar = document.getElementById('reorderBar');
+    if (!bar) return;
+    const n = lastOrderCount(readLastOrder());
+    bar.style.display = (n > 0 && totalCount() === 0) ? 'block' : 'none';
+    const t = document.getElementById('reorderText');
+    if (t && n > 0) t.textContent = `Welcome back! Your last order had ${n} item${n === 1 ? '' : 's'}.`;
+  }
+  function reorderLastOrder(){
+    const o = readLastOrder();
+    if (!o || !lastOrderCount(o)) return;
+    const validIds = new Set(items.map(it => it.id));
+    Object.keys(cart).forEach(id => { cart[id] = 0; });
+    Object.keys(o.cart || {}).forEach(id => { if (validIds.has(id) && Number(o.cart[id]) > 0) cart[id] = Number(o.cart[id]); });
+    sixPacks = Array.isArray(o.sixPacks) ? o.sixPacks.filter(sp => sp && typeof sp === 'object') : [];
+    detoxes = Array.isArray(o.detoxes) ? o.detoxes.filter(d => d && DETOX_PRICE_BY_DAYS[d.days]).map(d => ({ days: String(d.days), price: DETOX_PRICE_BY_DAYS[d.days] })) : [];
+    const ex = o.extras || {};
+    extras.shot = Math.max(0, Number(ex.shot) || 0);
+    extras.hydration = Math.max(0, Number(ex.hydration) || 0);
+    extras.sticks = Math.max(0, Number(ex.sticks) || 0);
+    Object.keys(gallonCart).forEach(k => delete gallonCart[k]);
+    const validGallonKeys = new Set();
+    GALLON_FLAVOR_IDS.forEach(id => { validGallonKeys.add(id + '_gallon'); validGallonKeys.add(id + '_half'); });
+    Object.keys(o.gallonCart || {}).forEach(k => { if (validGallonKeys.has(k) && Number(o.gallonCart[k]) > 0) gallonCart[k] = Number(o.gallonCart[k]); });
+    renderMenu(); renderBuilder(); renderGallons();
+    updateShotDisplays(); updateHydrationDisplays(); updateStickDisplays();
+    updateCartUI();
+    showAddedToast('Your last order is back in your cart', 3500);
+    if (!moveToOtherDayIfNeeded()) openCart();
+  }
+  // Detox price by length, so a reordered cleanse keeps the right price.
+  const DETOX_PRICE_BY_DAYS = { 1:40, 2:80, 3:115, 4:145, 5:170 };
 
   function sixPackLabel(flavorMap){
     return Object.entries(flavorMap).map(([id,qty])=>{
@@ -2009,23 +2078,11 @@
 
   function updateShotDisplays(){
     const priceLabel = extras.shot>=5 ? '$4 ea' : '$5 ea';
-    document.getElementById('qty-shot').textContent = extras.shot;
-    document.getElementById('shotPrice').textContent = priceLabel;
     document.getElementById('qty-shot-builder').textContent = extras.shot;
     document.getElementById('shotBuilderPrice').textContent = priceLabel;
     document.getElementById('qty-shot-cart').textContent = extras.shot;
     document.getElementById('shotCartPrice').textContent = priceLabel;
   }
-
-  document.getElementById('shotCard').addEventListener('click', (e)=>{
-    const btn = e.target.closest('.qbtn');
-    if(!btn) return;
-    e.stopPropagation();
-    if(btn.dataset.action==='plus'){ extras.shot++; showAddedToast('Immunity Shot added to order'); }
-    else extras.shot = Math.max(0, extras.shot-1);
-    updateShotDisplays();
-    updateCartUI();
-  });
 
   document.getElementById('shotBuilderCard').addEventListener('click', (e)=>{
     const btn = e.target.closest('.qbtn');
@@ -2193,6 +2250,7 @@
 
   function updateCartUI(){
     saveCartToStorage();
+    updateReorderBar();
     document.getElementById('cartCount').textContent = totalCount();
     const vcCount = document.getElementById('viewCartCount');
     if(vcCount) vcCount.textContent = totalCount();
@@ -2451,6 +2509,7 @@
   function openCart(){ overlay.classList.add('open'); drawer.classList.add('open'); }
   function closeCartFn(){ overlay.classList.remove('open'); drawer.classList.remove('open'); }
   document.getElementById('openCart').addEventListener('click', openCart);
+  document.getElementById('reorderBtn').addEventListener('click', reorderLastOrder);
   document.getElementById('viewCartBtn').addEventListener('click', openCart);
   document.getElementById('closeCart').addEventListener('click', closeCartFn);
   overlay.addEventListener('click', closeCartFn);
@@ -2790,16 +2849,16 @@
     popupCard.classList.remove('active');
     popup16Card.classList.remove('active');
     if(mode==='pickup'){
-      modeNote.textContent = "Pickup at The Kitchen's Market (order by Thursday night) — Friday (8am-5pm), Saturday (8am-3pm) or Sunday (10am-3pm) — 2655 W Guadalupe Rd Suite 13 Mesa, AZ";
+      modeNote.textContent = "The Kitchen's Market, 2655 W Guadalupe Rd, Mesa · order by Thursday night";
       pickupCard.classList.add('active');
     } else if(mode==='delivery'){
       modeNote.textContent = ''; // delivery timing is explained in the day picker and cart
       deliveryCard.classList.add('active');
     } else if(mode==='popup16th'){
-      modeNote.textContent = 'Pick up Saturday (9am-1pm) (order by Friday 8pm) — 1710 N 16th St, Phoenix';
+      modeNote.textContent = '1710 N 16th St, Phoenix · Saturdays 9am–1pm · order by Friday 8pm';
       popup16Card.classList.add('active');
     } else {
-      modeNote.textContent = 'Pick up Saturday (9am-1pm) or Sunday (9am-2pm) — order by Friday 8pm for Saturday, Saturday 8pm for Sunday — 8367 W McDowell Rd, Tolleson';
+      modeNote.textContent = '8367 W McDowell Rd, Tolleson · Sat 9am–1pm, Sun 9am–2pm · order by Fri 8pm (Sat) or Sat 8pm (Sun)';
       popupCard.classList.add('active');
     }
     modeNote.style.display = modeNote.textContent ? '' : 'none';
@@ -2969,6 +3028,8 @@
       },
     };
 
+    try { localStorage.setItem(PENDING_ORDER_KEY, JSON.stringify(snapshotOrder())); } catch(e) {}
+
     const payBtn = document.getElementById('payOnline');
     const originalLabel = payBtn.textContent;
     payBtn.disabled = true;
@@ -3068,6 +3129,7 @@
   updateHydrationDisplays();
   updateStickDisplays();
   updateCartUI();
+  setBuilderOpen(true);
 
   // If bottles or gallons were already added on a previous visit, reveal
   // those grids immediately instead of leaving them hidden behind their
@@ -3183,6 +3245,12 @@
     const text = document.getElementById('orderStatusText');
 
     if(status === 'success'){
+      window.__orderJustPlaced = true;
+      // This order becomes the one "Reorder my last order" brings back.
+      try {
+        const pending = localStorage.getItem(PENDING_ORDER_KEY);
+        if (pending) { localStorage.setItem(LAST_ORDER_KEY, pending); localStorage.removeItem(PENDING_ORDER_KEY); }
+      } catch(e) {}
       // Clear the cart so a refresh doesn't re-show items they already paid for.
       Object.keys(cart).forEach(id => cart[id] = 0);
       sixPacks = [];
@@ -3190,8 +3258,11 @@
       extras.shot = 0;
       extras.hydration = 0;
       extras.sticks = 0;
+      Object.keys(gallonCart).forEach(k => delete gallonCart[k]);
       updateStickDisplays();
       renderMenu();
+      renderBuilder();
+      renderGallons();
       updateShotDisplays();
       updateHydrationDisplays();
       updateCartUI();
@@ -3223,6 +3294,7 @@
         })();
       }
     } else if(status === 'canceled'){
+      try { localStorage.removeItem(PENDING_ORDER_KEY); } catch(e) {}
       banner.style.background = 'var(--tan)';
       banner.style.color = 'var(--dark)';
       text.textContent = 'Checkout canceled — your cart is still here whenever you\'re ready.';
@@ -3352,6 +3424,7 @@
     function setApplied(code, label, valueCents){
       applied = code || '';
       try { if (code) sessionStorage.setItem(KEY, JSON.stringify({ code: code, label: label, v: valueCents })); else sessionStorage.removeItem(KEY); } catch(e) {}
+      var cb = $('codesBox'); if (code && cb) cb.open = true;
       $('rwApplied').style.display = code ? 'block' : 'none';
       $('rwEntry').style.display = code ? 'none' : 'block';
       if (code) $('rwAppliedText').textContent = '✓ Reward ' + code + ' — ' + label + '. One matching item in your cart will be free (you\'ll see it on the payment page).';
@@ -3494,9 +3567,11 @@
     <p class="eyebrow">Our menu</p>
     <h2>Fresh-pressed juice, horchata &amp; lemonade in the Phoenix area</h2>
     <p class="lede">Every bottle is squeezed, blended and bottled by hand by our mother &amp; son team, with pickup in Tolleson, Phoenix and Mesa and delivery across the Valley. <a href="#sixpack" style="color:inherit; text-decoration:underline;">Start your order</a>.</p>
+    <details class="mm-details"><summary>See the full menu &amp; prices</summary>
     <div class="mm-grid"><div class="mm-card"><h3>Fresh-pressed juices</h3><ul><li><strong>Green Juice</strong> &mdash; Spinach, parsley, orange <span class="mm-price">$7</span></li><li><strong>El Vampiro</strong> &mdash; Beets, carrot, orange <span class="mm-price">$7</span></li><li><strong>Mimosa Juice</strong> &mdash; Fresh-squeezed orange juice <span class="mm-price">$7</span></li><li><strong>Citrus Sunrise</strong> &mdash; Fresh-squeezed rio red grapefruit &amp; orange juice <span class="mm-price">$7</span></li><li><strong>Fresh Grapefruit</strong> &mdash; Fresh-squeezed rio red grapefruit <span class="mm-price">$7</span></li><li><strong>The Son&#x27;s Favorite</strong> &mdash; Orange &amp; carrot <span class="mm-price">$7</span></li><li><strong>Watermelon</strong> &mdash; Fresh watermelon, nothing else <span class="mm-price">$7</span></li><li><strong>Agua de Pepino con Limón</strong> &mdash; Cucumber, lime, agave <span class="mm-price">$7</span></li></ul></div><div class="mm-card"><h3>Horchata, matcha &amp; coffee</h3><ul><li><strong>Horchata Latte</strong> &mdash; Horchata made from scratch w/ 2 shots of espresso <span class="mm-price">$7</span></li><li><strong>My Mom&#x27;s Horchata</strong> &mdash; Traditional horchata, homemade style <span class="mm-price">$7</span></li><li><strong>Chata Matcha</strong> &mdash; Ceremonial grade matcha &amp; traditional horchata <span class="mm-price">$7</span></li><li><strong>Strawberry Horchata</strong> &mdash; Homemade horchata with fresh strawberry <span class="mm-price">$7</span></li></ul></div><div class="mm-card"><h3>Lemonade</h3><ul><li><strong>Strawberry Lemonade</strong> &mdash; Fresh-squeezed lemons, real strawberries, agave <span class="mm-price">$7</span></li></ul></div></div>
     <p class="mm-note"><strong>Sizes &amp; bundles:</strong> 16oz bottles are $7 each, or build your own 6-pack for $36. Gallons (128oz) are $30 and half gallons (64oz) are $19 in every flavor except Chata Matcha. Ginger &amp; orange immunity shots (4oz) are $5 each, or $4 each when you buy 5 or more.</p>
     <p class="mm-note"><strong>Detox cleanses:</strong> 1-day $40, 2-day $80, 3-day $115, 4-day $145 and 5-day $170. Each day includes 5 bottles of fresh juice plus an immunity shot.</p>
+    </details>
   </div>
 </section>
 
@@ -3544,15 +3619,6 @@
     </div>
   </div>
 </div>
-<div class="email-popup-overlay" id="holidayNoticeOverlay" style="z-index:10001;">
-  <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="holidayNoticeTitle">
-    <button class="email-popup-close" id="holidayNoticeClose" aria-label="Close">&times;</button>
-    <h3 id="holidayNoticeTitle">Holiday Schedule 🎄🦃</h3>
-    <p style="margin:0 0 14px;"><strong>Thanksgiving weekend (Nov 27&ndash;29)</strong><br>No pop-ups Saturday, Nov 28 or Sunday, Nov 29.<br>No pickups in Mesa that weekend.<br>No deliveries Friday, Nov 27 or Sunday, Nov 29.</p>
-    <p style="margin:0 0 20px;"><strong>Christmas weekend (Dec 25&ndash;27)</strong><br>No pop-ups Saturday, Dec 26 or Sunday, Dec 27.<br>No pickups in Mesa that weekend.<br>No deliveries Friday, Dec 25 or Sunday, Dec 27.</p>
-    <button type="button" class="popup-ok" id="holidayNoticeOk">Got it</button>
-  </div>
-</div>
 <div class="email-popup-overlay" id="emailPopupOverlay">
   <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="emailPopupTitle">
     <button class="email-popup-close" id="emailPopupClose" aria-label="Close">&times;</button>
@@ -3576,29 +3642,13 @@
 </div>
 
 <script>
-  // Holiday announcement pop-up: shown once per visit until the last closed
-  // day (Dec 27, 2026) has passed, then it never appears again.
+  // The holiday schedule banner disappears on its own after the last closed day.
   (function(){
-    const overlay = document.getElementById('holidayNoticeOverlay');
-    if (!overlay) return;
-    const SEEN_KEY = 'mmj_holiday_notice_2026';
-    const LAST_DAY = '2026-12-27';
+    const banner = document.getElementById('holidayBanner');
+    if (!banner) return;
     const az = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }));
     const todayIso = az.getFullYear() + '-' + String(az.getMonth() + 1).padStart(2, '0') + '-' + String(az.getDate()).padStart(2, '0');
-    if (todayIso > LAST_DAY) return;
-    try { if (sessionStorage.getItem(SEEN_KEY)) return; } catch (e) {}
-
-    function close(){
-      overlay.classList.remove('show');
-      window.__holidayNoticeOpen = false;
-      try { sessionStorage.setItem(SEEN_KEY, '1'); } catch (e) {}
-    }
-    window.__holidayNoticeOpen = true; // keeps the email pop-up from opening on top of it
-    setTimeout(() => overlay.classList.add('show'), 800);
-    document.getElementById('holidayNoticeOk').addEventListener('click', close);
-    document.getElementById('holidayNoticeClose').addEventListener('click', close);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('show')) close(); });
+    if (todayIso > '2026-12-27') banner.remove();
   })();
 </script>
 
@@ -3625,12 +3675,26 @@
       localStorage.setItem(STORAGE_KEY, '1');
     }
 
-    // Wait for the holiday announcement (if it's open) before showing this.
-    function showWhenFree(){
-      if (window.__holidayNoticeOpen) { setTimeout(showWhenFree, 1000); return; }
-      overlay.classList.add('show');
+    // Never interrupt someone who is ordering: show this right after an order
+    // is placed (once the confirmation box is closed), or to a visitor who has
+    // been browsing for a minute with nothing in their cart.
+    function cartBusy(){
+      const drawer = document.getElementById('cartDrawer');
+      return (drawer && drawer.classList.contains('open')) || (typeof totalCount === 'function' && totalCount() > 0);
     }
-    setTimeout(showWhenFree, 4000);
+    function showPopup(){ overlay.classList.add('show'); }
+    if (window.__orderJustPlaced) {
+      (function waitForConfirmation(){
+        const o = document.getElementById('orderStatusOverlay');
+        if (o && o.style.display !== 'none') { setTimeout(waitForConfirmation, 800); return; }
+        setTimeout(showPopup, 1200);
+      })();
+    } else {
+      setTimeout(function check(){
+        if (cartBusy()) { setTimeout(check, 20000); return; }
+        showPopup();
+      }, 60000);
+    }
 
     closeBtn.addEventListener('click', dismiss);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) dismiss(); });
