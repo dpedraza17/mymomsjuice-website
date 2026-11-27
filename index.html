@@ -1288,6 +1288,10 @@
     </div>
     <div class="field" id="rwBox" style="margin-bottom:16px;">
       <label for="rwCode" style="font-size:17.5px; font-weight:700;">Rewards (optional)</label>
+      <div id="rwTierList" style="background:rgba(255,255,255,0.07); border:1px solid var(--line); border-radius:10px; padding:12px 14px;">
+        <p style="margin:0 0 8px; font-size:14.5px; line-height:1.4;">⭐ Earn 1 point for every $1 you spend on items. Redeem points for:</p>
+        <ul id="rwTierItems" style="list-style:none; margin:0; padding:0; font-size:15px; line-height:1.4;"></ul>
+      </div>
       <div id="rwApplied" style="display:none; background:rgba(168,230,176,0.15); border:1px solid #A8E6B0; border-radius:10px; padding:12px 14px;">
         <p id="rwAppliedText" style="margin:0 0 8px; font-size:15px; font-weight:700; line-height:1.4; color:#A8E6B0;"></p>
         <button type="button" id="rwRemove" style="font-family:inherit; font-size:14px; font-weight:700; padding:6px 12px; border-radius:8px; border:1px solid currentColor; background:transparent; color:inherit; cursor:pointer;">Remove reward</button>
@@ -3350,9 +3354,38 @@
       try { if (code) sessionStorage.setItem(KEY, JSON.stringify({ code: code, label: label, v: valueCents })); else sessionStorage.removeItem(KEY); } catch(e) {}
       $('rwApplied').style.display = code ? 'block' : 'none';
       $('rwEntry').style.display = code ? 'none' : 'block';
-      if (code) $('rwAppliedText').textContent = '✓ Reward ' + code + ' — ' + label + ' (up to ' + money(valueCents) + ' off your items). You\'ll see it on the payment page.';
+      if (code) $('rwAppliedText').textContent = '✓ Reward ' + code + ' — ' + label + '. One matching item in your cart will be free (you\'ll see it on the payment page).';
     }
     window.mmjGetReward = function(){ return applied; };
+
+    // Reward list shown in the cart. Starts with these values so it appears
+    // instantly, then refreshes from the server so it always matches loyalty.js.
+    function renderTierList(tiers){
+      var ul = $('rwTierItems');
+      if (!ul || !tiers || !tiers.length) return;
+      ul.innerHTML = '';
+      tiers.forEach(function(t){
+        var li = document.createElement('li');
+        li.style.cssText = 'display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-top:1px solid var(--line);';
+        var name = document.createElement('span');
+        name.textContent = t.label;
+        var pts = document.createElement('strong');
+        pts.style.whiteSpace = 'nowrap';
+        pts.textContent = Number(t.points).toLocaleString('en-US') + ' pts';
+        li.appendChild(name); li.appendChild(pts);
+        ul.appendChild(li);
+      });
+      ul.firstChild.style.borderTop = 'none';
+    }
+    renderTierList([
+      { points: 50,   label: 'Free shot' },
+      { points: 70,   label: 'Free 16oz juice' },
+      { points: 200,  label: 'Free half gallon' },
+      { points: 300,  label: 'Free gallon' },
+      { points: 1200, label: 'Free 3-day detox' }
+    ]);
+    fetch(API + '/api/loyalty/tiers').then(function(r){ return r.json(); })
+      .then(function(d){ renderTierList(d && d.tiers); }).catch(function(){});
 
     try {
       var saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
@@ -3400,7 +3433,7 @@
         b.type = 'button';
         b.disabled = !t.canRedeem;
         b.style.cssText = 'display:block; width:100%; text-align:left; margin:0 0 8px; font-family:inherit; font-size:15px; font-weight:700; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:' + (t.canRedeem ? '#fff' : 'rgba(255,255,255,0.4)') + '; color:var(--dark); cursor:' + (t.canRedeem ? 'pointer' : 'default') + '; opacity:' + (t.canRedeem ? '1' : '0.7') + ';';
-        b.textContent = t.points + ' pts — ' + t.label + ' (' + money(t.valueCents) + ' off)' + (t.canRedeem ? '' : ' · ' + (t.points - d.points) + ' to go');
+        b.textContent = t.points + ' pts — ' + t.label + (t.canRedeem ? '' : ' · ' + (t.points - d.points) + ' to go');
         if (t.canRedeem) b.addEventListener('click', function(){ pickTier(t); });
         box.appendChild(b);
       });
