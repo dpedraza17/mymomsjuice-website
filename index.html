@@ -464,12 +464,16 @@
   #modeBar .seg{display:grid; grid-template-columns:1fr 1fr; gap:6px; max-width:520px; border-radius:16px;}
   #modeBar .seg button{padding:11px 8px; font-size:14.5px;}
   .toggle-hint-icon{display:none;}
+  /* Cart pickup/delivery buttons match the homepage 2x2 grid */
+  #cartModeBar .seg{display:grid; grid-template-columns:1fr 1fr; gap:6px; max-width:520px; border-radius:16px;}
+  #cartModeBar .seg button{padding:11px 8px; font-size:14.5px;}
+  #cartModeBar .mode-inner{align-items:center;}
   .shots-jump{display:block; text-align:center; background:var(--yellow); color:var(--dark); font-weight:800; font-size:17px; text-decoration:none; padding:14px 20px; border-radius:999px; margin:0 0 16px; box-shadow:0 3px 0 rgba(0,0,0,.35);}
   .shots-jump:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.35);}
   #shotBuilderCard{scroll-margin-top:130px;}
   #sixpack .section-head{justify-content:center; text-align:center;}
-  .jump-nav{padding:10px 0 0;}
-  .jump-nav .wrap{gap:6px; flex-wrap:nowrap;}
+  .jump-nav{padding:10px 0 14px;}
+  .jump-nav .wrap{gap:6px; flex-wrap:wrap; justify-content:center;}
   .jump-nav .chip{font-size:13px; padding:9px 11px; white-space:nowrap;}
   @media (max-width:380px){ .jump-nav .chip{font-size:12px; padding:9px 8px;} }
   .lineup-photo{padding:14px 0 0; background:var(--dark);}
@@ -647,7 +651,7 @@
    "hasMenu": {
     "@type": "Menu",
     "name": "My Mom's Juice Menu",
-    "url": "https://mymomsjuice.com/#menu",
+    "url": "https://mymomsjuice.com/#sixpack",
     "hasMenuSection": [
      {
       "@type": "MenuSection",
@@ -966,15 +970,15 @@
 <nav class="jump-nav" aria-label="Jump to a section">
   <div class="wrap">
     <a class="chip" href="#sixpack">6-Packs</a>
+    <a class="chip" href="#shotBuilderCard">Immunity shots</a>
     <a class="chip" href="#" id="jumpSingles">Single bottles</a>
     <a class="chip" href="#detox">Cleanses</a>
     <a class="chip" href="#gallons">Gallons</a>
   </div>
 </nav>
 
-<section class="section" id="sixpack" style="padding:12px 0 40px;">
+<section class="section" id="sixpack" style="padding:24px 0 40px;">
   <div class="wrap">
-    <a href="#shotBuilderCard" class="shots-jump">🥤 Immunity shots — $5 each &darr;</a>
     <div class="section-head">
       <div>
         <p class="mode-label" style="margin:0 0 8px;">Step 2 — Pick your juice</p>
@@ -1209,6 +1213,28 @@
     <div id="cartBody" style="margin-bottom:16px;">
       <p class="cart-empty">Nothing added yet — tap "Add" on any menu item.</p>
     </div>
+    <div id="cartShotUpsell" style="display:none; margin-bottom:16px; background:#E9D8B4; border:1px solid var(--line); border-radius:10px; padding:16px; color:var(--dark);">
+      <p style="margin:0 0 12px; font-size:18px; color:var(--dark);"><strong>Add Immunity Shots?</strong> Ginger &amp; fresh-squeezed orange. <span id="shotCartPrice">$5 ea</span></p>
+      <span class="qty-controls">
+        <button class="qbtn" data-action="minus" data-id="shot" id="shotCartMinus" style="border-color:var(--dark); background:#fff; color:var(--dark);">–</button>
+        <span class="qty mono" id="qty-shot-cart" style="font-size:19px; color:var(--dark);">0</span>
+        <button class="qbtn" data-action="plus" data-id="shot" id="shotCartPlus" style="border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
+      </span>
+      <p style="font-size:15px; margin:10px 0 0; color:var(--dark);">$5 each, or $4 each when ordering 5 or more.</p>
+    </div>
+    <details id="codesBox" style="margin-bottom:2px;">
+      <summary style="cursor:pointer; font-weight:700; font-size:16px; padding:6px 0;">Have a creator code? Click here</summary>
+    <div class="field" style="margin:12px 0 16px;">
+      <label for="affCode" style="font-size:17.5px; font-weight:700;">Creator code (optional)</label>
+      <p class="muted" style="margin:2px 0 8px; font-size:14px; line-height:1.4;">Only for codes from a creator or influencer. <strong>Promo or discount codes from us go on the payment page</strong> after you tap Pay, not here.</p>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="affCode" placeholder="Creator's code (not a promo code)" autocapitalize="characters" autocomplete="off" maxlength="20" style="flex:1; min-width:0; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); text-transform:uppercase;">
+        <button type="button" id="affCodeApply" style="font-family:inherit; font-size:15px; font-weight:700; padding:12px 18px; border-radius:10px; border:none; background:var(--orange); color:#fff; cursor:pointer;">Apply</button>
+      </div>
+      <p id="affCodeMsg" style="display:none; margin:8px 0 0; font-size:14.5px; font-weight:700; line-height:1.4;"></p>
+    </div>
+    </details>
+    <p style="margin:0 0 16px; font-size:16px; font-weight:700; line-height:1.4;">Promo codes go on the next page.</p>
     <div id="cartHydrationUpsell" style="margin-bottom:16px; background:#F7D3E0; border:1px solid var(--line); border-radius:10px; padding:16px; color:var(--dark);">
       <div class="mbh-addon">
         <img id="mbhCartImg" loading="lazy" decoding="async" width="456" height="600" alt="Mama Bear Hydration raspberry stick pack">
@@ -1222,25 +1248,32 @@
           <button class="qbtn" data-action="plus" data-id="hydration" style="border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
         </span>
       </div>
-    </div>
-    <div id="cartShotUpsell" style="display:none; margin-bottom:16px; background:#E9D8B4; border:1px solid var(--line); border-radius:10px; padding:16px; color:var(--dark);">
-      <p style="margin:0 0 12px; font-size:18px; color:var(--dark);"><strong>Add Immunity Shots?</strong> Ginger &amp; fresh-squeezed orange. <span id="shotCartPrice">$5 ea</span></p>
-      <span class="qty-controls">
-        <button class="qbtn" data-action="minus" data-id="shot" id="shotCartMinus" style="border-color:var(--dark); background:#fff; color:var(--dark);">–</button>
-        <span class="qty mono" id="qty-shot-cart" style="font-size:19px; color:var(--dark);">0</span>
-        <button class="qbtn" data-action="plus" data-id="shot" id="shotCartPlus" style="border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
-      </span>
-      <p style="font-size:15px; margin:10px 0 0; color:var(--dark);">$5 each, or $4 each when ordering 5 or more.</p>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding-top:12px; border-top:1px solid rgba(13,34,19,.15);">
+        <span style="background:#D82F6B; color:#fff; font-weight:800; font-size:15px; padding:6px 14px; border-radius:99px; white-space:nowrap;">$2 per single stick</span>
+        <span class="qty-controls">
+          <button class="qbtn" data-action="minus" data-id="sticks" style="border-color:var(--dark); background:#fff; color:var(--dark);">–</button>
+          <span class="qty mono" id="qty-sticks-cart" style="font-size:19px; color:var(--dark);">0</span>
+          <button class="qbtn" data-action="plus" data-id="sticks" style="border-color:var(--dark); background:#fff; color:var(--dark);">+</button>
+        </span>
+      </div>
     </div>
     <div style="height:8px;"></div>
+    <div id="cartFulfillSummary" style="display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--dark); border:2px solid var(--orange); border-radius:14px; padding:12px 14px; margin-bottom:18px; color:#fff;">
+      <div style="min-width:0;">
+        <div id="cartFulfillText" style="font-weight:800; font-size:15.5px; line-height:1.3;"></div>
+        <div id="cartFulfillDetail" style="display:none; margin-top:4px; font-size:13px; font-weight:600; line-height:1.4; opacity:.9;"></div>
+      </div>
+      <button type="button" id="cartFulfillChange" style="flex:none; font-family:inherit; font-size:13px; font-weight:700; padding:7px 12px; border-radius:999px; border:1.5px solid #fff; background:transparent; color:#fff; cursor:pointer;">Make a change</button>
+    </div>
+    <div id="cartFulfillEdit" style="display:none;">
     <div class="mode-bar" id="cartModeBar" style="border-radius:14px; margin-bottom:18px;">
       <div class="mode-inner" style="padding:14px 10px; flex-direction:column; gap:10px; justify-content:flex-start;">
-        <span class="mode-label" style="font-size:18px;">You selected:</span>
+        <span class="mode-label" style="font-size:18px;">Delivery or pickup?</span>
         <div class="seg" role="group" aria-label="Choose pickup or delivery">
-          <button type="button" class="mode-btn active" data-mode="delivery">Get delivery</button>
-          <button type="button" class="mode-btn" data-mode="pickup">Pick up in Mesa</button>
-          <button type="button" class="mode-btn" data-mode="popup">Pick up on 83rd Ave &amp; McDowell</button>
-          <button type="button" class="mode-btn" data-mode="popup16th">Pick up on 16th St &amp; McDowell</button>
+          <button type="button" class="mode-btn active" data-mode="delivery">Delivery</button>
+          <button type="button" class="mode-btn" data-mode="pickup">Pickup — Mesa</button>
+          <button type="button" class="mode-btn" data-mode="popup">Pickup — 83rd Ave &amp; McDowell</button>
+          <button type="button" class="mode-btn" data-mode="popup16th">Pickup — 16th St &amp; McDowell</button>
         </div>
       </div>
     </div>
@@ -1266,6 +1299,7 @@
         <div class="delivery-toggle" id="popup16Toggle" role="radiogroup" aria-label="Pickup day"></div>
         <div class="delivery-hint">Tap a day to choose</div>
       <div style="font-size:13px; font-weight:600; margin-top:6px; line-height:1.4;">1710 N 16th St, Phoenix, AZ<br>Saturdays 9am–1pm<br>Order by Friday 8pm for Saturday pickup (after Thu night: 7 main juices only)</div>
+    </div>
     </div>
     <div style="display:flex; gap:10px;">
       <div class="field" style="flex:1; min-width:0;">
@@ -1308,16 +1342,11 @@
       <label for="custNote" id="custNoteLabel" style="font-size:17.5px; font-weight:700;">Add a note (optional)</label>
       <textarea id="custNote" rows="3" placeholder="Leave a note…" style="width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); resize:vertical;"></textarea>
     </div>
-    <details id="codesBox" style="margin-bottom:16px;">
-      <summary style="cursor:pointer; font-weight:700; font-size:16px; padding:6px 0;">Have a creator code or a reward?</summary>
-    <div class="field" style="margin:12px 0 16px;">
-      <label for="affCode" style="font-size:17.5px; font-weight:700;">Creator code (optional)</label>
-      <p class="muted" style="margin:2px 0 8px; font-size:14px; line-height:1.4;">Only for codes from a creator or influencer. <strong>Promo or discount codes from us go on the payment page</strong> after you tap Pay, not here.</p>
-      <div style="display:flex; gap:8px;">
-        <input type="text" id="affCode" placeholder="Creator's code (not a promo code)" autocapitalize="characters" autocomplete="off" maxlength="20" style="flex:1; min-width:0; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--dark); text-transform:uppercase;">
-        <button type="button" id="affCodeApply" style="font-family:inherit; font-size:15px; font-weight:700; padding:12px 18px; border-radius:10px; border:none; background:var(--orange); color:#fff; cursor:pointer;">Apply</button>
-      </div>
-      <p id="affCodeMsg" style="display:none; margin:8px 0 0; font-size:14.5px; font-weight:700; line-height:1.4;"></p>
+    <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:14px 16px; color:var(--dark); font-size:15px; font-weight:600; line-height:1.5;">
+      <p style="margin:0 0 8px; font-weight:800;">You must be present at delivery — we can't leave orders outside.</p>
+      <p style="margin:0 0 8px;">Free delivery on orders of $100 or more (before tip). Delivery days: Wed, Fri &amp; Sun.</p>
+      <p style="margin:0 0 8px;">Estimated times: East Valley 9am–12pm &middot; South/North/Central Phoenix 11am–3pm &middot; West Valley 1pm–4pm. We'll text you when we're on the way.</p>
+      <p style="margin:0;">Times don't work? <a href="sms:+14808750690">Text</a> or <a href="tel:+14808750690">call</a> 480-875-0690.</p>
     </div>
     <div class="field" id="rwBox" style="margin-bottom:16px;">
       <label for="rwCode" style="font-size:17.5px; font-weight:700;">Rewards (optional)</label>
@@ -1353,13 +1382,6 @@
         </div>
       </div>
       <p id="rwMsg" style="display:none; margin:8px 0 0; font-size:14.5px; font-weight:700; line-height:1.4;"></p>
-    </div>
-    </details>
-    <div id="deliveryTimesNote" style="display:none; margin-bottom:16px; background:#fff8e1; border:2px solid var(--orange); border-radius:10px; padding:14px 16px; color:var(--dark); font-size:15px; font-weight:600; line-height:1.5;">
-      <p style="margin:0 0 8px; font-weight:800;">You must be present at delivery — we can't leave orders outside.</p>
-      <p style="margin:0 0 8px;">Free delivery on orders of $100 or more (before tip). Delivery days: Wed, Fri &amp; Sun.</p>
-      <p style="margin:0 0 8px;">Estimated times: East Valley 9am–12pm &middot; South/North/Central Phoenix 11am–3pm &middot; West Valley 1pm–4pm. We'll text you when we're on the way.</p>
-      <p style="margin:0;">Times don't work? <a href="sms:+14808750690">Text</a> or <a href="tel:+14808750690">call</a> 480-875-0690.</p>
     </div>
     <button class="send-btn" id="payOnline">Pay online with card (Stripe)</button>
     <a href="tel:+14808750690" class="call-link">Questions? Call 480-875-0690</a>
@@ -2122,6 +2144,8 @@
   function updateStickDisplays(){
     const el = document.getElementById('qty-sticks-hero');
     if(el) el.textContent = extras.sticks;
+    const ec = document.getElementById('qty-sticks-cart');
+    if(ec) ec.textContent = extras.sticks;
   }
   document.getElementById('heroStickStepper').addEventListener('click', (e)=>{
     const btn = e.target.closest('.qbtn');
@@ -2136,6 +2160,13 @@
     const btn = e.target.closest('.qbtn');
     if(!btn) return;
     e.stopPropagation();
+    if(btn.dataset.id === 'sticks'){
+      if(btn.dataset.action==='plus'){ extras.sticks++; showAddedToast('Hydration stick added to order'); }
+      else extras.sticks = Math.max(0, extras.sticks-1);
+      updateStickDisplays();
+      updateCartUI();
+      return;
+    }
     if(btn.dataset.action==='plus'){ extras.hydration++; showAddedToast('Mama Bear Hydration added to order'); }
     else extras.hydration = Math.max(0, extras.hydration-1);
     updateHydrationDisplays();
@@ -2283,16 +2314,14 @@
       const unitPrice = size === 'gallon' ? GALLON_PRICE : HALF_GALLON_PRICE;
       rows.push({type:'gallon', key, qty:gallonCart[key], total:gallonCart[key]*unitPrice, label:`${flavor?flavor.name:'Item'} — ${sizeLabel} <span class="cart-unit">$${unitPrice} ea</span>`});
     });
-    // The hydration pouch always has a line in the cart. It starts at 0
-    // ($0.00) — the customer taps + to actually add one.
-    const hydrationRow = extras.hydration
-      ? {type:'hydration', key:'hydration', qty:extras.hydration, total:extras.hydration*hydrationUnitPrice(), label:`Mama Bear Hydration Pouch (15 sticks) <span class="cart-unit">$${hydrationUnitPrice()} ea</span>`}
-      : {type:'hydration', key:'hydration', qty:0, total:0, noRemove:true, label:`Mama Bear Hydration Pouch (15 sticks) <span class="cart-unit">Tap + to add · $27 each</span>`};
-    rows.push(hydrationRow);
-    // Single sticks work the same way: always listed, starting at 0.
-    rows.push(extras.sticks
-      ? {type:'sticks', key:'sticks', qty:extras.sticks, total:extras.sticks*STICK_PRICE, label:`Mama Bear Hydration Single Stick <span class="cart-unit">$${STICK_PRICE} ea</span>`}
-      : {type:'sticks', key:'sticks', qty:0, total:0, noRemove:true, label:`Mama Bear Hydration Single Stick <span class="cart-unit">Tap + to add · $${STICK_PRICE} each</span>`});
+    // Hydration pouches / single sticks only show in the summary when the
+    // customer actually added some (from the hydration section on the page).
+    if(extras.hydration){
+      rows.push({type:'hydration', key:'hydration', qty:extras.hydration, total:extras.hydration*hydrationUnitPrice(), label:`Mama Bear Hydration Pouch (15 sticks) <span class="cart-unit">$${hydrationUnitPrice()} ea</span>`});
+    }
+    if(extras.sticks){
+      rows.push({type:'sticks', key:'sticks', qty:extras.sticks, total:extras.sticks*STICK_PRICE, label:`Mama Bear Hydration Single Stick <span class="cart-unit">$${STICK_PRICE} ea</span>`});
+    }
     if(mode === 'delivery' && totalCount() > 0){
       const feePrice = qualifiesForFreeDelivery()
         ? `<span class="fee-strike">$${currentDeliveryFee().toFixed(2)}</span>FREE`
@@ -2707,8 +2736,53 @@
   // Draws the two-button day picker in both delivery banners (home + cart)
   // and remembers exactly which date is on screen so that's what gets sent.
   // The earlier delivery day is always selected by default.
+
+  // Cart: collapsed "what you chose" line with a small "Make a change" button.
+  let cartFulfillOpen = false;
+  function updateCartFulfillSummary(){
+    const sumEl = document.getElementById('cartFulfillSummary');
+    const editEl = document.getElementById('cartFulfillEdit');
+    const textEl = document.getElementById('cartFulfillText');
+    const btn = document.getElementById('cartFulfillChange');
+    if(!sumEl || !editEl || !textEl || !btn) return;
+    const PICKUP_INFO = {
+      pickup:    { addr:"The Kitchen's Market, 2655 W Guadalupe Rd Suite 13, Mesa, AZ", hours:{5:'8am–5pm', 6:'8am–3pm', 0:'10am–3pm'} },
+      popup:     { addr:'8367 W McDowell Rd, Tolleson, AZ', hours:{6:'9am–1pm', 0:'9am–2pm'} },
+      popup16th: { addr:'1710 N 16th St, Phoenix, AZ', hours:{6:'9am–1pm'} }
+    };
+    const detailEl = document.getElementById('cartFulfillDetail');
+    let detail = '';
+    let line = '';
+    if(mode === 'delivery'){
+      const opts = getDeliveryOptions();
+      const sel = opts[deliveryChoice] || opts[0];
+      if(sel) line = `Delivery · ${sel.dayName}, ${sel.shortDate}`;
+    } else if(isPickupMode(mode)){
+      const pk = getSelectedPickup(mode);
+      const b = document.querySelector('#cartModeBar .mode-btn[data-mode="' + mode + '"]');
+      const where = b ? b.textContent.trim() : 'Pickup';
+      if(pk) line = `${where} · ${pk.dayName}, ${pk.shortDate}`;
+      const info = PICKUP_INFO[mode];
+      if(pk && info){
+        const hrs = info.hours[pk.dow];
+        detail = info.addr + (hrs ? `<br>${pk.dayName} pickup hours: ${hrs}` : '');
+      }
+    }
+    const open = cartFulfillOpen || !line;
+    textEl.textContent = line || 'Choose delivery or pickup';
+    if(detailEl){ detailEl.innerHTML = detail; detailEl.style.display = detail ? 'block' : 'none'; }
+    btn.textContent = open ? (line ? 'Done' : '') : 'Make a change';
+    btn.style.display = (open && !line) ? 'none' : '';
+    editEl.style.display = open ? 'block' : 'none';
+    sumEl.style.marginBottom = open ? '10px' : '18px';
+  }
+  (function(){
+    const btn = document.getElementById('cartFulfillChange');
+    if(btn) btn.addEventListener('click', ()=>{ cartFulfillOpen = !cartFulfillOpen; updateCartFulfillSummary(); });
+  })();
   function updateDeliverySwapUI(){
     const opts = getDeliveryOptions();
+    updateCartFulfillSummary();
     const sel = opts[deliveryChoice] || opts[0];
     shownDeliveryIso = sel.iso;
     // The pay button repeats the chosen day, so it's confirmed at the last step.
@@ -3435,7 +3509,6 @@
     function setApplied(code, label, valueCents){
       applied = code || '';
       try { if (code) sessionStorage.setItem(KEY, JSON.stringify({ code: code, label: label, v: valueCents })); else sessionStorage.removeItem(KEY); } catch(e) {}
-      var cb = $('codesBox'); if (code && cb) cb.open = true;
       $('rwApplied').style.display = code ? 'block' : 'none';
       $('rwEntry').style.display = code ? 'none' : 'block';
       if (code) $('rwAppliedText').textContent = '✓ Reward ' + code + ' — ' + label + '. One matching item in your cart will be free (you\'ll see it on the payment page).';
@@ -3563,28 +3636,6 @@
     });
   })();
 </script>
-
-<style>
-  #menu .mm-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-top:22px;}
-  #menu .mm-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px;}
-  #menu h3{margin:0 0 10px; font-size:20px;}
-  #menu ul{margin:0; padding-left:18px; line-height:1.5;}
-  #menu li{margin-bottom:8px;}
-  #menu .mm-price{font-family:'Space Mono',monospace; white-space:nowrap;}
-  #menu .mm-note{margin-top:18px; max-width:760px; line-height:1.55;}
-</style>
-<section class="section" id="menu">
-  <div class="wrap">
-    <p class="eyebrow">Our menu</p>
-    <h2>Fresh-pressed juice, horchata &amp; lemonade in the Phoenix area</h2>
-    <p class="lede">Every bottle is squeezed, blended and bottled by hand by our mother &amp; son team, with pickup in Tolleson, Phoenix and Mesa and delivery across the Valley. <a href="#sixpack" style="color:inherit; text-decoration:underline;">Start your order</a>.</p>
-    <details class="mm-details"><summary>See the full menu &amp; prices</summary>
-    <div class="mm-grid"><div class="mm-card"><h3>Fresh-pressed juices</h3><ul><li><strong>Green Juice</strong> &mdash; Spinach, parsley, orange <span class="mm-price">$7</span></li><li><strong>El Vampiro</strong> &mdash; Beets, carrot, orange <span class="mm-price">$7</span></li><li><strong>Mimosa Juice</strong> &mdash; Fresh-squeezed orange juice <span class="mm-price">$7</span></li><li><strong>Citrus Sunrise</strong> &mdash; Fresh-squeezed rio red grapefruit &amp; orange juice <span class="mm-price">$7</span></li><li><strong>Fresh Grapefruit</strong> &mdash; Fresh-squeezed rio red grapefruit <span class="mm-price">$7</span></li><li><strong>The Son&#x27;s Favorite</strong> &mdash; Orange &amp; carrot <span class="mm-price">$7</span></li><li><strong>Watermelon</strong> &mdash; Fresh watermelon, nothing else <span class="mm-price">$7</span></li><li><strong>Agua de Pepino con Limón</strong> &mdash; Cucumber, lime, agave <span class="mm-price">$7</span></li></ul></div><div class="mm-card"><h3>Horchata, matcha &amp; coffee</h3><ul><li><strong>Horchata Latte</strong> &mdash; Horchata made from scratch w/ 2 shots of espresso <span class="mm-price">$7</span></li><li><strong>My Mom&#x27;s Horchata</strong> &mdash; Traditional horchata, homemade style <span class="mm-price">$7</span></li><li><strong>Chata Matcha</strong> &mdash; Ceremonial grade matcha &amp; traditional horchata <span class="mm-price">$7</span></li><li><strong>Strawberry Horchata</strong> &mdash; Homemade horchata with fresh strawberry <span class="mm-price">$7</span></li></ul></div><div class="mm-card"><h3>Lemonade</h3><ul><li><strong>Strawberry Lemonade</strong> &mdash; Fresh-squeezed lemons, real strawberries, agave <span class="mm-price">$7</span></li></ul></div></div>
-    <p class="mm-note"><strong>Sizes &amp; bundles:</strong> 16oz bottles are $7 each, or build your own 6-pack for $36. Gallons (128oz) are $30 and half gallons (64oz) are $19 in every flavor except Chata Matcha. Ginger &amp; orange immunity shots (4oz) are $5 each, or $4 each when you buy 5 or more.</p>
-    <p class="mm-note"><strong>Detox cleanses:</strong> 1-day $40, 2-day $80, 3-day $115, 4-day $145 and 5-day $170. Each day includes 5 bottles of fresh juice plus an immunity shot.</p>
-    </details>
-  </div>
-</section>
 
 <footer>
   <div class="wrap" style="display:flex; flex-wrap:wrap; gap:32px; justify-content:space-between; max-width:1100px; margin:0 auto; padding:0 20px;">
